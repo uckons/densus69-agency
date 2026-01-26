@@ -1,0 +1,262 @@
+<div class="space-y-6">
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Models -->
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-admin-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Total Models</p>
+                    <p class="text-3xl font-bold text-gray-800 mt-2">
+                        <%= typeof stats !== 'undefined' ? stats.totalModels : 0 %>
+                    </p>
+                </div>
+                <div class="bg-admin-100 p-4 rounded-full">
+                    <i class="fas fa-users text-admin-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Active Models -->
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Active Models</p>
+                    <p class="text-3xl font-bold text-gray-800 mt-2">
+                        <%= typeof stats !== 'undefined' ? stats.activeModels : 0 %>
+                    </p>
+                </div>
+                <div class="bg-green-100 p-4 rounded-full">
+                    <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Monthly Revenue -->
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Monthly Revenue</p>
+                    <p class="text-3xl font-bold text-gray-800 mt-2">
+                        <%= typeof stats !== 'undefined' ? formatCurrency(stats.monthlyRevenue) : formatCurrency(0) %>
+                    </p>
+                </div>
+                <div class="bg-yellow-100 p-4 rounded-full">
+                    <i class="fas fa-dollar-sign text-yellow-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Revenue -->
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Total Revenue</p>
+                    <p class="text-3xl font-bold text-gray-800 mt-2">
+                        <%= typeof stats !== 'undefined' ? formatCurrency(stats.totalRevenue) : formatCurrency(0) %>
+                    </p>
+                </div>
+                <div class="bg-purple-100 p-4 rounded-full">
+                    <i class="fas fa-chart-line text-purple-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Revenue Chart -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-chart-bar mr-2 text-admin-500"></i>
+                Monthly Revenue Trend
+            </h3>
+            <canvas id="revenueChart" height="300"></canvas>
+        </div>
+        
+        <!-- Models Status Chart -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-chart-pie mr-2 text-admin-500"></i>
+                Models by Status
+            </h3>
+            <canvas id="modelsChart" height="300"></canvas>
+        </div>
+    </div>
+    
+    <!-- Recent Transactions -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">
+                <i class="fas fa-history mr-2 text-admin-500"></i>
+                Recent Transactions
+            </h3>
+            <a href="/admin/transactions" class="text-admin-600 hover:text-admin-700 text-sm font-medium">
+                View All <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <% if (typeof recentTransactions !== 'undefined' && recentTransactions.length > 0) { %>
+                        <% recentTransactions.forEach(transaction => { %>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <%= new Date(transaction.date).toLocaleDateString('id-ID') %>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <img src="<%= transaction.model?.photo || '/images/default-avatar.png' %>" 
+                                             alt="<%= transaction.model?.name %>" 
+                                             class="w-8 h-8 rounded-full object-cover mr-3">
+                                        <span class="text-sm font-medium text-gray-900"><%= transaction.model?.name %></span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <%= transaction.jobType %>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                    <%= formatCurrency(transaction.amount) %>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        <%= transaction.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                            transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                            'bg-red-100 text-red-800' %>">
+                                        <%= transaction.status %>
+                                    </span>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                <i class="fas fa-inbox text-4xl mb-2"></i>
+                                <p>No recent transactions</p>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Pending Complaints -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">
+                <i class="fas fa-exclamation-circle mr-2 text-red-500"></i>
+                Pending Complaints
+                <% if (typeof pendingComplaints !== 'undefined' && pendingComplaints.length > 0) { %>
+                    <span class="ml-2 bg-red-100 text-red-600 text-xs font-semibold px-2 py-1 rounded-full">
+                        <%= pendingComplaints.length %>
+                    </span>
+                <% } %>
+            </h3>
+            <a href="/admin/complaints" class="text-admin-600 hover:text-admin-700 text-sm font-medium">
+                View All <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        
+        <div class="space-y-3">
+            <% if (typeof pendingComplaints !== 'undefined' && pendingComplaints.length > 0) { %>
+                <% pendingComplaints.slice(0, 5).forEach(complaint => { %>
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <p class="font-medium text-gray-900"><%= complaint.subject %></p>
+                                <p class="text-sm text-gray-600 mt-1 line-clamp-2"><%= complaint.message %></p>
+                                <div class="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                                    <span><i class="fas fa-user mr-1"></i><%= complaint.name %></span>
+                                    <span><i class="fas fa-clock mr-1"></i><%= new Date(complaint.createdAt).toLocaleDateString('id-ID') %></span>
+                                </div>
+                            </div>
+                            <a href="/admin/complaints?id=<%= complaint._id %>" 
+                               class="ml-4 text-admin-600 hover:text-admin-700 text-sm font-medium">
+                                Review
+                            </a>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-check-circle text-4xl mb-2 text-green-500"></i>
+                    <p>No pending complaints</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: <%= typeof chartData !== 'undefined' && chartData.revenueLabels ? JSON.stringify(chartData.revenueLabels) : JSON.stringify(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']) %>,
+            datasets: [{
+                label: 'Revenue',
+                data: <%= typeof chartData !== 'undefined' && chartData.revenueData ? JSON.stringify(chartData.revenueData) : JSON.stringify([0, 0, 0, 0, 0, 0]) %>,
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'Rp ' + value.toLocaleString('id-ID');
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Models Status Chart
+    const modelsCtx = document.getElementById('modelsChart').getContext('2d');
+    new Chart(modelsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Active', 'Pending', 'Inactive'],
+            datasets: [{
+                data: <%= typeof chartData !== 'undefined' && chartData.modelsStatus ? JSON.stringify(chartData.modelsStatus) : JSON.stringify([0, 0, 0]) %>,
+                backgroundColor: [
+                    'rgb(34, 197, 94)',
+                    'rgb(234, 179, 8)',
+                    'rgb(239, 68, 68)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+</script>

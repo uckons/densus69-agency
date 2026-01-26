@@ -1,0 +1,130 @@
+<%- include('../partials/header') %>
+
+<div class="flex h-screen bg-gray-100">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar fixed md:relative inset-y-0 left-0 z-30 w-64 bg-admin-800 text-white transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+        <div class="flex flex-col h-full">
+            <!-- Logo -->
+            <div class="flex items-center justify-between h-16 px-6 bg-admin-900">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-star text-admin-400 text-xl"></i>
+                    <span class="text-xl font-bold">Admin Panel</span>
+                </div>
+                <button id="close-sidebar" class="md:hidden text-white hover:text-admin-300">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                <a href="/admin/dashboard" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition <%= (typeof activePage !== 'undefined' && activePage === 'dashboard') ? 'bg-admin-700' : '' %>">
+                    <i class="fas fa-tachometer-alt w-5"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <a href="/admin/models-list" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition <%= (typeof activePage !== 'undefined' && activePage === 'models') ? 'bg-admin-700' : '' %>">
+                    <i class="fas fa-users w-5"></i>
+                    <span>Models</span>
+                </a>
+                
+                <a href="/admin/transactions" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition <%= (typeof activePage !== 'undefined' && activePage === 'transactions') ? 'bg-admin-700' : '' %>">
+                    <i class="fas fa-exchange-alt w-5"></i>
+                    <span>Transactions</span>
+                </a>
+                
+                <a href="/admin/transaction-form" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition <%= (typeof activePage !== 'undefined' && activePage === 'transaction-form') ? 'bg-admin-700' : '' %>">
+                    <i class="fas fa-plus-circle w-5"></i>
+                    <span>Add Transaction</span>
+                </a>
+                
+                <a href="/admin/revenue-analytics" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition <%= (typeof activePage !== 'undefined' && activePage === 'analytics') ? 'bg-admin-700' : '' %>">
+                    <i class="fas fa-chart-line w-5"></i>
+                    <span>Analytics</span>
+                </a>
+                
+                <a href="/admin/complaints" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition <%= (typeof activePage !== 'undefined' && activePage === 'complaints') ? 'bg-admin-700' : '' %>">
+                    <i class="fas fa-exclamation-triangle w-5"></i>
+                    <span>Complaints</span>
+                </a>
+                
+                <hr class="my-4 border-admin-700">
+                
+                <a href="/" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Public Site</span>
+                </a>
+                
+                <a href="/logout" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-600 transition text-red-300">
+                    <i class="fas fa-sign-out-alt w-5"></i>
+                    <span>Logout</span>
+                </a>
+            </nav>
+            
+            <!-- User Info -->
+            <div class="px-6 py-4 bg-admin-900 border-t border-admin-700">
+                <div class="flex items-center space-x-3">
+                    <img src="<%= typeof user !== 'undefined' && user.photo ? user.photo : '/images/default-avatar.png' %>" 
+                         alt="Admin" 
+                         class="w-10 h-10 rounded-full object-cover border-2 border-admin-600">
+                    <div>
+                        <p class="font-medium"><%= typeof user !== 'undefined' ? user.name : 'Admin' %></p>
+                        <p class="text-xs text-admin-300">Administrator</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Top Bar -->
+        <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6">
+            <button id="open-sidebar" class="md:hidden text-gray-600 hover:text-gray-900">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+            
+            <h1 class="text-xl font-semibold text-gray-800">
+                <%= typeof pageTitle !== 'undefined' ? pageTitle : 'Dashboard' %>
+            </h1>
+            
+            <div class="flex items-center space-x-4">
+                <button class="relative text-gray-600 hover:text-gray-900">
+                    <i class="fas fa-bell text-xl"></i>
+                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">3</span>
+                </button>
+            </div>
+        </header>
+        
+        <!-- Page Content -->
+        <main class="flex-1 overflow-y-auto p-6">
+            <%- body %>
+        </main>
+    </div>
+</div>
+
+<!-- Sidebar Toggle Script -->
+<script>
+    const sidebar = document.getElementById('sidebar');
+    const openBtn = document.getElementById('open-sidebar');
+    const closeBtn = document.getElementById('close-sidebar');
+    
+    openBtn?.addEventListener('click', () => {
+        sidebar.classList.remove('-translate-x-full');
+    });
+    
+    closeBtn?.addEventListener('click', () => {
+        sidebar.classList.add('-translate-x-full');
+    });
+    
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth < 768 && 
+            !sidebar.contains(e.target) && 
+            !openBtn.contains(e.target) &&
+            !sidebar.classList.contains('-translate-x-full')) {
+            sidebar.classList.add('-translate-x-full');
+        }
+    });
+</script>
+
+<%- include('../partials/footer') %>

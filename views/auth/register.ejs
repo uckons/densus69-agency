@@ -1,0 +1,302 @@
+<%- include('../partials/header') %>
+
+<div class="min-h-screen bg-gradient-to-br from-pink-500 to-purple-600 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="flex items-center justify-center space-x-2 mb-2">
+                    <i class="fas fa-star text-pink-500 text-4xl"></i>
+                    <span class="text-4xl font-bold text-gray-800">Densus<span class="text-pink-500">69</span></span>
+                </div>
+                <h2 class="mt-4 text-3xl font-extrabold text-gray-900">
+                    Join as a Model
+                </h2>
+                <p class="mt-2 text-sm text-gray-600">
+                    Start your modeling career with us today
+                </p>
+            </div>
+            
+            <!-- Registration Form -->
+            <form id="register-form" class="space-y-6" onsubmit="handleRegister(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Full Name -->
+                    <div class="md:col-span-2">
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-user mr-2"></i>Full Name *
+                        </label>
+                        <input 
+                            id="name" 
+                            name="name" 
+                            type="text" 
+                            required 
+                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                            placeholder="Enter your full name">
+                    </div>
+                    
+                    <!-- Email -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-envelope mr-2"></i>Email Address *
+                        </label>
+                        <input 
+                            id="email" 
+                            name="email" 
+                            type="email" 
+                            required 
+                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                            placeholder="your@email.com">
+                    </div>
+                    
+                    <!-- Phone -->
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-phone mr-2"></i>Phone Number *
+                        </label>
+                        <input 
+                            id="phone" 
+                            name="phone" 
+                            type="tel" 
+                            required 
+                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                            placeholder="+62 xxx xxxx xxxx">
+                    </div>
+                    
+                    <!-- Date of Birth -->
+                    <div>
+                        <label for="dob" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-calendar mr-2"></i>Date of Birth *
+                        </label>
+                        <input 
+                            id="dob" 
+                            name="dob" 
+                            type="date" 
+                            required 
+                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent">
+                    </div>
+                    
+                    <!-- Gender -->
+                    <div>
+                        <label for="gender" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-venus-mars mr-2"></i>Gender *
+                        </label>
+                        <select 
+                            id="gender" 
+                            name="gender" 
+                            required 
+                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent">
+                            <option value="">Select gender</option>
+                            <option value="female">Female</option>
+                            <option value="male">Male</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Height -->
+                    <div>
+                        <label for="height" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-ruler-vertical mr-2"></i>Height (cm)
+                        </label>
+                        <input 
+                            id="height" 
+                            name="height" 
+                            type="number" 
+                            min="100" 
+                            max="250" 
+                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                            placeholder="170">
+                    </div>
+                    
+                    <!-- Weight -->
+                    <div>
+                        <label for="weight" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-weight mr-2"></i>Weight (kg)
+                        </label>
+                        <input 
+                            id="weight" 
+                            name="weight" 
+                            type="number" 
+                            min="30" 
+                            max="200" 
+                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                            placeholder="55">
+                    </div>
+                    
+                    <!-- City -->
+                    <div class="md:col-span-2">
+                        <label for="city" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-map-marker-alt mr-2"></i>City *
+                        </label>
+                        <input 
+                            id="city" 
+                            name="city" 
+                            type="text" 
+                            required 
+                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                            placeholder="Jakarta">
+                    </div>
+                    
+                    <!-- Bio -->
+                    <div class="md:col-span-2">
+                        <label for="bio" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-align-left mr-2"></i>Short Bio
+                        </label>
+                        <textarea 
+                            id="bio" 
+                            name="bio" 
+                            rows="3" 
+                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                            placeholder="Tell us about yourself..."></textarea>
+                    </div>
+                    
+                    <!-- Profile Photo -->
+                    <div class="md:col-span-2">
+                        <label for="photo" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-camera mr-2"></i>Profile Photo *
+                        </label>
+                        <div class="flex items-center space-x-4">
+                            <img id="photo-preview" 
+                                 src="/images/default-avatar.png" 
+                                 alt="Preview" 
+                                 class="w-24 h-24 rounded-full object-cover border-4 border-gray-200">
+                            <div class="flex-1">
+                                <input 
+                                    id="photo" 
+                                    name="photo" 
+                                    type="file" 
+                                    accept="image/*" 
+                                    required 
+                                    onchange="previewImage(this, 'photo-preview')"
+                                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100">
+                                <p class="mt-2 text-xs text-gray-500">JPG, PNG or GIF (MAX. 5MB)</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Password -->
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-lock mr-2"></i>Password *
+                        </label>
+                        <input 
+                            id="password" 
+                            name="password" 
+                            type="password" 
+                            required 
+                            minlength="6"
+                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                            placeholder="Min. 6 characters">
+                    </div>
+                    
+                    <!-- Confirm Password -->
+                    <div>
+                        <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-lock mr-2"></i>Confirm Password *
+                        </label>
+                        <input 
+                            id="confirm_password" 
+                            name="confirm_password" 
+                            type="password" 
+                            required 
+                            minlength="6"
+                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                            placeholder="Repeat password">
+                    </div>
+                    
+                    <!-- Terms & Conditions -->
+                    <div class="md:col-span-2">
+                        <div class="flex items-start">
+                            <input 
+                                id="terms" 
+                                name="terms" 
+                                type="checkbox" 
+                                required 
+                                class="h-4 w-4 mt-1 text-pink-600 focus:ring-pink-500 border-gray-300 rounded">
+                            <label for="terms" class="ml-2 block text-sm text-gray-700">
+                                I agree to the <a href="/terms" class="text-pink-600 hover:text-pink-500">Terms & Conditions</a> 
+                                and <a href="/privacy" class="text-pink-600 hover:text-pink-500">Privacy Policy</a>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <div>
+                    <button 
+                        type="submit" 
+                        class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-all transform hover:scale-105">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        Create Account
+                    </button>
+                </div>
+                
+                <!-- Login Link -->
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">
+                        Already have an account? 
+                        <a href="/auth/login" class="font-medium text-pink-600 hover:text-pink-500">
+                            Sign in
+                        </a>
+                    </p>
+                </div>
+            </form>
+            
+            <!-- Back to Home -->
+            <div class="text-center pt-4 border-t border-gray-200 mt-6">
+                <a href="/" class="text-sm text-gray-600 hover:text-gray-900 flex items-center justify-center">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function handleRegister(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const formData = new FormData(form);
+        
+        // Validate passwords match
+        const password = formData.get('password');
+        const confirmPassword = formData.get('confirm_password');
+        
+        if (password !== confirmPassword) {
+            showToast('Passwords do not match', 'error');
+            return;
+        }
+        
+        try {
+            showLoading();
+            const response = await fetch('/auth/register', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.success) {
+                showToast(data.message || 'Registration successful!', 'success');
+                
+                // Redirect to login or dashboard
+                setTimeout(() => {
+                    if (data.autoLogin) {
+                        window.location.href = '/model/dashboard';
+                    } else {
+                        window.location.href = '/auth/login';
+                    }
+                }, 1500);
+            } else {
+                showToast(data.message || 'Registration failed', 'error');
+            }
+        } catch (error) {
+            hideLoading();
+            showToast('An error occurred. Please try again.', 'error');
+        }
+    }
+</script>
+
+<%- include('../partials/footer') %>

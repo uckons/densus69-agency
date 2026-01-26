@@ -1,0 +1,185 @@
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h2 class="text-2xl font-bold text-gray-800">Available Jobs</h2>
+        <p class="text-gray-600 text-sm mt-1">Browse and apply for modeling opportunities</p>
+    </div>
+    
+    <!-- Filters -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <input type="text" 
+                   id="search" 
+                   placeholder="Search jobs..." 
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500">
+            
+            <select id="jobTypeFilter" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500">
+                <option value="">All Job Types</option>
+                <option value="Fashion Show">Fashion Show</option>
+                <option value="Photo Shoot">Photo Shoot</option>
+                <option value="Commercial">Commercial</option>
+                <option value="Event">Event</option>
+                <option value="Promotional">Promotional</option>
+            </select>
+            
+            <select id="locationFilter" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500">
+                <option value="">All Locations</option>
+                <option value="Jakarta">Jakarta</option>
+                <option value="Surabaya">Surabaya</option>
+                <option value="Bandung">Bandung</option>
+                <option value="Bali">Bali</option>
+            </select>
+            
+            <button class="px-4 py-2 bg-model-600 text-white rounded-lg hover:bg-model-700 transition">
+                <i class="fas fa-search mr-2"></i>Search
+            </button>
+        </div>
+    </div>
+    
+    <!-- Jobs Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <% if (typeof jobs !== 'undefined' && jobs.length > 0) { %>
+            <% jobs.forEach(job => { %>
+                <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
+                    <div class="h-48 bg-gradient-to-br from-model-400 to-model-600 flex items-center justify-center">
+                        <i class="fas fa-briefcase text-white text-6xl opacity-50"></i>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="flex items-start justify-between mb-3">
+                            <h3 class="text-lg font-bold text-gray-800"><%= job.title %></h3>
+                            <span class="px-3 py-1 bg-model-100 text-model-700 text-xs font-semibold rounded-full">
+                                <%= job.type %>
+                            </span>
+                        </div>
+                        
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2"><%= job.description %></p>
+                        
+                        <div class="space-y-2 text-sm text-gray-600 mb-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-map-marker-alt w-5 text-model-500"></i>
+                                <span><%= job.location %></span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-calendar w-5 text-model-500"></i>
+                                <span><%= new Date(job.date).toLocaleDateString('id-ID') %></span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-dollar-sign w-5 text-model-500"></i>
+                                <span class="font-semibold text-gray-900"><%= formatCurrency(job.rate) %></span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-2">
+                            <button onclick="viewJobDetails('<%= job._id %>')" 
+                                    class="flex-1 px-4 py-2 border border-model-600 text-model-600 rounded-lg hover:bg-model-50 transition text-sm font-medium">
+                                <i class="fas fa-info-circle mr-1"></i>Details
+                            </button>
+                            <button onclick="applyJob('<%= job._id %>')" 
+                                    class="flex-1 px-4 py-2 bg-model-600 text-white rounded-lg hover:bg-model-700 transition text-sm font-medium">
+                                <i class="fas fa-paper-plane mr-1"></i>Apply
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="col-span-full text-center py-16">
+                <i class="fas fa-briefcase text-6xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500 text-lg">No jobs available at the moment</p>
+                <p class="text-gray-400 text-sm mt-2">Check back later for new opportunities</p>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- Job Details Modal -->
+<div id="job-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
+            <h3 class="text-xl font-bold text-gray-800">Job Details</h3>
+            <button onclick="closeJobModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <div id="job-details-content" class="p-6">
+            <!-- Content will be loaded dynamically -->
+        </div>
+    </div>
+</div>
+
+<script>
+    function viewJobDetails(jobId) {
+        // In a real app, fetch job details from server
+        document.getElementById('job-modal').classList.remove('hidden');
+        document.getElementById('job-details-content').innerHTML = `
+            <div class="space-y-4">
+                <p class="text-gray-600">Loading job details...</p>
+            </div>
+        `;
+        
+        // Simulate loading
+        setTimeout(() => {
+            document.getElementById('job-details-content').innerHTML = `
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-2">Description</h4>
+                        <p class="text-gray-600">Full job description will be displayed here...</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-2">Requirements</h4>
+                        <ul class="list-disc list-inside text-gray-600 space-y-1">
+                            <li>Professional modeling experience</li>
+                            <li>Available for the specified dates</li>
+                            <li>Portfolio required</li>
+                        </ul>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button onclick="applyJob('${jobId}')" 
+                                class="flex-1 px-6 py-3 bg-model-600 text-white rounded-lg hover:bg-model-700 transition">
+                            <i class="fas fa-paper-plane mr-2"></i>Apply Now
+                        </button>
+                        <button onclick="closeJobModal()" 
+                                class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            `;
+        }, 500);
+    }
+    
+    function closeJobModal() {
+        document.getElementById('job-modal').classList.add('hidden');
+    }
+    
+    async function applyJob(jobId) {
+        if (!confirm('Are you sure you want to apply for this job?')) return;
+        
+        try {
+            showLoading();
+            const response = await fetch(`/model/jobs/${jobId}/apply`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.success) {
+                showToast('Application submitted successfully', 'success');
+                closeJobModal();
+            } else {
+                showToast(data.message || 'Application failed', 'error');
+            }
+        } catch (error) {
+            hideLoading();
+            showToast('An error occurred', 'error');
+        }
+    }
+</script>

@@ -1,0 +1,220 @@
+<!-- Page Header -->
+<section class="bg-gradient-to-r from-model-600 to-pink-600 text-white py-20">
+    <div class="container mx-auto px-4 text-center">
+        <h1 class="text-5xl font-bold mb-4">Our Models</h1>
+        <p class="text-xl">Browse through our talented roster of professional models</p>
+    </div>
+</section>
+
+<!-- Filters Section -->
+<section class="bg-white shadow-md sticky top-16 z-30 py-6">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <input type="text" 
+                   id="search" 
+                   placeholder="Search models..." 
+                   class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500"
+                   onkeyup="filterModels()">
+            
+            <select id="genderFilter" 
+                    class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500"
+                    onchange="filterModels()">
+                <option value="">All Genders</option>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+                <option value="other">Other</option>
+            </select>
+            
+            <select id="cityFilter" 
+                    class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500"
+                    onchange="filterModels()">
+                <option value="">All Cities</option>
+                <option value="Jakarta">Jakarta</option>
+                <option value="Surabaya">Surabaya</option>
+                <option value="Bandung">Bandung</option>
+                <option value="Bali">Bali</option>
+                <option value="Medan">Medan</option>
+            </select>
+            
+            <select id="sortFilter" 
+                    class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500"
+                    onchange="filterModels()">
+                <option value="newest">Newest First</option>
+                <option value="name">Name (A-Z)</option>
+                <option value="popular">Most Popular</option>
+            </select>
+            
+            <button onclick="clearFilters()" 
+                    class="px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                <i class="fas fa-times mr-2"></i>Clear
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Models Grid -->
+<section class="py-12 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <!-- Results Count -->
+        <div class="mb-6 flex items-center justify-between">
+            <p class="text-gray-600">
+                Showing <span id="results-count" class="font-semibold"><%= typeof models !== 'undefined' ? models.length : 0 %></span> models
+            </p>
+            
+            <div class="flex space-x-2">
+                <button id="grid-view" 
+                        onclick="toggleView('grid')" 
+                        class="px-4 py-2 bg-model-600 text-white rounded-lg">
+                    <i class="fas fa-th"></i>
+                </button>
+                <button id="list-view" 
+                        onclick="toggleView('list')" 
+                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg">
+                    <i class="fas fa-list"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Grid View -->
+        <div id="models-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <% if (typeof models !== 'undefined' && models.length > 0) { %>
+                <% models.forEach(model => { %>
+                    <a href="/model/<%= model._id %>" 
+                       class="model-card bg-white rounded-xl shadow-md overflow-hidden hover:shadow-2xl transition-all transform hover:-translate-y-2"
+                       data-name="<%= model.name.toLowerCase() %>"
+                       data-gender="<%= model.gender %>"
+                       data-city="<%= model.city %>">
+                        <!-- Photo -->
+                        <div class="aspect-[3/4] overflow-hidden bg-gray-200 relative group">
+                            <img src="<%= model.photo || '/images/default-avatar.png' %>" 
+                                 alt="<%= model.name %>" 
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            
+                            <!-- Quick Info Overlay -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div class="absolute bottom-4 left-4 right-4 text-white">
+                                    <p class="text-sm mb-1"><%= model.bio ? (model.bio.substring(0, 80) + '...') : 'View full profile' %></p>
+                                    <p class="text-xs text-gray-300">
+                                        <i class="fas fa-eye mr-1"></i>Click to view profile
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Info -->
+                        <div class="p-4">
+                            <h3 class="font-bold text-lg text-gray-800 mb-1 truncate"><%= model.name %></h3>
+                            <p class="text-gray-600 text-sm mb-2">
+                                <i class="fas fa-map-marker-alt mr-1"></i><%= model.city %>
+                            </p>
+                            
+                            <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
+                                <span><%= model.height || 'N/A' %>cm</span>
+                                <span>•</span>
+                                <span><%= model.age || 'N/A' %> yrs</span>
+                                <span>•</span>
+                                <span class="capitalize"><%= model.gender %></span>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-gray-500">
+                                    <i class="fas fa-briefcase mr-1"></i><%= model.jobsCompleted || 0 %> jobs
+                                </span>
+                                <span class="text-model-600 font-semibold text-sm">
+                                    View Profile <i class="fas fa-arrow-right ml-1"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                <% }) %>
+            <% } else { %>
+                <div class="col-span-full text-center py-16">
+                    <i class="fas fa-users text-6xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500 text-xl">No models found</p>
+                    <p class="text-gray-400 mt-2">Try adjusting your filters</p>
+                </div>
+            <% } %>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="mt-12 flex justify-center">
+            <div class="flex space-x-2">
+                <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="px-4 py-2 bg-model-600 text-white rounded-lg">1</button>
+                <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">2</button>
+                <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">3</button>
+                <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-20 bg-gradient-to-r from-model-600 to-pink-600 text-white">
+    <div class="container mx-auto px-4 text-center">
+        <h2 class="text-4xl font-bold mb-4">Want to Join Our Models?</h2>
+        <p class="text-xl mb-8">Start your modeling career with us today</p>
+        <a href="/auth/register" 
+           class="inline-block px-8 py-4 bg-white text-model-600 rounded-full font-semibold text-lg hover:bg-gray-100 transition transform hover:scale-105">
+            <i class="fas fa-user-plus mr-2"></i>Register as Model
+        </a>
+    </div>
+</section>
+
+<script>
+    function filterModels() {
+        const search = document.getElementById('search').value.toLowerCase();
+        const gender = document.getElementById('genderFilter').value.toLowerCase();
+        const city = document.getElementById('cityFilter').value;
+        
+        const cards = document.querySelectorAll('.model-card');
+        let visibleCount = 0;
+        
+        cards.forEach(card => {
+            const name = card.dataset.name;
+            const cardGender = card.dataset.gender;
+            const cardCity = card.dataset.city;
+            
+            const matchSearch = !search || name.includes(search);
+            const matchGender = !gender || cardGender === gender;
+            const matchCity = !city || cardCity === city;
+            
+            if (matchSearch && matchGender && matchCity) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        document.getElementById('results-count').textContent = visibleCount;
+    }
+    
+    function clearFilters() {
+        document.getElementById('search').value = '';
+        document.getElementById('genderFilter').value = '';
+        document.getElementById('cityFilter').value = '';
+        document.getElementById('sortFilter').value = 'newest';
+        filterModels();
+    }
+    
+    function toggleView(view) {
+        const grid = document.getElementById('models-grid');
+        const gridBtn = document.getElementById('grid-view');
+        const listBtn = document.getElementById('list-view');
+        
+        if (view === 'grid') {
+            grid.className = 'grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6';
+            gridBtn.className = 'px-4 py-2 bg-model-600 text-white rounded-lg';
+            listBtn.className = 'px-4 py-2 bg-gray-200 text-gray-700 rounded-lg';
+        } else {
+            grid.className = 'space-y-4';
+            gridBtn.className = 'px-4 py-2 bg-gray-200 text-gray-700 rounded-lg';
+            listBtn.className = 'px-4 py-2 bg-model-600 text-white rounded-lg';
+        }
+    }
+</script>

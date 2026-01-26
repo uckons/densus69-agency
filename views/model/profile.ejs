@@ -1,0 +1,196 @@
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Profile Card -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <!-- Cover Photo -->
+        <div class="h-48 bg-gradient-to-r from-model-500 to-model-700"></div>
+        
+        <!-- Profile Info -->
+        <div class="relative px-8 pb-8">
+            <!-- Profile Photo -->
+            <div class="absolute -top-16 left-8">
+                <img src="<%= typeof model !== 'undefined' ? (model.photo || '/images/default-avatar.png') : '/images/default-avatar.png' %>" 
+                     alt="Profile" 
+                     class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg">
+            </div>
+            
+            <!-- Edit Button -->
+            <div class="flex justify-end pt-4">
+                <a href="/model/edit-profile" 
+                   class="px-6 py-2 bg-model-600 text-white rounded-lg hover:bg-model-700 transition">
+                    <i class="fas fa-edit mr-2"></i>Edit Profile
+                </a>
+            </div>
+            
+            <!-- Name & Status -->
+            <div class="mt-12">
+                <div class="flex items-center space-x-4">
+                    <h2 class="text-3xl font-bold text-gray-800"><%= typeof model !== 'undefined' ? model.name : 'Model Name' %></h2>
+                    <span class="px-4 py-1 text-sm font-semibold rounded-full 
+                        <%= typeof model !== 'undefined' && model.status === 'active' ? 'bg-green-100 text-green-800' : 
+                            typeof model !== 'undefined' && model.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                            'bg-red-100 text-red-800' %>">
+                        <%= typeof model !== 'undefined' ? model.status : 'pending' %>
+                    </span>
+                </div>
+                
+                <div class="flex items-center space-x-6 mt-4 text-gray-600">
+                    <span><i class="fas fa-envelope mr-2"></i><%= typeof model !== 'undefined' ? model.email : '' %></span>
+                    <span><i class="fas fa-phone mr-2"></i><%= typeof model !== 'undefined' ? model.phone : '' %></span>
+                    <span><i class="fas fa-map-marker-alt mr-2"></i><%= typeof model !== 'undefined' ? model.city : '' %></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Details Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Personal Information -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-user mr-2 text-model-500"></i>
+                Personal Information
+            </h3>
+            
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Gender:</span>
+                    <span class="font-medium text-gray-900"><%= typeof model !== 'undefined' ? model.gender : '' %></span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Age:</span>
+                    <span class="font-medium text-gray-900"><%= typeof model !== 'undefined' ? (model.age || 'N/A') : 'N/A' %></span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Date of Birth:</span>
+                    <span class="font-medium text-gray-900">
+                        <%= typeof model !== 'undefined' && model.dob ? new Date(model.dob).toLocaleDateString('id-ID') : 'N/A' %>
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Member Since:</span>
+                    <span class="font-medium text-gray-900">
+                        <%= typeof model !== 'undefined' ? new Date(model.createdAt).toLocaleDateString('id-ID') : '' %>
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Physical Stats -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-ruler mr-2 text-model-500"></i>
+                Physical Stats
+            </h3>
+            
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Height:</span>
+                    <span class="font-medium text-gray-900">
+                        <%= typeof model !== 'undefined' && model.height ? model.height + ' cm' : 'N/A' %>
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Weight:</span>
+                    <span class="font-medium text-gray-900">
+                        <%= typeof model !== 'undefined' && model.weight ? model.weight + ' kg' : 'N/A' %>
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Daily Rate:</span>
+                    <span class="font-medium text-gray-900">
+                        <%= typeof model !== 'undefined' && model.rate ? formatCurrency(model.rate) : 'Not set' %>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bio -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-align-left mr-2 text-model-500"></i>
+            About Me
+        </h3>
+        <p class="text-gray-700 leading-relaxed">
+            <%= typeof model !== 'undefined' && model.bio ? model.bio : 'No bio available yet.' %>
+        </p>
+    </div>
+    
+    <!-- Gallery Preview -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                <i class="fas fa-images mr-2 text-model-500"></i>
+                Gallery
+            </h3>
+            <a href="/model/gallery" class="text-model-600 hover:text-model-700 text-sm font-medium">
+                Manage Gallery <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <% if (typeof gallery !== 'undefined' && gallery.length > 0) { %>
+                <% gallery.slice(0, 8).forEach(photo => { %>
+                    <div class="aspect-square rounded-lg overflow-hidden">
+                        <img src="<%= photo.url %>" 
+                             alt="Gallery" 
+                             class="w-full h-full object-cover hover:scale-110 transition-transform duration-300">
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="col-span-full text-center py-8 text-gray-500">
+                    <i class="fas fa-image text-4xl mb-2"></i>
+                    <p>No photos in gallery yet</p>
+                    <a href="/model/gallery" class="text-model-600 hover:text-model-700 text-sm font-medium mt-2 inline-block">
+                        Upload Photos
+                    </a>
+                </div>
+            <% } %>
+        </div>
+    </div>
+    
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <div class="flex items-center space-x-4">
+                <div class="bg-green-100 p-4 rounded-full">
+                    <i class="fas fa-briefcase text-green-600 text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-gray-500 text-sm">Completed Jobs</p>
+                    <p class="text-2xl font-bold text-gray-800">
+                        <%= typeof stats !== 'undefined' ? stats.completedJobs : 0 %>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <div class="flex items-center space-x-4">
+                <div class="bg-model-100 p-4 rounded-full">
+                    <i class="fas fa-dollar-sign text-model-600 text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-gray-500 text-sm">Total Earnings</p>
+                    <p class="text-2xl font-bold text-gray-800">
+                        <%= typeof stats !== 'undefined' ? formatCurrency(stats.totalEarnings) : formatCurrency(0) %>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <div class="flex items-center space-x-4">
+                <div class="bg-blue-100 p-4 rounded-full">
+                    <i class="fas fa-star text-blue-600 text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-gray-500 text-sm">Profile Views</p>
+                    <p class="text-2xl font-bold text-gray-800">
+                        <%= typeof stats !== 'undefined' ? stats.profileViews : 0 %>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
