@@ -1,27 +1,6 @@
 # Densus69 Agency - Modeling Agency Management System
 
-Modern web-based modeling agency management system built with Node.js, Tailwind CSS, and PostgreSQL.
-
-## Features
-
-- Admin dashboard with revenue analytics
-- Model registration and profile management
-- Photo gallery management
-- Transaction and salary calculations
-- Job board and booking system
-- Customer complaint management
-
-## Tech Stack
-
-- Node.js + Express.js
-- Tailwind CSS
-- PostgreSQL
-- Chart.js
-- JWT Authentication
+Full-featured web-based modeling agency management system.
 
 ## Coming Soon
-
-Full application will be added via pull request.
-
----
-Created by @uckons
+Complete application with Node.js, Express, Tailwind CSS, and PostgreSQL.
