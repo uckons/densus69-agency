@@ -1,0 +1,249 @@
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header -->
+    <div>
+        <a href="/model/profile" class="text-model-600 hover:text-model-700 text-sm font-medium mb-2 inline-block">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Profile
+        </a>
+        <h2 class="text-2xl font-bold text-gray-800">Edit Profile</h2>
+        <p class="text-gray-600 text-sm mt-1">Update your personal information</p>
+    </div>
+    
+    <!-- Edit Form -->
+    <div class="bg-white rounded-xl shadow-md p-8">
+        <form id="edit-profile-form" onsubmit="handleSubmit(event)">
+            <!-- Profile Photo -->
+            <div class="mb-8 flex flex-col items-center">
+                <img id="photo-preview" 
+                     src="<%= typeof model !== 'undefined' ? (model.photo || '/images/default-avatar.png') : '/images/default-avatar.png' %>" 
+                     alt="Profile" 
+                     class="w-32 h-32 rounded-full object-cover border-4 border-model-200 mb-4">
+                <label class="cursor-pointer">
+                    <span class="px-6 py-2 bg-model-600 text-white rounded-lg hover:bg-model-700 transition inline-block">
+                        <i class="fas fa-camera mr-2"></i>Change Photo
+                    </span>
+                    <input type="file" 
+                           name="photo" 
+                           accept="image/*" 
+                           class="hidden"
+                           onchange="previewImage(this, 'photo-preview')">
+                </label>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Name -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user mr-2"></i>Full Name *
+                    </label>
+                    <input type="text" 
+                           name="name" 
+                           value="<%= typeof model !== 'undefined' ? model.name : '' %>"
+                           required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500 focus:border-transparent">
+                </div>
+                
+                <!-- Email (readonly) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-envelope mr-2"></i>Email
+                    </label>
+                    <input type="email" 
+                           value="<%= typeof model !== 'undefined' ? model.email : '' %>"
+                           readonly
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500">
+                    <p class="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                </div>
+                
+                <!-- Phone -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-phone mr-2"></i>Phone Number *
+                    </label>
+                    <input type="tel" 
+                           name="phone" 
+                           value="<%= typeof model !== 'undefined' ? model.phone : '' %>"
+                           required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500 focus:border-transparent">
+                </div>
+                
+                <!-- Date of Birth -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-calendar mr-2"></i>Date of Birth
+                    </label>
+                    <input type="date" 
+                           name="dob" 
+                           value="<%= typeof model !== 'undefined' && model.dob ? new Date(model.dob).toISOString().split('T')[0] : '' %>"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500 focus:border-transparent">
+                </div>
+                
+                <!-- Gender -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-venus-mars mr-2"></i>Gender
+                    </label>
+                    <select name="gender" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500 focus:border-transparent">
+                        <option value="female" <%= typeof model !== 'undefined' && model.gender === 'female' ? 'selected' : '' %>>Female</option>
+                        <option value="male" <%= typeof model !== 'undefined' && model.gender === 'male' ? 'selected' : '' %>>Male</option>
+                        <option value="other" <%= typeof model !== 'undefined' && model.gender === 'other' ? 'selected' : '' %>>Other</option>
+                    </select>
+                </div>
+                
+                <!-- Height -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-ruler-vertical mr-2"></i>Height (cm)
+                    </label>
+                    <input type="number" 
+                           name="height" 
+                           value="<%= typeof model !== 'undefined' ? (model.height || '') : '' %>"
+                           min="100" 
+                           max="250"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500 focus:border-transparent">
+                </div>
+                
+                <!-- Weight -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-weight mr-2"></i>Weight (kg)
+                    </label>
+                    <input type="number" 
+                           name="weight" 
+                           value="<%= typeof model !== 'undefined' ? (model.weight || '') : '' %>"
+                           min="30" 
+                           max="200"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500 focus:border-transparent">
+                </div>
+                
+                <!-- City -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-map-marker-alt mr-2"></i>City *
+                    </label>
+                    <input type="text" 
+                           name="city" 
+                           value="<%= typeof model !== 'undefined' ? model.city : '' %>"
+                           required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500 focus:border-transparent">
+                </div>
+                
+                <!-- Bio -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-align-left mr-2"></i>Bio
+                    </label>
+                    <textarea name="bio" 
+                              rows="4"
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500 focus:border-transparent"
+                              placeholder="Tell us about yourself..."><%= typeof model !== 'undefined' ? (model.bio || '') : '' %></textarea>
+                </div>
+                
+                <!-- Social Links -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fab fa-instagram mr-2"></i>Instagram
+                    </label>
+                    <input type="text" 
+                           name="instagram" 
+                           value="<%= typeof model !== 'undefined' ? (model.instagram || '') : '' %>"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500 focus:border-transparent"
+                           placeholder="@username">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fab fa-facebook mr-2"></i>Facebook
+                    </label>
+                    <input type="text" 
+                           name="facebook" 
+                           value="<%= typeof model !== 'undefined' ? (model.facebook || '') : '' %>"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500 focus:border-transparent"
+                           placeholder="Profile URL">
+                </div>
+            </div>
+            
+            <!-- Change Password Section -->
+            <div class="mt-8 pt-8 border-t border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Change Password</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-lock mr-2"></i>New Password
+                        </label>
+                        <input type="password" 
+                               name="newPassword" 
+                               minlength="6"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500 focus:border-transparent"
+                               placeholder="Leave blank to keep current">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-lock mr-2"></i>Confirm Password
+                        </label>
+                        <input type="password" 
+                               name="confirmPassword" 
+                               minlength="6"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-model-500 focus:border-transparent"
+                               placeholder="Confirm new password">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
+                <a href="/model/profile" 
+                   class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="px-6 py-3 bg-model-600 text-white rounded-lg font-medium hover:bg-model-700 transition">
+                    <i class="fas fa-save mr-2"></i>Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    async function handleSubmit(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const formData = new FormData(form);
+        
+        // Validate password if provided
+        const newPassword = formData.get('newPassword');
+        const confirmPassword = formData.get('confirmPassword');
+        
+        if (newPassword && newPassword !== confirmPassword) {
+            showToast('Passwords do not match', 'error');
+            return;
+        }
+        
+        try {
+            showLoading();
+            const response = await fetch('/model/profile', {
+                method: 'PUT',
+                body: formData
+            });
+            
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.success) {
+                showToast('Profile updated successfully', 'success');
+                setTimeout(() => {
+                    window.location.href = '/model/profile';
+                }, 1500);
+            } else {
+                showToast(data.message || 'Failed to update profile', 'error');
+            }
+        } catch (error) {
+            hideLoading();
+            showToast('An error occurred', 'error');
+        }
+    }
+</script>

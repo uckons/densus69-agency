@@ -1,0 +1,207 @@
+<!-- Hero Section -->
+<section class="relative h-96 bg-gradient-to-br from-model-600 to-pink-600 overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="container mx-auto px-4 h-full flex items-center relative z-10">
+        <div>
+            <a href="/models" class="text-white hover:text-gray-200 text-sm mb-4 inline-block">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Models
+            </a>
+            <h1 class="text-5xl font-bold text-white mb-2">
+                <%= typeof model !== 'undefined' ? model.name : 'Model Name' %>
+            </h1>
+            <p class="text-xl text-white opacity-90">
+                <i class="fas fa-map-marker-alt mr-2"></i>
+                <%= typeof model !== 'undefined' ? model.city : '' %>
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Profile Content -->
+<section class="py-12 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column - Profile Info -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Profile Photo -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="aspect-[3/4]">
+                        <img src="<%= typeof model !== 'undefined' ? (model.photo || '/images/default-avatar.png') : '/images/default-avatar.png' %>" 
+                             alt="<%= typeof model !== 'undefined' ? model.name : '' %>" 
+                             class="w-full h-full object-cover">
+                    </div>
+                </div>
+                
+                <!-- Quick Stats -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="font-semibold text-lg text-gray-800 mb-4">Quick Stats</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Gender:</span>
+                            <span class="font-medium text-gray-900 capitalize"><%= typeof model !== 'undefined' ? model.gender : '' %></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Age:</span>
+                            <span class="font-medium text-gray-900"><%= typeof model !== 'undefined' ? (model.age || 'N/A') : 'N/A' %></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Height:</span>
+                            <span class="font-medium text-gray-900">
+                                <%= typeof model !== 'undefined' && model.height ? model.height + ' cm' : 'N/A' %>
+                            </span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Weight:</span>
+                            <span class="font-medium text-gray-900">
+                                <%= typeof model !== 'undefined' && model.weight ? model.weight + ' kg' : 'N/A' %>
+                            </span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Jobs Completed:</span>
+                            <span class="font-medium text-gray-900"><%= typeof model !== 'undefined' ? (model.jobsCompleted || 0) : 0 %></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contact -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="font-semibold text-lg text-gray-800 mb-4">Book This Model</h3>
+                    <p class="text-sm text-gray-600 mb-4">Interested in working with this model? Contact us for availability and rates.</p>
+                    
+                    <a href="/complaint" 
+                       class="block w-full px-6 py-3 bg-model-600 text-white rounded-lg hover:bg-model-700 transition text-center font-medium">
+                        <i class="fas fa-envelope mr-2"></i>Contact Agency
+                    </a>
+                    
+                    <% if (typeof model !== 'undefined' && model.rate) { %>
+                        <div class="mt-4 p-4 bg-model-50 rounded-lg">
+                            <p class="text-xs text-gray-600 mb-1">Starting Rate:</p>
+                            <p class="text-2xl font-bold text-model-600"><%= formatCurrency(model.rate) %></p>
+                            <p class="text-xs text-gray-500">per day</p>
+                        </div>
+                    <% } %>
+                </div>
+                
+                <!-- Social Links -->
+                <% if (typeof model !== 'undefined' && (model.instagram || model.facebook)) { %>
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="font-semibold text-lg text-gray-800 mb-4">Social Media</h3>
+                        <div class="space-y-2">
+                            <% if (model.instagram) { %>
+                                <a href="https://instagram.com/<%= model.instagram %>" 
+                                   target="_blank"
+                                   class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition">
+                                    <i class="fab fa-instagram text-pink-600 text-xl"></i>
+                                    <span class="text-gray-700"><%= model.instagram %></span>
+                                </a>
+                            <% } %>
+                            <% if (model.facebook) { %>
+                                <a href="<%= model.facebook %>" 
+                                   target="_blank"
+                                   class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition">
+                                    <i class="fab fa-facebook text-blue-600 text-xl"></i>
+                                    <span class="text-gray-700">Facebook</span>
+                                </a>
+                            <% } %>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+            
+            <!-- Right Column - Details & Gallery -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- About -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="font-semibold text-2xl text-gray-800 mb-4">About <%= typeof model !== 'undefined' ? model.name : '' %></h3>
+                    <p class="text-gray-700 leading-relaxed">
+                        <%= typeof model !== 'undefined' && model.bio ? model.bio : 'No bio available yet.' %>
+                    </p>
+                </div>
+                
+                <!-- Photo Gallery -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="font-semibold text-2xl text-gray-800 mb-4">Portfolio</h3>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <% if (typeof gallery !== 'undefined' && gallery.length > 0) { %>
+                            <% gallery.forEach(photo => { %>
+                                <div class="aspect-square rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition"
+                                     onclick="openLightbox('<%= photo.url %>')">
+                                    <img src="<%= photo.url %>" 
+                                         alt="Portfolio" 
+                                         class="w-full h-full object-cover hover:scale-110 transition-transform duration-300">
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="col-span-full text-center py-12 text-gray-500">
+                                <i class="fas fa-images text-4xl mb-2"></i>
+                                <p>No portfolio photos available</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+                
+                <!-- Experience Highlights -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="font-semibold text-2xl text-gray-800 mb-4">Experience Highlights</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                            <div class="bg-model-100 p-3 rounded-full">
+                                <i class="fas fa-star text-model-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Professional Experience</h4>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    <%= typeof model !== 'undefined' ? (model.jobsCompleted || 0) : 0 %> successful projects completed
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                            <div class="bg-pink-100 p-3 rounded-full">
+                                <i class="fas fa-briefcase text-pink-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Available For</h4>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    Fashion Shows • Photo Shoots • Commercial • Events
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Lightbox Modal -->
+<div id="lightbox" class="hidden fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center p-4">
+    <button onclick="closeLightbox()" 
+            class="absolute top-4 right-4 text-white hover:text-gray-300 text-4xl z-10">
+        <i class="fas fa-times"></i>
+    </button>
+    <img id="lightbox-image" src="" alt="Portfolio" class="max-w-full max-h-full object-contain">
+</div>
+
+<script>
+    function openLightbox(imageUrl) {
+        document.getElementById('lightbox-image').src = imageUrl;
+        document.getElementById('lightbox').classList.remove('hidden');
+    }
+    
+    function closeLightbox() {
+        document.getElementById('lightbox').classList.add('hidden');
+    }
+    
+    // Close lightbox on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeLightbox();
+    });
+    
+    // Close lightbox on background click
+    document.getElementById('lightbox')?.addEventListener('click', function(e) {
+        if (e.target === this) closeLightbox();
+    });
+</script>

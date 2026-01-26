@@ -1,0 +1,90 @@
+<%- include('../partials/header') %>
+
+<%- include('../partials/navbar') %>
+
+<!-- Page Content -->
+<main class="min-h-screen">
+    <%- body %>
+</main>
+
+<!-- Footer -->
+<footer class="bg-gray-900 text-white py-12">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <!-- About -->
+            <div>
+                <div class="flex items-center space-x-2 mb-4">
+                    <i class="fas fa-star text-pink-500 text-2xl"></i>
+                    <span class="text-2xl font-bold">Densus<span class="text-pink-500">69</span></span>
+                </div>
+                <p class="text-gray-400 text-sm">
+                    Professional modeling agency providing top-tier talent for fashion, commercial, and promotional events.
+                </p>
+            </div>
+            
+            <!-- Quick Links -->
+            <div>
+                <h4 class="font-semibold text-lg mb-4">Quick Links</h4>
+                <ul class="space-y-2 text-gray-400 text-sm">
+                    <li><a href="/" class="hover:text-pink-500 transition">Home</a></li>
+                    <li><a href="/models" class="hover:text-pink-500 transition">Browse Models</a></li>
+                    <li><a href="/about" class="hover:text-pink-500 transition">About Us</a></li>
+                    <li><a href="/complaint" class="hover:text-pink-500 transition">Contact</a></li>
+                </ul>
+            </div>
+            
+            <!-- For Models -->
+            <div>
+                <h4 class="font-semibold text-lg mb-4">For Models</h4>
+                <ul class="space-y-2 text-gray-400 text-sm">
+                    <li><a href="/auth/register" class="hover:text-pink-500 transition">Join as Model</a></li>
+                    <li><a href="/auth/login" class="hover:text-pink-500 transition">Model Login</a></li>
+                    <li><a href="/model/dashboard" class="hover:text-pink-500 transition">Dashboard</a></li>
+                </ul>
+            </div>
+            
+            <!-- Contact -->
+            <div>
+                <h4 class="font-semibold text-lg mb-4">Contact Us</h4>
+                <ul class="space-y-2 text-gray-400 text-sm">
+                    <li class="flex items-start space-x-2">
+                        <i class="fas fa-map-marker-alt mt-1"></i>
+                        <span>Jakarta, Indonesia</span>
+                    </li>
+                    <li class="flex items-center space-x-2">
+                        <i class="fas fa-phone"></i>
+                        <span>+62 123 4567 890</span>
+                    </li>
+                    <li class="flex items-center space-x-2">
+                        <i class="fas fa-envelope"></i>
+                        <span>info@densus69.com</span>
+                    </li>
+                </ul>
+                
+                <!-- Social Media -->
+                <div class="flex space-x-4 mt-4">
+                    <a href="#" class="text-gray-400 hover:text-pink-500 transition">
+                        <i class="fab fa-facebook text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-pink-500 transition">
+                        <i class="fab fa-instagram text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-pink-500 transition">
+                        <i class="fab fa-twitter text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-pink-500 transition">
+                        <i class="fab fa-linkedin text-xl"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <hr class="border-gray-800 my-8">
+        
+        <div class="text-center text-gray-400 text-sm">
+            <p>&copy; <%= new Date().getFullYear() %> Densus69 Agency. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,248 @@
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <a href="/admin/models-list" class="text-admin-600 hover:text-admin-700 text-sm font-medium mb-2 inline-block">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Models
+            </a>
+            <h2 class="text-2xl font-bold text-gray-800">Edit Model Details</h2>
+        </div>
+    </div>
+    
+    <!-- Model Info Card -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center space-x-6 mb-6">
+            <img src="<%= typeof model !== 'undefined' ? (model.photo || '/images/default-avatar.png') : '/images/default-avatar.png' %>" 
+                 alt="Model" 
+                 class="w-24 h-24 rounded-full object-cover border-4 border-admin-200">
+            <div>
+                <h3 class="text-2xl font-bold text-gray-800"><%= typeof model !== 'undefined' ? model.name : 'Model Name' %></h3>
+                <p class="text-gray-600"><%= typeof model !== 'undefined' ? model.email : '' %></p>
+                <p class="text-sm text-gray-500 mt-1">
+                    Member since <%= typeof model !== 'undefined' ? new Date(model.createdAt).toLocaleDateString('id-ID') : '' %>
+                </p>
+            </div>
+        </div>
+        
+        <!-- Edit Form -->
+        <form id="edit-model-form" onsubmit="handleSubmit(event)">
+            <input type="hidden" name="modelId" value="<%= typeof model !== 'undefined' ? model._id : '' %>">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-toggle-on mr-2"></i>Status *
+                    </label>
+                    <select name="status" 
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500 focus:border-transparent">
+                        <option value="pending" <%= typeof model !== 'undefined' && model.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                        <option value="active" <%= typeof model !== 'undefined' && model.status === 'active' ? 'selected' : '' %>>Active</option>
+                        <option value="inactive" <%= typeof model !== 'undefined' && model.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+                    </select>
+                </div>
+                
+                <!-- Daily Rate -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-dollar-sign mr-2"></i>Daily Rate (IDR)
+                    </label>
+                    <input type="number" 
+                           name="rate" 
+                           value="<%= typeof model !== 'undefined' ? (model.rate || '') : '' %>"
+                           min="0"
+                           step="100000"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500 focus:border-transparent"
+                           placeholder="e.g., 1000000">
+                </div>
+                
+                <!-- Phone -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-phone mr-2"></i>Phone Number
+                    </label>
+                    <input type="tel" 
+                           name="phone" 
+                           value="<%= typeof model !== 'undefined' ? (model.phone || '') : '' %>"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500 focus:border-transparent"
+                           placeholder="+62 xxx xxxx xxxx">
+                </div>
+                
+                <!-- City -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-map-marker-alt mr-2"></i>City
+                    </label>
+                    <input type="text" 
+                           name="city" 
+                           value="<%= typeof model !== 'undefined' ? (model.city || '') : '' %>"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500 focus:border-transparent"
+                           placeholder="Jakarta">
+                </div>
+                
+                <!-- Height -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-ruler-vertical mr-2"></i>Height (cm)
+                    </label>
+                    <input type="number" 
+                           name="height" 
+                           value="<%= typeof model !== 'undefined' ? (model.height || '') : '' %>"
+                           min="100" 
+                           max="250"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500 focus:border-transparent"
+                           placeholder="170">
+                </div>
+                
+                <!-- Weight -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-weight mr-2"></i>Weight (kg)
+                    </label>
+                    <input type="number" 
+                           name="weight" 
+                           value="<%= typeof model !== 'undefined' ? (model.weight || '') : '' %>"
+                           min="30" 
+                           max="200"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500 focus:border-transparent"
+                           placeholder="55">
+                </div>
+                
+                <!-- Bio -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-align-left mr-2"></i>Bio
+                    </label>
+                    <textarea name="bio" 
+                              rows="4"
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500 focus:border-transparent"
+                              placeholder="Model bio..."><%= typeof model !== 'undefined' ? (model.bio || '') : '' %></textarea>
+                </div>
+                
+                <!-- Admin Notes -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-sticky-note mr-2"></i>Admin Notes (Internal)
+                    </label>
+                    <textarea name="adminNotes" 
+                              rows="3"
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500 focus:border-transparent"
+                              placeholder="Internal notes..."><%= typeof model !== 'undefined' ? (model.adminNotes || '') : '' %></textarea>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex justify-end space-x-4 mt-6 pt-6 border-t border-gray-200">
+                <a href="/admin/models-list" 
+                   class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="px-6 py-3 bg-admin-600 text-white rounded-lg font-medium hover:bg-admin-700 transition">
+                    <i class="fas fa-save mr-2"></i>Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button onclick="sendNotification()" 
+                class="bg-blue-500 text-white p-4 rounded-lg hover:bg-blue-600 transition text-center">
+            <i class="fas fa-bell text-2xl mb-2"></i>
+            <p class="font-medium">Send Notification</p>
+        </button>
+        
+        <button onclick="viewTransactions()" 
+                class="bg-green-500 text-white p-4 rounded-lg hover:bg-green-600 transition text-center">
+            <i class="fas fa-history text-2xl mb-2"></i>
+            <p class="font-medium">View Transactions</p>
+        </button>
+        
+        <button onclick="suspendModel()" 
+                class="bg-red-500 text-white p-4 rounded-lg hover:bg-red-600 transition text-center">
+            <i class="fas fa-ban text-2xl mb-2"></i>
+            <p class="font-medium">Suspend Model</p>
+        </button>
+    </div>
+</div>
+
+<script>
+    async function handleSubmit(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const formData = new FormData(form);
+        const modelId = formData.get('modelId');
+        
+        try {
+            showLoading();
+            const response = await fetch(`/admin/models/${modelId}`, {
+                method: 'PUT',
+                body: formData
+            });
+            
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.success) {
+                showToast('Model updated successfully', 'success');
+                setTimeout(() => {
+                    window.location.href = '/admin/models-list';
+                }, 1500);
+            } else {
+                showToast(data.message || 'Failed to update model', 'error');
+            }
+        } catch (error) {
+            hideLoading();
+            showToast('An error occurred', 'error');
+        }
+    }
+    
+    function sendNotification() {
+        const modelId = document.querySelector('input[name="modelId"]').value;
+        const message = prompt('Enter notification message:');
+        
+        if (message) {
+            // Implement notification sending
+            showToast('Notification sent successfully', 'success');
+        }
+    }
+    
+    function viewTransactions() {
+        const modelId = document.querySelector('input[name="modelId"]').value;
+        window.location.href = `/admin/transactions?modelId=${modelId}`;
+    }
+    
+    async function suspendModel() {
+        if (!confirm('Are you sure you want to suspend this model?')) {
+            return;
+        }
+        
+        const modelId = document.querySelector('input[name="modelId"]').value;
+        
+        try {
+            showLoading();
+            const response = await fetch(`/admin/models/${modelId}/suspend`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.success) {
+                showToast('Model suspended successfully', 'success');
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showToast(data.message || 'Failed to suspend model', 'error');
+            }
+        } catch (error) {
+            hideLoading();
+            showToast('An error occurred', 'error');
+        }
+    }
+</script>

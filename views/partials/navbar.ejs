@@ -1,0 +1,102 @@
+<nav class="bg-white shadow-md sticky top-0 z-40">
+    <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center h-16">
+            <!-- Logo -->
+            <a href="/" class="flex items-center space-x-2">
+                <i class="fas fa-star text-pink-500 text-2xl"></i>
+                <span class="text-2xl font-bold text-gray-800">Densus<span class="text-pink-500">69</span></span>
+            </a>
+            
+            <!-- Desktop Navigation -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="/" class="text-gray-700 hover:text-pink-500 transition">Home</a>
+                <a href="/models" class="text-gray-700 hover:text-pink-500 transition">Models</a>
+                <a href="/about" class="text-gray-700 hover:text-pink-500 transition">About</a>
+                <a href="/complaint" class="text-gray-700 hover:text-pink-500 transition">Contact</a>
+                
+                <% if (typeof user !== 'undefined' && user) { %>
+                    <div class="relative group">
+                        <button class="flex items-center space-x-2 text-gray-700 hover:text-pink-500">
+                            <img src="<%= user.photo || '/images/default-avatar.png' %>" 
+                                 alt="<%= user.name %>" 
+                                 class="w-8 h-8 rounded-full object-cover border-2 border-gray-200">
+                            <span><%= user.name %></span>
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </button>
+                        
+                        <!-- Dropdown -->
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all">
+                            <% if (user.role === 'admin') { %>
+                                <a href="/admin/dashboard" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                                </a>
+                            <% } else if (user.role === 'model') { %>
+                                <a href="/model/dashboard" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                                </a>
+                                <a href="/model/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-user mr-2"></i> Profile
+                                </a>
+                            <% } %>
+                            <hr class="my-2">
+                            <a href="/logout" class="block px-4 py-2 text-red-600 hover:bg-gray-100">
+                                <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <a href="/auth/login" class="text-gray-700 hover:text-pink-500 transition">Login</a>
+                    <a href="/auth/register" class="bg-pink-500 text-white px-6 py-2 rounded-full hover:bg-pink-600 transition">
+                        Join as Model
+                    </a>
+                <% } %>
+            </div>
+            
+            <!-- Mobile Menu Button -->
+            <button id="mobile-menu-btn" class="md:hidden text-gray-700 hover:text-pink-500">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200">
+        <div class="px-4 py-3 space-y-3">
+            <a href="/" class="block text-gray-700 hover:text-pink-500 py-2">Home</a>
+            <a href="/models" class="block text-gray-700 hover:text-pink-500 py-2">Models</a>
+            <a href="/about" class="block text-gray-700 hover:text-pink-500 py-2">About</a>
+            <a href="/complaint" class="block text-gray-700 hover:text-pink-500 py-2">Contact</a>
+            
+            <% if (typeof user !== 'undefined' && user) { %>
+                <hr class="my-2">
+                <% if (user.role === 'admin') { %>
+                    <a href="/admin/dashboard" class="block text-gray-700 hover:text-pink-500 py-2">
+                        <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                    </a>
+                <% } else if (user.role === 'model') { %>
+                    <a href="/model/dashboard" class="block text-gray-700 hover:text-pink-500 py-2">
+                        <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                    </a>
+                    <a href="/model/profile" class="block text-gray-700 hover:text-pink-500 py-2">
+                        <i class="fas fa-user mr-2"></i> Profile
+                    </a>
+                <% } %>
+                <a href="/logout" class="block text-red-600 hover:text-red-700 py-2">
+                    <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                </a>
+            <% } else { %>
+                <a href="/auth/login" class="block text-gray-700 hover:text-pink-500 py-2">Login</a>
+                <a href="/auth/register" class="block bg-pink-500 text-white px-6 py-2 rounded-full hover:bg-pink-600 text-center">
+                    Join as Model
+                </a>
+            <% } %>
+        </div>
+    </div>
+</nav>
+
+<script>
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', function() {
+        const menu = document.getElementById('mobile-menu');
+        menu.classList.toggle('hidden');
+    });
+</script>
