@@ -13,7 +13,7 @@ router.get('/dashboard', adminController.getDashboard);
 router.get('/models', adminController.getModels);
 
 // GET /api/admin/models/:id - Get model by ID
-router.get('/models/:id', adminController.getModelById);
+router.get('/models/:id', adminController.getModelDetail);
 
 // PUT /api/admin/models/:id/status - Update model status
 router.put('/models/:id/status', adminController.updateModelStatus);
@@ -22,6 +22,6 @@ router.put('/models/:id/status', adminController.updateModelStatus);
 router.put('/models/:id/rate', adminController.updateModelRate);
 
 // GET /api/admin/analytics - Get analytics data
-router.get('/analytics', adminController.getAnalytics);
+router.get('/analytics', adminController.getRevenueAnalytics);
 
 module.exports = router;

@@ -42,9 +42,88 @@ app.use('/api/transactions', transactionRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/complaints', complaintRoutes);
 
+// View routes for rendering pages
+const { auth, isAdmin, isModel } = require('./middleware/auth');
+
 // Root route
 app.get('/', (req, res) => {
   res.render('public/home');
+});
+
+// Auth routes
+app.get('/login', (req, res) => {
+  res.render('auth/login');
+});
+
+app.get('/register', (req, res) => {
+  res.render('auth/register');
+});
+
+// Admin routes
+app.get('/admin/dashboard', auth, isAdmin, (req, res) => {
+  res.render('admin/dashboard', { user: req.user });
+});
+
+app.get('/admin/models', auth, isAdmin, (req, res) => {
+  res.render('admin/models-list', { user: req.user });
+});
+
+app.get('/admin/models/:id/edit', auth, isAdmin, (req, res) => {
+  res.render('admin/model-edit', { user: req.user, modelId: req.params.id });
+});
+
+app.get('/admin/transactions', auth, isAdmin, (req, res) => {
+  res.render('admin/transactions', { user: req.user });
+});
+
+app.get('/admin/transactions/new', auth, isAdmin, (req, res) => {
+  res.render('admin/transaction-form', { user: req.user });
+});
+
+app.get('/admin/analytics', auth, isAdmin, (req, res) => {
+  res.render('admin/revenue-analytics', { user: req.user });
+});
+
+app.get('/admin/complaints', auth, isAdmin, (req, res) => {
+  res.render('admin/complaints', { user: req.user });
+});
+
+// Model routes
+app.get('/model/dashboard', auth, isModel, (req, res) => {
+  res.render('model/dashboard', { user: req.user });
+});
+
+app.get('/model/profile', auth, isModel, (req, res) => {
+  res.render('model/profile', { user: req.user });
+});
+
+app.get('/model/profile/edit', auth, isModel, (req, res) => {
+  res.render('model/edit-profile', { user: req.user });
+});
+
+app.get('/model/gallery', auth, isModel, (req, res) => {
+  res.render('model/gallery', { user: req.user });
+});
+
+app.get('/model/jobs', auth, isModel, (req, res) => {
+  res.render('model/jobs', { user: req.user });
+});
+
+app.get('/model/bookings', auth, isModel, (req, res) => {
+  res.render('model/bookings', { user: req.user });
+});
+
+// Public routes
+app.get('/models', (req, res) => {
+  res.render('public/models-gallery');
+});
+
+app.get('/models/:id', (req, res) => {
+  res.render('public/model-detail', { modelId: req.params.id });
+});
+
+app.get('/complaint', (req, res) => {
+  res.render('public/complaint-form');
 });
 
 // Error handling middleware

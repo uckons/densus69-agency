@@ -277,7 +277,35 @@ exports.deletePhoto = async (req, res) => {
 /**
  * Get public gallery for a model
  */
+/**
+ * Get public gallery - List all active models
+ */
 exports.getPublicGallery = async (req, res) => {
+  try {
+    // Get all active models with their cover photos
+    const models = await Model.findAllWithCovers();
+    
+    // Filter only active models
+    const activeModels = models.filter(model => model.is_active);
+
+    res.json({
+      success: true,
+      data: activeModels
+    });
+  } catch (error) {
+    console.error('Get public gallery error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get public model profile - Individual model details with photos
+ */
+exports.getPublicModelProfile = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -289,11 +317,11 @@ exports.getPublicGallery = async (req, res) => {
       });
     }
 
-    // Only show gallery for active models
-    if (model.status !== 'active') {
+    // Only show profile for active models
+    if (!model.is_active) {
       return res.status(403).json({
         success: false,
-        message: 'Model gallery not available'
+        message: 'Model profile not available'
       });
     }
 
@@ -303,20 +331,21 @@ exports.getPublicGallery = async (req, res) => {
       success: true,
       data: {
         model: {
-          model_id: model.id,
+          id: model.id,
           full_name: model.full_name,
           height: model.height,
           weight: model.weight,
-          bust_size: model.bust_size,
-          waist_size: model.waist_size,
-          hip_size: model.hip_size,
-          bio: model.bio
+          measurements: model.measurements,
+          gender: model.gender,
+          experience_level: model.experience_level,
+          bio: model.bio,
+          status: model.status
         },
         photos
       }
     });
   } catch (error) {
-    console.error('Get public gallery error:', error);
+    console.error('Get public model profile error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',
