@@ -108,11 +108,10 @@ exports.login = async (req, res) => {
     if (user.role === 'model') {
       modelProfile = await Model.findByUserId(user.id);
       
-      if (modelProfile && modelProfile.status !== 'active') {
+      if (modelProfile && !modelProfile.is_active) {
         return res.status(403).json({
           success: false,
-          message: 'Your account is not active. Please contact admin.',
-          status: modelProfile.status
+          message: 'Your account is not active. Please contact admin.'
         });
       }
     }
