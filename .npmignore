@@ -1,0 +1,36 @@
+# Development files
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Uploads
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Temp
+tmp/
+temp/
