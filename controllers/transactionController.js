@@ -145,7 +145,7 @@ exports.getTransactionById = async (req, res) => {
       data: {
         transaction,
         model: model ? {
-          model_id: model.model_id,
+          model_id: model.id,
           full_name: model.full_name,
           rate: model.rate
         } : null

@@ -14,11 +14,12 @@ exports.register = async (req, res) => {
       phone,
       address,
       date_of_birth,
+      gender,
       height,
       weight,
-      bust_size,
-      waist_size,
-      hip_size
+      measurements,
+      experience_level,
+      bio
     } = req.body;
 
     // Check if user already exists
@@ -43,25 +44,26 @@ exports.register = async (req, res) => {
 
     // Create model profile
     await Model.create({
-      user_id: user.user_id,
+      user_id: user.id,
       full_name,
       phone,
       address,
       date_of_birth,
+      gender,
       height,
       weight,
-      bust_size,
-      waist_size,
-      hip_size,
-      status: 'pending',
+      measurements,
+      experience_level,
+      bio,
+      status: 'vacant',
       rate: 0
     });
 
     res.status(201).json({
       success: true,
-      message: 'Registration successful. Please wait for admin approval.',
+      message: 'Registration successful. Welcome to Densus69 Agency!',
       data: {
-        user_id: user.user_id,
+        user_id: user.id,
         email: user.email,
         role: user.role
       }
@@ -104,7 +106,7 @@ exports.login = async (req, res) => {
     // Get model profile if user is a model
     let modelProfile = null;
     if (user.role === 'model') {
-      modelProfile = await Model.findByUserId(user.user_id);
+      modelProfile = await Model.findByUserId(user.id);
       
       if (modelProfile && modelProfile.status !== 'active') {
         return res.status(403).json({
@@ -118,10 +120,10 @@ exports.login = async (req, res) => {
     // Create JWT token
     const token = jwt.sign(
       {
-        user_id: user.user_id,
+        userId: user.id,
         email: user.email,
         role: user.role,
-        model_id: modelProfile ? modelProfile.model_id : null
+        model_id: modelProfile ? modelProfile.id : null
       },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '7d' }
@@ -139,7 +141,7 @@ exports.login = async (req, res) => {
       message: 'Login successful',
       data: {
         user: {
-          user_id: user.user_id,
+          user_id: user.id,
           email: user.email,
           role: user.role
         },
@@ -182,7 +184,7 @@ exports.logout = async (req, res) => {
  */
 exports.getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.user_id);
+    const user = await User.findById(req.user.userId);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -192,14 +194,14 @@ exports.getCurrentUser = async (req, res) => {
 
     let modelProfile = null;
     if (user.role === 'model') {
-      modelProfile = await Model.findByUserId(user.user_id);
+      modelProfile = await Model.findByUserId(user.id);
     }
 
     res.json({
       success: true,
       data: {
         user: {
-          user_id: user.user_id,
+          user_id: user.id,
           email: user.email,
           role: user.role,
           created_at: user.created_at

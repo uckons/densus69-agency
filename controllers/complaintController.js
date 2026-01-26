@@ -27,7 +27,7 @@ exports.createComplaint = async (req, res) => {
 
     const complaint = await Complaint.create({
       model_id: modelId,
-      user_id: req.user.user_id,
+      user_id: req.user.userId,
       subject,
       description,
       priority: priority || 'medium',
@@ -56,7 +56,7 @@ exports.getComplaints = async (req, res) => {
   try {
     const { status, priority, model_id } = req.query;
     const userRole = req.user.role;
-    const userId = req.user.user_id;
+    const userId = req.user.userId;
 
     let complaints = await Complaint.findAll();
 
@@ -93,11 +93,11 @@ exports.getComplaints = async (req, res) => {
         return {
           ...complaint,
           model: model ? {
-            model_id: model.model_id,
+            model_id: model.id,
             full_name: model.full_name
           } : null,
           user: user ? {
-            user_id: user.user_id,
+            user_id: user.id,
             email: user.email
           } : null
         };
@@ -126,7 +126,7 @@ exports.getComplaintById = async (req, res) => {
   try {
     const { id } = req.params;
     const userRole = req.user.role;
-    const userId = req.user.user_id;
+    const userId = req.user.userId;
 
     const complaint = await Complaint.findById(id);
     if (!complaint) {
@@ -158,11 +158,11 @@ exports.getComplaintById = async (req, res) => {
       data: {
         ...complaint,
         model: model ? {
-          model_id: model.model_id,
+          model_id: model.id,
           full_name: model.full_name
         } : null,
         user: user ? {
-          user_id: user.user_id,
+          user_id: user.id,
           email: user.email
         } : null
       }
@@ -264,7 +264,7 @@ exports.addResponse = async (req, res) => {
 
     // Check authorization
     const userRole = req.user.role;
-    const userId = req.user.user_id;
+    const userId = req.user.userId;
 
     if (userRole !== 'admin' && complaint.user_id !== userId) {
       return res.status(403).json({

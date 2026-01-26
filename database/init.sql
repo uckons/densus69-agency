@@ -140,10 +140,11 @@ CREATE INDEX idx_complaints_status ON complaints(status);
 -- Create default admin user (password: admin123)
 -- Password hash for 'admin123' with bcrypt salt rounds 10
 INSERT INTO users (email, password, role) 
-VALUES ('admin@densus69.com', '$2a$10$ZqXZ3K3Z3Z3Z3Z3Z3Z3Z3uGF.8nJ0J0J0J0J0J0J0J0J0J0J0J0J0', 'admin');
+VALUES ('admin@densus69.com', '$2a$10$HP79acSbbCnPOAjzVCC5ve.joM6kRi0P6jTXPu.GFR41vBhZJZ5pK', 'admin');
 
--- Note: The actual password hash will be generated when first admin registers
--- For testing, you'll need to register an admin user through the application
+-- Default credentials for first login:
+-- Email: admin@densus69.com
+-- Password: admin123
 
 -- Create trigger to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()

@@ -119,7 +119,7 @@ exports.getJobDetail = async (req, res) => {
         return {
           ...booking,
           model: model ? {
-            model_id: model.model_id,
+            model_id: model.id,
             full_name: model.full_name,
             rate: model.rate
           } : null

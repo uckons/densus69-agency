@@ -303,7 +303,7 @@ exports.getPublicGallery = async (req, res) => {
       success: true,
       data: {
         model: {
-          model_id: model.model_id,
+          model_id: model.id,
           full_name: model.full_name,
           height: model.height,
           weight: model.weight,
