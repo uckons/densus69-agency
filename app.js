@@ -14,6 +14,9 @@ const modelRoutes = require('./routes/models');
 const transactionRoutes = require('./routes/transactions');
 const jobRoutes = require('./routes/jobs');
 const complaintRoutes = require('./routes/complaints');
+const authWebRoutes = require('./routes/authWeb');
+const modelWebController = require('./controllers/modelWebController');
+const adminWebController = require('./controllers/adminWebController');
 
 // Middleware
 app.use(morgan('dev'));
@@ -26,6 +29,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // View engine setup
+app.set('view cache', false);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -41,6 +45,7 @@ app.use('/api/models', modelRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/complaints', complaintRoutes);
+app.use('/auth', authWebRoutes);
 
 // View routes for rendering pages
 const { auth, isAdmin, isModel } = require('./middleware/auth');
@@ -60,9 +65,7 @@ app.get('/register', (req, res) => {
 });
 
 // Admin routes
-app.get('/admin/dashboard', auth, isAdmin, (req, res) => {
-  res.render('admin/dashboard', { user: req.user });
-});
+app.get('/admin/dashboard', auth, isAdmin, adminWebController.showDashboard);
 
 app.get('/admin/models', auth, isAdmin, (req, res) => {
   res.render('admin/models-list', { user: req.user });
@@ -89,9 +92,7 @@ app.get('/admin/complaints', auth, isAdmin, (req, res) => {
 });
 
 // Model routes
-app.get('/model/dashboard', auth, isModel, (req, res) => {
-  res.render('model/dashboard', { user: req.user });
-});
+app.get('/model/dashboard', auth, isModel, modelWebController.showDashboard);
 
 app.get('/model/profile', auth, isModel, (req, res) => {
   res.render('model/profile', { user: req.user });
@@ -156,3 +157,11 @@ app.use((req, res) => {
 });
 
 module.exports = app;
+
+// Start server
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`✓ Server running on port ${PORT}`);
+  console.log(`✓ Environment: ${process.env.NODE_ENV}`);
+  console.log(`✓ URL: http://localhost:${PORT}`);
+});

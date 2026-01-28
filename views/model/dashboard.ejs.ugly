@@ -1,0 +1,253 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<div class="space-y-6">
+    <!-- Welcome Banner -->
+    <div class="bg-gradient-to-r from-model-500 to-model-700 rounded-xl shadow-md p-8 text-white">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-3xl font-bold mb-2">Welcome back, <%= typeof user !== 'undefined' ? user.name : 'Model' %>!</h2>
+                <p class="text-model-100">Here's your performance overview</p>
+            </div>
+            <div class="hidden md:block">
+                <i class="fas fa-star text-6xl text-model-300 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Earnings -->
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Total Earnings</p>
+                    <p class="text-3xl font-bold text-gray-800 mt-2">
+                        <%= typeof stats !== 'undefined' ? formatCurrency(stats.totalEarnings) : formatCurrency(0) %>
+                    </p>
+                </div>
+                <div class="bg-green-100 p-4 rounded-full">
+                    <i class="fas fa-dollar-sign text-green-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- This Month -->
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-model-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">This Month</p>
+                    <p class="text-3xl font-bold text-gray-800 mt-2">
+                        <%= typeof stats !== 'undefined' ? formatCurrency(stats.monthlyEarnings) : formatCurrency(0) %>
+                    </p>
+                </div>
+                <div class="bg-model-100 p-4 rounded-full">
+                    <i class="fas fa-calendar text-model-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Completed Jobs -->
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Completed Jobs</p>
+                    <p class="text-3xl font-bold text-gray-800 mt-2">
+                        <%= typeof stats !== 'undefined' ? stats.completedJobs : 0 %>
+                    </p>
+                </div>
+                <div class="bg-blue-100 p-4 rounded-full">
+                    <i class="fas fa-briefcase text-blue-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pending Bookings -->
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Pending Bookings</p>
+                    <p class="text-3xl font-bold text-gray-800 mt-2">
+                        <%= typeof stats !== 'undefined' ? stats.pendingBookings : 0 %>
+                    </p>
+                </div>
+                <div class="bg-yellow-100 p-4 rounded-full">
+                    <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Earnings Chart -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-chart-line mr-2 text-model-500"></i>
+                Monthly Earnings
+            </h3>
+            <canvas id="earningsChart" height="300"></canvas>
+        </div>
+        
+        <!-- Job Types Chart -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-chart-pie mr-2 text-model-500"></i>
+                Jobs by Type
+            </h3>
+            <canvas id="jobTypesChart" height="300"></canvas>
+        </div>
+    </div>
+    
+    <!-- Recent Transactions -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">
+                <i class="fas fa-history mr-2 text-model-500"></i>
+                Recent Transactions
+            </h3>
+            <a href="/model/transactions" class="text-model-600 hover:text-model-700 text-sm font-medium">
+                View All <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Job Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <% if (typeof recentTransactions !== 'undefined' && recentTransactions.length > 0) { %>
+                        <% recentTransactions.forEach(transaction => { %>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <%= new Date(transaction.date).toLocaleDateString('id-ID') %>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <%= transaction.jobType %>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <%= transaction.clientName || 'N/A' %>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                    <%= formatCurrency(transaction.amount) %>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        <%= transaction.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                            transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                            'bg-red-100 text-red-800' %>">
+                                        <%= transaction.status %>
+                                    </span>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                <i class="fas fa-inbox text-4xl mb-2"></i>
+                                <p>No recent transactions</p>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <a href="/model/edit-profile" 
+           class="bg-gradient-to-br from-model-500 to-model-600 text-white rounded-xl shadow-md p-6 hover:shadow-lg transition text-center">
+            <i class="fas fa-edit text-4xl mb-3"></i>
+            <h4 class="font-semibold text-lg">Update Profile</h4>
+            <p class="text-model-100 text-sm mt-1">Edit your information</p>
+        </a>
+        
+        <a href="/model/gallery" 
+           class="bg-gradient-to-br from-pink-500 to-pink-600 text-white rounded-xl shadow-md p-6 hover:shadow-lg transition text-center">
+            <i class="fas fa-images text-4xl mb-3"></i>
+            <h4 class="font-semibold text-lg">Manage Gallery</h4>
+            <p class="text-pink-100 text-sm mt-1">Upload new photos</p>
+        </a>
+        
+        <a href="/model/jobs" 
+           class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl shadow-md p-6 hover:shadow-lg transition text-center">
+            <i class="fas fa-briefcase text-4xl mb-3"></i>
+            <h4 class="font-semibold text-lg">View Jobs</h4>
+            <p class="text-blue-100 text-sm mt-1">Browse available jobs</p>
+        </a>
+    </div>
+</div>
+
+<script>
+    // Earnings Chart
+    const earningsCtx = document.getElementById('earningsChart');
+    if (earningsCtx) {
+        new Chart(earningsCtx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Monthly Earnings',
+                    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    borderColor: 'rgb(168, 85, 247)',
+                    backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'Rp ' + value.toLocaleString('id-ID');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Job Types Chart
+    const jobTypesCtx = document.getElementById('jobTypesChart');
+    if (jobTypesCtx) {
+        new Chart(jobTypesCtx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Fashion Show', 'Photo Shoot', 'Event'],
+                datasets: [{
+                    data: [5, 8, 3],
+                    backgroundColor: [
+                        'rgb(168, 85, 247)',
+                        'rgb(236, 72, 153)',
+                        'rgb(59, 130, 246)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+</script>

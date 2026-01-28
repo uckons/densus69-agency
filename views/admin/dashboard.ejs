@@ -1,262 +1,407 @@
-<div class="space-y-6">
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Total Models -->
-        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-admin-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm font-medium">Total Models</p>
-                    <p class="text-3xl font-bold text-gray-800 mt-2">
-                        <%= typeof stats !== 'undefined' ? stats.totalModels : 0 %>
-                    </p>
-                </div>
-                <div class="bg-admin-100 p-4 rounded-full">
-                    <i class="fas fa-users text-admin-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Active Models -->
-        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm font-medium">Active Models</p>
-                    <p class="text-3xl font-bold text-gray-800 mt-2">
-                        <%= typeof stats !== 'undefined' ? stats.activeModels : 0 %>
-                    </p>
-                </div>
-                <div class="bg-green-100 p-4 rounded-full">
-                    <i class="fas fa-check-circle text-green-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Monthly Revenue -->
-        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm font-medium">Monthly Revenue</p>
-                    <p class="text-3xl font-bold text-gray-800 mt-2">
-                        <%= typeof stats !== 'undefined' ? formatCurrency(stats.monthlyRevenue) : formatCurrency(0) %>
-                    </p>
-                </div>
-                <div class="bg-yellow-100 p-4 rounded-full">
-                    <i class="fas fa-dollar-sign text-yellow-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Total Revenue -->
-        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm font-medium">Total Revenue</p>
-                    <p class="text-3xl font-bold text-gray-800 mt-2">
-                        <%= typeof stats !== 'undefined' ? formatCurrency(stats.totalRevenue) : formatCurrency(0) %>
-                    </p>
-                </div>
-                <div class="bg-purple-100 p-4 rounded-full">
-                    <i class="fas fa-chart-line text-purple-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
-    </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Densus69 Agency</title>
     
-    <!-- Charts Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Revenue Chart -->
-        <div class="bg-white rounded-xl shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">
-                <i class="fas fa-chart-bar mr-2 text-admin-500"></i>
-                Monthly Revenue Trend
-            </h3>
-            <canvas id="revenueChart" height="300"></canvas>
-        </div>
-        
-        <!-- Models Status Chart -->
-        <div class="bg-white rounded-xl shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">
-                <i class="fas fa-chart-pie mr-2 text-admin-500"></i>
-                Models by Status
-            </h3>
-            <canvas id="modelsChart" height="300"></canvas>
-        </div>
-    </div>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Recent Transactions -->
-    <div class="bg-white rounded-xl shadow-md p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-800">
-                <i class="fas fa-history mr-2 text-admin-500"></i>
-                Recent Transactions
-            </h3>
-            <a href="/admin/transactions" class="text-admin-600 hover:text-admin-700 text-sm font-medium">
-                View All <i class="fas fa-arrow-right ml-1"></i>
-            </a>
-        </div>
-        
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    <% if (typeof recentTransactions !== 'undefined' && recentTransactions.length > 0) { %>
-                        <% recentTransactions.forEach(transaction => { %>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <%= new Date(transaction.date).toLocaleDateString('id-ID') %>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <img src="<%= transaction.model?.photo || '/images/default-avatar.png' %>" 
-                                             alt="<%= transaction.model?.name %>" 
-                                             class="w-8 h-8 rounded-full object-cover mr-3">
-                                        <span class="text-sm font-medium text-gray-900"><%= transaction.model?.name %></span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <%= transaction.jobType %>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                                    <%= formatCurrency(transaction.amount) %>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        <%= transaction.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                                            transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                            'bg-red-100 text-red-800' %>">
-                                        <%= transaction.status %>
-                                    </span>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    <% } else { %>
-                        <tr>
-                            <td colspan="5" class="px-6 py-8 text-center text-gray-500">
-                                <i class="fas fa-inbox text-4xl mb-2"></i>
-                                <p>No recent transactions</p>
-                            </td>
-                        </tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Pending Complaints -->
-    <div class="bg-white rounded-xl shadow-md p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-800">
-                <i class="fas fa-exclamation-circle mr-2 text-red-500"></i>
-                Pending Complaints
-                <% if (typeof pendingComplaints !== 'undefined' && pendingComplaints.length > 0) { %>
-                    <span class="ml-2 bg-red-100 text-red-600 text-xs font-semibold px-2 py-1 rounded-full">
-                        <%= pendingComplaints.length %>
-                    </span>
-                <% } %>
-            </h3>
-            <a href="/admin/complaints" class="text-admin-600 hover:text-admin-700 text-sm font-medium">
-                View All <i class="fas fa-arrow-right ml-1"></i>
-            </a>
-        </div>
-        
-        <div class="space-y-3">
-            <% if (typeof pendingComplaints !== 'undefined' && pendingComplaints.length > 0) { %>
-                <% pendingComplaints.slice(0, 5).forEach(complaint => { %>
-                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <p class="font-medium text-gray-900"><%= complaint.subject %></p>
-                                <p class="text-sm text-gray-600 mt-1 line-clamp-2"><%= complaint.message %></p>
-                                <div class="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                                    <span><i class="fas fa-user mr-1"></i><%= complaint.name %></span>
-                                    <span><i class="fas fa-clock mr-1"></i><%= new Date(complaint.createdAt).toLocaleDateString('id-ID') %></span>
-                                </div>
-                            </div>
-                            <a href="/admin/complaints?id=<%= complaint._id %>" 
-                               class="ml-4 text-admin-600 hover:text-admin-700 text-sm font-medium">
-                                Review
-                            </a>
-                        </div>
-                    </div>
-                <% }) %>
-            <% } else { %>
-                <div class="text-center py-8 text-gray-500">
-                    <i class="fas fa-check-circle text-4xl mb-2 text-green-500"></i>
-                    <p>No pending complaints</p>
-                </div>
-            <% } %>
-        </div>
-    </div>
-</div>
-
-<script>
-    // Revenue Chart
-    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-    new Chart(revenueCtx, {
-        type: 'line',
-        data: {
-            labels: <%= typeof chartData !== 'undefined' && chartData.revenueLabels ? JSON.stringify(chartData.revenueLabels) : JSON.stringify(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']) %>,
-            datasets: [{
-                label: 'Revenue',
-                data: <%= typeof chartData !== 'undefined' && chartData.revenueData ? JSON.stringify(chartData.revenueData) : JSON.stringify([0, 0, 0, 0, 0, 0]) %>,
-                borderColor: 'rgb(59, 130, 246)',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return 'Rp ' + value.toLocaleString('id-ID');
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        admin: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
                         }
                     }
                 }
             }
         }
-    });
+    </script>
+</head>
+<body class="bg-gray-50">
     
-    // Models Status Chart
-    const modelsCtx = document.getElementById('modelsChart').getContext('2d');
-    new Chart(modelsCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Active', 'Pending', 'Inactive'],
-            datasets: [{
-                data: <%= typeof chartData !== 'undefined' && chartData.modelsStatus ? JSON.stringify(chartData.modelsStatus) : JSON.stringify([0, 0, 0]) %>,
-                backgroundColor: [
-                    'rgb(34, 197, 94)',
-                    'rgb(234, 179, 8)',
-                    'rgb(239, 68, 68)'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
+    <!-- Navbar -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-shield-alt text-admin-600 text-2xl mr-3"></i>
+                    <span class="text-xl font-bold text-gray-800">Densus69 Agency - Admin</span>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-600">
+                        <i class="fas fa-user-shield mr-2"></i>
+                        <%= typeof user !== 'undefined' ? user.email : 'Admin' %>
+                    </span>
+                    <a href="/auth/logout" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow-lg min-h-screen">
+            <div class="p-4">
+                <div class="mb-6 text-center">
+                    <div class="w-20 h-20 bg-admin-100 rounded-full mx-auto mb-3 flex items-center justify-center">
+                        <i class="fas fa-user-shield text-admin-600 text-3xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-800">Administrator</h3>
+                    <p class="text-sm text-gray-500">Super Admin</p>
+                </div>
+                
+                <nav class="space-y-2">
+                    <a href="/admin/dashboard" class="flex items-center px-4 py-3 bg-admin-50 text-admin-700 rounded-lg">
+                        <i class="fas fa-chart-line mr-3"></i>
+                        Dashboard
+                    </a>
+                    <a href="/admin/models" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg">
+                        <i class="fas fa-users mr-3"></i>
+                        Models
+                    </a>
+                    <a href="/admin/jobs" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg">
+                        <i class="fas fa-briefcase mr-3"></i>
+                        Jobs
+                    </a>
+                    <a href="/admin/transactions" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg">
+                        <i class="fas fa-money-bill-wave mr-3"></i>
+                        Transactions
+                    </a>
+                    <a href="/admin/analytics" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg">
+                        <i class="fas fa-chart-bar mr-3"></i>
+                        Analytics
+                    </a>
+                    <a href="/admin/complaints" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg">
+                        <i class="fas fa-exclamation-triangle mr-3"></i>
+                        Complaints
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8">
+            <div class="max-w-7xl mx-auto">
+                
+                <!-- Welcome Banner -->
+                <div class="bg-gradient-to-r from-admin-500 to-admin-700 rounded-xl shadow-lg p-8 text-white mb-8">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-3xl font-bold mb-2">Admin Dashboard</h2>
+                            <p class="text-admin-100">Manage your agency platform</p>
+                        </div>
+                        <div class="hidden md:block">
+                            <i class="fas fa-shield-alt text-6xl text-admin-300 opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stats Cards Row 1 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Total Models -->
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm font-medium">Total Models</p>
+                                <p class="text-3xl font-bold text-gray-800 mt-2">
+                                    <%= typeof stats !== 'undefined' ? stats.totalModels : 0 %>
+                                </p>
+                            </div>
+                            <div class="bg-purple-100 p-4 rounded-full">
+                                <i class="fas fa-users text-purple-600 text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Total Jobs -->
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm font-medium">Total Jobs</p>
+                                <p class="text-3xl font-bold text-gray-800 mt-2">
+                                    <%= typeof stats !== 'undefined' ? stats.totalJobs : 0 %>
+                                </p>
+                            </div>
+                            <div class="bg-blue-100 p-4 rounded-full">
+                                <i class="fas fa-briefcase text-blue-600 text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Active Jobs -->
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm font-medium">Active Jobs</p>
+                                <p class="text-3xl font-bold text-gray-800 mt-2">
+                                    <%= typeof stats !== 'undefined' ? stats.activeJobs : 0 %>
+                                </p>
+                            </div>
+                            <div class="bg-green-100 p-4 rounded-full">
+                                <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pending Bookings -->
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm font-medium">Pending Bookings</p>
+                                <p class="text-3xl font-bold text-gray-800 mt-2">
+                                    <%= typeof stats !== 'undefined' ? stats.pendingBookings : 0 %>
+                                </p>
+                            </div>
+                            <div class="bg-yellow-100 p-4 rounded-full">
+                                <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Revenue Stats Row 2 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- Total Revenue -->
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-emerald-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm font-medium">Total Revenue</p>
+                                <p class="text-3xl font-bold text-gray-800 mt-2">
+                                    <%= typeof stats !== 'undefined' ? formatCurrency(stats.totalRevenue) : formatCurrency(0) %>
+                                </p>
+                            </div>
+                            <div class="bg-emerald-100 p-4 rounded-full">
+                                <i class="fas fa-dollar-sign text-emerald-600 text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Monthly Revenue -->
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-cyan-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm font-medium">This Month</p>
+                                <p class="text-3xl font-bold text-gray-800 mt-2">
+                                    <%= typeof stats !== 'undefined' ? formatCurrency(stats.monthlyRevenue) : formatCurrency(0) %>
+                                </p>
+                            </div>
+                            <div class="bg-cyan-100 p-4 rounded-full">
+                                <i class="fas fa-calendar text-cyan-600 text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Total Transactions -->
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-indigo-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm font-medium">Total Transactions</p>
+                                <p class="text-3xl font-bold text-gray-800 mt-2">
+                                    <%= typeof stats !== 'undefined' ? stats.totalTransactions : 0 %>
+                                </p>
+                            </div>
+                            <div class="bg-indigo-100 p-4 rounded-full">
+                                <i class="fas fa-receipt text-indigo-600 text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- Monthly Revenue Chart -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-chart-line text-admin-600 mr-2"></i>
+                            Monthly Revenue Trend
+                        </h3>
+                        <div class="h-64">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Stats Overview -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-chart-pie text-admin-600 mr-2"></i>
+                            Platform Overview
+                        </h3>
+                        <div class="h-64">
+                            <canvas id="overviewChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-money-bill-wave text-admin-600 mr-2"></i>
+                        Recent Transactions
+                    </h3>
+                    <% if (typeof recentTransactions !== 'undefined' && recentTransactions.length > 0) { %>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Model</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <% recentTransactions.forEach(tx => { %>
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 text-sm">#<%= tx.id %></td>
+                                            <td class="px-6 py-4"><%= tx.model_name || 'N/A' %></td>
+                                            <td class="px-6 py-4"><%= tx.client_name || 'N/A' %></td>
+                                            <td class="px-6 py-4 font-semibold text-green-600"><%= formatCurrency(tx.gross_amount) %></td>
+                                            <td class="px-6 py-4 text-sm"><%= new Date(tx.transaction_date).toLocaleDateString('id-ID') %></td>
+                                        </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } else { %>
+                        <p class="text-gray-500 text-center py-8">No transactions yet</p>
+                    <% } %>
+                </div>
+
+                <!-- Recent Models -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-users text-admin-600 mr-2"></i>
+                        Recently Registered Models
+                    </h3>
+                    <% if (typeof recentModels !== 'undefined' && recentModels.length > 0) { %>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Height</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registered</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <% recentModels.forEach(model => { %>
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4"><%= model.full_name %></td>
+                                            <td class="px-6 py-4 text-sm"><%= model.email %></td>
+                                            <td class="px-6 py-4"><%= model.height %> cm</td>
+                                            <td class="px-6 py-4 text-sm"><%= new Date(model.created_at).toLocaleDateString('id-ID') %></td>
+                                        </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } else { %>
+                        <p class="text-gray-500 text-center py-8">No models yet</p>
+                    <% } %>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Revenue Chart
+        const revenueCtx = document.getElementById('revenueChart');
+        if (revenueCtx) {
+            new Chart(revenueCtx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Revenue',
+                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'Rp ' + value.toLocaleString('id-ID');
+                                }
+                            }
+                        }
+                    }
                 }
-            }
+            });
         }
-    });
-</script>
+        
+        // Overview Chart
+        const overviewCtx = document.getElementById('overviewChart');
+        if (overviewCtx) {
+            new Chart(overviewCtx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Models', 'Active Jobs', 'Pending Bookings', 'Completed Jobs'],
+                    datasets: [{
+                        data: [
+                            <%= typeof stats !== 'undefined' ? stats.totalModels : 0 %>,
+                            <%= typeof stats !== 'undefined' ? stats.activeJobs : 0 %>,
+                            <%= typeof stats !== 'undefined' ? stats.pendingBookings : 0 %>,
+                            <%= typeof stats !== 'undefined' ? (stats.totalJobs - stats.activeJobs) : 0 %>
+                        ],
+                        backgroundColor: [
+                            'rgb(168, 85, 247)',
+                            'rgb(34, 197, 94)',
+                            'rgb(251, 191, 36)',
+                            'rgb(59, 130, 246)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
