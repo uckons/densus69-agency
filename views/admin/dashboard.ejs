@@ -39,66 +39,59 @@
     </script>
 </head>
 <body class="bg-gray-50">
+    <%- include('../partials/header') %>
     
-    <!-- Navbar -->
-    <nav class="bg-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <i class="fas fa-shield-alt text-admin-600 text-2xl mr-3"></i>
-                    <span class="text-xl font-bold text-gray-800">Densus69 Agency - Admin</span>
-                </div>
-                
-                <div class="flex items-center space-x-4">
-                    <span class="text-gray-600">
-                        <i class="fas fa-user-shield mr-2"></i>
-                        <%= typeof user !== 'undefined' ? user.email : 'Admin' %>
-                    </span>
-                    <a href="/auth/logout" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
-                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <div class="flex">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-white shadow-lg min-h-screen">
-            <div class="p-4">
-                <div class="mb-6 text-center">
-                    <div class="w-20 h-20 bg-admin-100 rounded-full mx-auto mb-3 flex items-center justify-center">
-                        <i class="fas fa-user-shield text-admin-600 text-3xl"></i>
-                    </a>
+    <div class="flex h-screen bg-gray-100">
+        <!-- Modern Sidebar -->
+        <aside id="sidebar" class="sidebar fixed md:relative inset-y-0 left-0 z-30 w-64 bg-admin-800 text-white transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+            <div class="flex flex-col h-full">
+                <!-- Logo -->
+                <div class="flex items-center justify-between h-16 px-6 bg-admin-900">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-star text-admin-400 text-xl"></i>
+                        <span class="text-xl font-bold">Admin Panel</span>
                     </div>
-                    <h3 class="font-semibold text-gray-800">Administrator</h3>
-                    <p class="text-sm text-gray-500">Super Admin</p>
+                    <button id="close-sidebar" class="md:hidden text-white hover:text-admin-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
                 </div>
                 
-                <nav class="space-y-2">
-                    <a href="/admin/dashboard" class="flex items-center px-4 py-3 bg-admin-50 text-admin-700 rounded-lg">
-                        <i class="fas fa-chart-line mr-3"></i>
-                        Dashboard
+                <!-- Navigation -->
+                <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                    <a href="/admin/dashboard" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition bg-admin-700">
+                        <i class="fas fa-tachometer-alt w-5"></i>
+                        <span>Dashboard</span>
                     </a>
-                    <a href="/admin/models" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg">
-                        <i class="fas fa-users mr-3"></i>
-                        Models
+                    
+                    <a href="/admin/models" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-users w-5"></i>
+                        <span>Models</span>
                     </a>
-                    <a href="/admin/jobs" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg">
-                        <i class="fas fa-briefcase mr-3"></i>
-                        Jobs
+                    
+                    <a href="/admin/agents" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-user-tie w-5"></i>
+                        <span>Agents</span>
                     </a>
-                    <a href="/admin/transactions" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg">
-                        <i class="fas fa-money-bill-wave mr-3"></i>
-                        Transactions
+                    
+                    <a href="/admin/jobs" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-briefcase w-5"></i>
+                        <span>Jobs</span>
                     </a>
-                    <a href="/admin/analytics" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg">
-                        <i class="fas fa-chart-bar mr-3"></i>
-                        Analytics
+                    
+                    <a href="/admin/transactions" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-exchange-alt w-5"></i>
+                        <span>Transactions</span>
                     </a>
-                    <a href="/admin/complaints" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg">
-                        <i class="fas fa-exclamation-triangle mr-3"></i>
-                        Complaints
+                    
+                    <a href="/admin/analytics" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-chart-line w-5"></i>
+                        <span>Analytics</span>
+                    </a>
+                    
+                    <a href="/admin/complaints" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-exclamation-triangle w-5"></i>
+                        <span>Complaints</span>
+                    </a>
                     
                     <hr class="my-4 border-admin-700">
                     
@@ -107,15 +100,53 @@
                         <span>Users</span>
                     </a>
                     
-                    <a href="/admin/agents" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
-                        <i class="fas fa-user-tie w-5"></i>
-                        <span>Agents</span>
+                    <hr class="my-4 border-admin-700">
+                    
+                    <a href="/" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-home w-5"></i>
+                        <span>Public Site</span>
+                    </a>
+                    
+                    <a href="/auth/logout" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-600 transition text-red-300">
+                        <i class="fas fa-sign-out-alt w-5"></i>
+                        <span>Logout</span>
+                    </a>
                 </nav>
+                
+                <!-- User Info -->
+                <div class="px-6 py-4 bg-admin-900 border-t border-admin-700">
+                    <div class="flex items-center space-x-3">
+                        <img src="/images/default-avatar.png" 
+                             alt="Admin" 
+                             class="w-10 h-10 rounded-full object-cover border-2 border-admin-600">
+                        <div>
+                            <p class="font-medium"><%= typeof user !== 'undefined' ? user.email : 'Admin' %></p>
+                            <p class="text-xs text-admin-300">Administrator</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </aside>
-
-        <!-- Main Content -->
-        <main class="flex-1 p-8">
+        
+        <!-- Main Content Wrapper -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Bar -->
+            <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6">
+                <button id="open-sidebar" class="md:hidden text-gray-600 hover:text-gray-900">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+                
+                <h1 class="text-xl font-semibold text-gray-800">Admin Dashboard</h1>
+                
+                <div class="flex items-center space-x-4">
+                    <a href="/auth/logout" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </a>
+                </div>
+            </header>
+            
+            <!-- Page Content -->
+            <main class="flex-1 overflow-y-auto p-6">
             
             <!-- Welcome Banner -->
                 <div class="bg-gradient-to-r from-admin-500 to-admin-700 rounded-xl shadow-lg p-8 text-white mb-8">
@@ -336,9 +367,35 @@
                     <% } %>
                 </div>
 
-        </main>
+            </main>
+        </div>
     </div>
-
+    
+    <!-- Sidebar Toggle Script -->
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const openBtn = document.getElementById('open-sidebar');
+        const closeBtn = document.getElementById('close-sidebar');
+        
+        openBtn?.addEventListener('click', () => {
+            sidebar.classList.remove('-translate-x-full');
+        });
+        
+        closeBtn?.addEventListener('click', () => {
+            sidebar.classList.add('-translate-x-full');
+        });
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth < 768 && 
+                !sidebar.contains(e.target) && 
+                !openBtn.contains(e.target) &&
+                !sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
+    </script>
+    
     <script>
         // Revenue Chart
         const revenueCtx = document.getElementById('revenueChart');
@@ -413,5 +470,6 @@
         }
     </script>
 
+    <%- include('../partials/footer') %>
 </body>
 </html>
