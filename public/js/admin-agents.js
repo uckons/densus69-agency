@@ -139,6 +139,8 @@ async function addAgent() {
         closeAgentModal();
         loadAgents();
         alert('Agent added successfully');
+        // Replace history state to prevent form resubmission on page refresh
+        window.history.replaceState({}, document.title, window.location.pathname);
     } catch (error) {
         alert('Failed to add agent: ' + error.message);
     }
@@ -184,6 +186,8 @@ async function updateAgent() {
         closeAgentModal();
         loadAgents();
         alert('Agent updated successfully');
+        // Replace history state to prevent form resubmission on page refresh
+        window.history.replaceState({}, document.title, window.location.pathname);
     } catch (error) {
         alert('Failed to update agent: ' + error.message);
     }
