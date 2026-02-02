@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Users Management - Densus69 Agency</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⭐</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
@@ -147,24 +148,30 @@
 <div id="userModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 space-y-6">
         <h2 id="modalTitle" class="text-2xl font-bold mb-2">Add/Edit User</h2>
-        <input type="hidden" id="userId">
-        <div class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Email</label>
-                <input id="userEmail" type="email" class="mt-1 w-full px-3 py-2 border rounded focus:ring-blue-600">
+        
+        <!-- WRAP WITH FORM -->
+        <form id="userForm" onsubmit="return false;">
+            <input type="hidden" id="userId">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input id="userEmail" type="email" class="mt-1 w-full px-3 py-2 border rounded focus:ring-blue-600" autocomplete="email">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Role</label>
+                    <select id="userRole" class="mt-1 w-full px-3 py-2 border rounded focus:ring-blue-600">
+                        <option value="admin">Admin</option>
+                        <option value="model">Model</option>
+                    </select>
+                </div>
+                <div id="userPasswordRow">
+                    <label class="block text-sm font-medium text-gray-700">Password</label>
+                    <input id="userPassword" type="password" class="mt-1 w-full px-3 py-2 border rounded focus:ring-blue-600" autocomplete="new-password">
+                </div>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Role</label>
-                <select id="userRole" class="mt-1 w-full px-3 py-2 border rounded focus:ring-blue-600">
-                    <option value="admin">Admin</option>
-                    <option value="model">Model</option>
-                </select>
-            </div>
-            <div id="userPasswordRow">
-                <label class="block text-sm font-medium text-gray-700">Password</label>
-                <input id="userPassword" type="password" class="mt-1 w-full px-3 py-2 border rounded focus:ring-blue-600">
-            </div>
-        </div>
+        </form>
+        <!-- END FORM -->
+        
         <div class="flex justify-end space-x-2 pt-2">
             <button id="userModalAction" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-800">Save</button>
             <button id="closeUserModal" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100">Cancel</button>
