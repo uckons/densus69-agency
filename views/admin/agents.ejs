@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agents Management - Densus69 Agency</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        admin: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <%- include('../partials/header') %>
+    
+    <div class="flex h-screen bg-gray-100">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar fixed md:relative inset-y-0 left-0 z-30 w-64 bg-admin-800 text-white transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+            <div class="flex flex-col h-full">
+                <!-- Logo -->
+                <div class="flex items-center justify-between h-16 px-6 bg-admin-900">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-star text-admin-400 text-xl"></i>
+                        <span class="text-xl font-bold">Admin Panel</span>
+                    </div>
+                    <button id="close-sidebar" class="md:hidden text-white hover:text-admin-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Navigation -->
+                <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                    <a href="/admin/dashboard" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-tachometer-alt w-5"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    
+                    <a href="/admin/models" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-users w-5"></i>
+                        <span>Models</span>
+                    </a>
+                    
+                    <a href="/admin/agents" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition bg-admin-700">
+                        <i class="fas fa-user-tie w-5"></i>
+                        <span>Agents</span>
+                    </a>
+                    
+                    <a href="/admin/jobs" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-briefcase w-5"></i>
+                        <span>Jobs</span>
+                    </a>
+                    
+                    <a href="/admin/transactions" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-exchange-alt w-5"></i>
+                        <span>Transactions</span>
+                    </a>
+                    
+                    <a href="/admin/analytics" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-chart-line w-5"></i>
+                        <span>Analytics</span>
+                    </a>
+                    
+                    <a href="/admin/complaints" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-exclamation-triangle w-5"></i>
+                        <span>Complaints</span>
+                    </a>
+                    
+                    <hr class="my-4 border-admin-700">
+                    
+                    <a href="/admin/users" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-user-cog w-5"></i>
+                        <span>Users</span>
+                    </a>
+                    
+                    <hr class="my-4 border-admin-700">
+                    
+                    <a href="/" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-home w-5"></i>
+                        <span>Public Site</span>
+                    </a>
+                    
+                    <a href="/auth/logout" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-600 transition text-red-300">
+                        <i class="fas fa-sign-out-alt w-5"></i>
+                        <span>Logout</span>
+                    </a>
+                </nav>
+                
+                <!-- User Info -->
+                <div class="px-6 py-4 bg-admin-900 border-t border-admin-700">
+                    <div class="flex items-center space-x-3">
+                        <img src="/images/default-avatar.png" 
+                             alt="Admin" 
+                             class="w-10 h-10 rounded-full object-cover border-2 border-admin-600">
+                        <div>
+                            <p class="font-medium"><%= user.email %></p>
+                            <p class="text-xs text-admin-300">Administrator</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+<main class="flex-1 overflow-y-auto p-6">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold">Agents Management</h1>
+        <button id="addAgentBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+            <i class="fas fa-plus mr-2"></i>Add Agent
+        </button>
+    </div>
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-2 text-left font-semibold">ID</th>
+                    <th class="px-4 py-2 text-left font-semibold">Name</th>
+                    <th class="px-4 py-2 text-left font-semibold">Email</th>
+                    <th class="px-4 py-2 text-left font-semibold">Phone</th>
+                    <th class="px-4 py-2 text-left font-semibold">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="agentsTable" class="bg-white divide-y divide-gray-200"></tbody>
+        </table>
+    </div>
+</main>
+
+<!-- Modal Agent -->
+<div id="agentModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 space-y-6">
+        <h2 id="agentModalTitle" class="text-2xl font-bold mb-2">Add/Edit Agent</h2>
+        <input type="hidden" id="agentId">
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Name</label>
+                <input id="agentName" type="text" class="mt-1 w-full px-3 py-2 border rounded focus:ring-green-600">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Email</label>
+                <input id="agentEmail" type="email" class="mt-1 w-full px-3 py-2 border rounded focus:ring-green-600">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Phone</label>
+                <input id="agentPhone" type="text" class="mt-1 w-full px-3 py-2 border rounded focus:ring-green-600">
+            </div>
+        </div>
+        <div class="flex justify-end space-x-2 pt-2">
+            <button id="agentModalAction" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-800">Save</button>
+            <button id="closeAgentModal" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100">Cancel</button>
+        </div>
+    </div>
+</div>
+<script src="/js/admin-agents.js"></script>
+    
+    <%- include('../partials/footer') %>
+</body>
+</html>

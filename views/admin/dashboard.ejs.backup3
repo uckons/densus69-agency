@@ -68,7 +68,6 @@
                 <div class="mb-6 text-center">
                     <div class="w-20 h-20 bg-admin-100 rounded-full mx-auto mb-3 flex items-center justify-center">
                         <i class="fas fa-user-shield text-admin-600 text-3xl"></i>
-                    </a>
                     </div>
                     <h3 class="font-semibold text-gray-800">Administrator</h3>
                     <p class="text-sm text-gray-500">Super Admin</p>
@@ -109,6 +108,10 @@
                     <a href="/admin/agents" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-user-tie w-5"></i>
                         <span>Agents</span>
+                    </a>
+                        <i class="fas fa-exclamation-triangle mr-3"></i>
+                        Complaints
+                    </a>
                 </nav>
             </div>
         </aside>

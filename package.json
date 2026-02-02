@@ -10,6 +10,7 @@
     "watch:css": "npx tailwindcss -i ./public/css/input.css -o ./public/css/styles.css --watch"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",

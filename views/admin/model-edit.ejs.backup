@@ -57,6 +57,8 @@
                     <a href="/admin/models" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition bg-admin-700">
                         <i class="fas fa-users w-5"></i>
                         <span>Models</span>
+                    </a>
+                    
                     <a href="/admin/jobs" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition ">
                         <i class="fas fa-briefcase w-5"></i>
                         <span>Jobs</span>
@@ -72,11 +74,10 @@
                         <span>Analytics</span>
                     </a>
                     
-                    <a href="/admin/complaints" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-exclamation-triangle w-5"></i>
                         <span>Complaints</span>
                     </a>
-                    
+                    <hr class="my-4 border-admin-700">
                     
                     <a href="/admin/users" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-user-cog w-5"></i>
@@ -84,6 +85,11 @@
                     </a>
                     
                     <a href="/admin/agents" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-user-tie w-5"></i>
+                        <span>Agents</span>
+                    </a>
+                        <i class="fas fa-exclamation-triangle w-5"></i>
+                        <span>Complaints</span>
                     </a>
                     
                     <hr class="my-4 border-admin-700">

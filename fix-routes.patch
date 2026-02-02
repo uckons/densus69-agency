@@ -1,0 +1,11 @@
+app.get('/admin/complaints', auth, isAdmin, (req, res) => {
+  res.render('admin/complaints', { user: req.user });
+});
+
+app.get('/admin/users', auth, isAdmin, (req, res) => {
+  res.render('admin/users', { user: req.user });
+});
+
+app.get('/admin/agents', auth, isAdmin, (req, res) => {
+  res.render('admin/agents', { user: req.user });
+});
