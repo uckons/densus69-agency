@@ -21,24 +21,55 @@ async function loadAgents() {
     }
 }
 
+// Helper function to escape HTML to prevent XSS
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+}
+
 function renderAgentsTable(agents) {
     const tbody = document.getElementById('agentsTable');
     if (!agents.length) {
         tbody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-gray-500">No agents found</td></tr>`;
         return;
     }
-    tbody.innerHTML = agents.map(a => `
+    tbody.innerHTML = agents.map(a => {
+        const name = escapeHtml(a.full_name || a.name);
+        const email = escapeHtml(a.email);
+        const phone = escapeHtml(a.phone || '-');
+        
+        return `
         <tr class="hover:bg-gray-50">
             <td class="px-4 py-3">${a.id}</td>
-            <td class="px-4 py-3">${a.full_name || a.name}</td>
-            <td class="px-4 py-3">${a.email}</td>
-            <td class="px-4 py-3">${a.phone || '-'}</td>
+            <td class="px-4 py-3">${name}</td>
+            <td class="px-4 py-3">${email}</td>
+            <td class="px-4 py-3">${phone}</td>
             <td class="px-4 py-3 flex space-x-2">
-                <button class="text-blue-600 hover:text-blue-800" onclick="showEditAgentModal(${a.id}, '${(a.full_name || a.name).replace(/'/g, "\\'")}', '${a.email}', '${a.phone || ''}')"><i class="fas fa-edit"></i></button>
-                <button class="text-red-600 hover:text-red-800" onclick="deleteAgent(${a.id})"><i class="fas fa-trash"></i></button>
+                <button class="text-blue-600 hover:text-blue-800 edit-agent-btn" data-id="${a.id}" data-name="${a.full_name || a.name || ''}" data-email="${a.email || ''}" data-phone="${a.phone || ''}"><i class="fas fa-edit"></i></button>
+                <button class="text-red-600 hover:text-red-800 delete-agent-btn" data-id="${a.id}"><i class="fas fa-trash"></i></button>
             </td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
+    
+    // Attach event listeners to buttons
+    document.querySelectorAll('.edit-agent-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const name = this.getAttribute('data-name');
+            const email = this.getAttribute('data-email');
+            const phone = this.getAttribute('data-phone');
+            window.showEditAgentModal(id, name, email, phone);
+        });
+    });
+    
+    document.querySelectorAll('.delete-agent-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            deleteAgent(id);
+        });
+    });
 }
 
 window.showAddAgentModal = function () {
@@ -75,10 +106,10 @@ function setAgentModal({ id, name, email, phone, type }) {
 }
 
 async function addAgent() {
-    const full_name = document.getElementById('agentName').value;
-    const email = document.getElementById('agentEmail').value;
-    const password = document.getElementById('agentPassword').value;
-    const phone = document.getElementById('agentPhone').value;
+    const full_name = document.getElementById('agentName').value.trim();
+    const email = document.getElementById('agentEmail').value.trim();
+    const password = document.getElementById('agentPassword').value;  // Don't trim passwords
+    const phone = document.getElementById('agentPhone').value.trim();
     
     // Validation
     if (!full_name || !email || !password) {
@@ -115,10 +146,10 @@ async function addAgent() {
 
 async function updateAgent() {
     const id = document.getElementById('agentId').value;
-    const full_name = document.getElementById('agentName').value;
-    const email = document.getElementById('agentEmail').value;
-    const phone = document.getElementById('agentPhone').value;
-    const password = document.getElementById('agentPassword').value;  // Optional for update
+    const full_name = document.getElementById('agentName').value.trim();
+    const email = document.getElementById('agentEmail').value.trim();
+    const phone = document.getElementById('agentPhone').value.trim();
+    const password = document.getElementById('agentPassword').value;  // Don't trim passwords
     
     if (!id || !full_name || !email) {
         return alert('Name and Email are required');
@@ -127,7 +158,7 @@ async function updateAgent() {
     const payload = { full_name, email, phone };
     
     // Only include password if provided
-    if (password && password.trim() !== '') {
+    if (password) {
         if (password.length < 6) {
             return alert('Password must be at least 6 characters');
         }
@@ -158,7 +189,8 @@ async function updateAgent() {
     }
 }
 
-window.deleteAgent = async function (id) {
+// Delete agent function
+async function deleteAgent(id) {
     if (!confirm('Delete this agent?')) return;
     try {
         const res = await fetch(`/api/admin/agents/${id}`, {
@@ -171,4 +203,7 @@ window.deleteAgent = async function (id) {
     } catch {
         alert('Failed to delete agent');
     }
-};
+}
+
+// Expose to window scope for backward compatibility
+window.deleteAgent = deleteAgent;
