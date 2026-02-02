@@ -30,11 +30,11 @@ function renderAgentsTable(agents) {
     tbody.innerHTML = agents.map(a => `
         <tr class="hover:bg-gray-50">
             <td class="px-4 py-3">${a.id}</td>
-            <td class="px-4 py-3">${a.name}</td>
+            <td class="px-4 py-3">${a.full_name || a.name}</td>
             <td class="px-4 py-3">${a.email}</td>
             <td class="px-4 py-3">${a.phone || '-'}</td>
             <td class="px-4 py-3 flex space-x-2">
-                <button class="text-blue-600 hover:text-blue-800" onclick="showEditAgentModal(${a.id}, '${a.name}', '${a.email}', '${a.phone || ''}')"><i class="fas fa-edit"></i></button>
+                <button class="text-blue-600 hover:text-blue-800" onclick="showEditAgentModal(${a.id}, '${(a.full_name || a.name).replace(/'/g, "\\'")}', '${a.email}', '${a.phone || ''}')"><i class="fas fa-edit"></i></button>
                 <button class="text-red-600 hover:text-red-800" onclick="deleteAgent(${a.id})"><i class="fas fa-trash"></i></button>
             </td>
         </tr>
@@ -60,15 +60,35 @@ function setAgentModal({ id, name, email, phone, type }) {
     document.getElementById('agentName').value = name;
     document.getElementById('agentEmail').value = email;
     document.getElementById('agentPhone').value = phone;
+    document.getElementById('agentPassword').value = '';  // Clear password
     document.getElementById('agentModalTitle').textContent = type === 'add' ? 'Add Agent' : 'Edit Agent';
+    
+    // Show password field only when adding new agent
+    const passwordField = document.getElementById('passwordField');
+    if (type === 'add') {
+        passwordField.classList.remove('hidden');
+    } else {
+        passwordField.classList.add('hidden');
+    }
+    
     document.getElementById('agentModalAction').onclick = type === 'add' ? addAgent : updateAgent;
 }
 
 async function addAgent() {
-    const name = document.getElementById('agentName').value;
+    const full_name = document.getElementById('agentName').value;
     const email = document.getElementById('agentEmail').value;
+    const password = document.getElementById('agentPassword').value;
     const phone = document.getElementById('agentPhone').value;
-    if (!name || !email) return alert('Name and Email required');
+    
+    // Validation
+    if (!full_name || !email || !password) {
+        return alert('Name, Email, and Password are required');
+    }
+    
+    if (password.length < 6) {
+        return alert('Password must be at least 6 characters');
+    }
+    
     try {
         const res = await fetch('/api/admin/agents', {
             method: 'POST',
@@ -76,23 +96,44 @@ async function addAgent() {
                 'Authorization': `Bearer ${getToken()}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ name, email, phone })
+            body: JSON.stringify({ full_name, email, password, phone })
         });
-        if (!res.ok) throw new Error('Failed');
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+            throw new Error(data.message || 'Failed to add agent');
+        }
+        
         closeAgentModal();
         loadAgents();
-        alert('Agent added');
-    } catch {
-        alert('Failed to add agent');
+        alert('Agent added successfully');
+    } catch (error) {
+        alert('Failed to add agent: ' + error.message);
     }
 }
 
 async function updateAgent() {
     const id = document.getElementById('agentId').value;
-    const name = document.getElementById('agentName').value;
+    const full_name = document.getElementById('agentName').value;
     const email = document.getElementById('agentEmail').value;
     const phone = document.getElementById('agentPhone').value;
-    if (!id || !name || !email) return alert('Name and Email required');
+    const password = document.getElementById('agentPassword').value;  // Optional for update
+    
+    if (!id || !full_name || !email) {
+        return alert('Name and Email are required');
+    }
+    
+    const payload = { full_name, email, phone };
+    
+    // Only include password if provided
+    if (password && password.trim() !== '') {
+        if (password.length < 6) {
+            return alert('Password must be at least 6 characters');
+        }
+        payload.password = password;
+    }
+    
     try {
         const res = await fetch(`/api/admin/agents/${id}`, {
             method: 'PUT',
@@ -100,14 +141,20 @@ async function updateAgent() {
                 'Authorization': `Bearer ${getToken()}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ name, email, phone })
+            body: JSON.stringify(payload)
         });
-        if (!res.ok) throw new Error('Failed');
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+            throw new Error(data.message || 'Failed to update agent');
+        }
+        
         closeAgentModal();
         loadAgents();
-        alert('Agent updated');
-    } catch {
-        alert('Failed to update agent');
+        alert('Agent updated successfully');
+    } catch (error) {
+        alert('Failed to update agent: ' + error.message);
     }
 }
 
