@@ -31,13 +31,17 @@
     <!-- Sidebar & Main Layout -->
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
-        <aside class="w-64 bg-admin-900 text-white flex-shrink-0 hidden md:flex flex-col">
-            <div class="flex-1 overflow-y-auto">
+        <aside id="sidebar" class="sidebar fixed md:relative inset-y-0 left-0 z-30 w-64 bg-admin-800 text-white transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+            <div class="flex flex-col h-full">
+                <!-- Logo -->
                 <div class="flex items-center justify-between h-16 px-6 bg-admin-900">
                     <div class="flex items-center space-x-2">
                         <i class="fas fa-star text-admin-400 text-xl"></i>
                         <span class="text-xl font-bold">Admin Panel</span>
                     </div>
+                    <button id="close-sidebar" class="md:hidden text-white hover:text-admin-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
                 </div>
                 
                 <!-- Navigation -->
@@ -50,6 +54,11 @@
                     <a href="/admin/models" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-users w-5"></i>
                         <span>Models</span>
+                    </a>
+                    
+                    <a href="/admin/agents" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-user-tie w-5"></i>
+                        <span>Agents</span>
                     </a>
                     
                     <a href="/admin/jobs" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
@@ -79,26 +88,31 @@
                         <span>Users</span>
                     </a>
                     
-                    <a href="/admin/agents" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
-                        <i class="fas fa-user-tie w-5"></i>
-                        <span>Agents</span>
-                    </a>
-                    
                     <hr class="my-4 border-admin-700">
                     
                     <a href="/" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-home w-5"></i>
                         <span>Public Site</span>
                     </a>
+                    
+                    <a href="/auth/logout" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-600 transition text-red-300">
+                        <i class="fas fa-sign-out-alt w-5"></i>
+                        <span>Logout</span>
+                    </a>
                 </nav>
-            </div>
-            
-            <!-- Logout -->
-            <div class="p-4 border-t border-admin-700">
-                <a href="/auth/logout" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-600 transition text-red-300">
-                    <i class="fas fa-sign-out-alt w-5"></i>
-                    <span>Logout</span>
-                </a>
+                
+                <!-- User Info -->
+                <div class="px-6 py-4 bg-admin-900 border-t border-admin-700">
+                    <div class="flex items-center space-x-3">
+                        <img src="/images/default-avatar.png" 
+                             alt="Admin" 
+                             class="w-10 h-10 rounded-full object-cover border-2 border-admin-600">
+                        <div>
+                            <p class="font-medium"><%= typeof user !== 'undefined' ? user.email : 'Admin' %></p>
+                            <p class="text-xs text-admin-300">Administrator</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </aside>
 
@@ -107,6 +121,9 @@
             <!-- Top Bar -->
             <header class="bg-white shadow-sm z-10">
                 <div class="flex items-center justify-between px-6 py-4">
+                    <button id="open-sidebar" class="md:hidden text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
                     <div>
                         <h1 class="text-xl font-semibold text-gray-800">Complaints</h1>
                         <p class="text-sm text-gray-600">Manage customer complaints</p>
@@ -321,6 +338,31 @@
             </div>
         </div>
     </div>
+
+    <!-- Sidebar Toggle Script -->
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const openBtn = document.getElementById('open-sidebar');
+        const closeBtn = document.getElementById('close-sidebar');
+        
+        openBtn?.addEventListener('click', () => {
+            sidebar.classList.remove('-translate-x-full');
+        });
+        
+        closeBtn?.addEventListener('click', () => {
+            sidebar.classList.add('-translate-x-full');
+        });
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth < 768 && 
+                !sidebar.contains(e.target) && 
+                !openBtn.contains(e.target) &&
+                !sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
+    </script>
 
     <script src="/js/admin-complaints.js"></script>
 </body>
