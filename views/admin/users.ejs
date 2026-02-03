@@ -110,9 +110,11 @@
                     <div class="flex items-center space-x-3">
                         <img src="/images/default-avatar.png" 
                              alt="Admin" 
-                             class="w-10 h-10 rounded-full object-cover border-2 border-admin-600">
-                        <div>
-                            <p class="font-medium"><%= user.email %></p>
+                             class="w-10 h-10 rounded-full object-cover border-2 border-admin-600 flex-shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-sm truncate" title="<%= user.email %>">
+                                <%= user.email %>
+                            </p>
                             <p class="text-xs text-admin-300">Administrator</p>
                         </div>
                     </div>
@@ -166,8 +168,20 @@
                     </select>
                 </div>
                 <div id="userPasswordRow">
-                    <label class="block text-sm font-medium text-gray-700">Password</label>
-                    <input id="userPassword" type="password" class="mt-1 w-full px-3 py-2 border rounded focus:ring-blue-600" autocomplete="new-password">
+                    <label class="block text-sm font-medium text-gray-700">
+                        Password
+                        <span id="passwordOptionalText" class="text-gray-500 font-normal hidden">(leave blank to keep current)</span>
+                        <span id="passwordRequiredText" class="text-red-500">*</span>
+                    </label>
+                    <input id="userPassword" 
+                           type="password" 
+                           class="mt-1 w-full px-3 py-2 border rounded focus:ring-blue-600"
+                           autocomplete="new-password"
+                           minlength="6"
+                           placeholder="Minimum 6 characters">
+                    <p id="passwordHelpText" class="text-xs text-gray-500 mt-1 hidden">
+                        Only fill this if you want to change the password
+                    </p>
                 </div>
             </div>
         </form>
