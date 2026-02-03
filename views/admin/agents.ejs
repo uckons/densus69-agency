@@ -110,9 +110,11 @@
                     <div class="flex items-center space-x-3">
                         <img src="/images/default-avatar.png" 
                              alt="Admin" 
-                             class="w-10 h-10 rounded-full object-cover border-2 border-admin-600">
-                        <div>
-                            <p class="font-medium"><%= user.email %></p>
+                             class="w-10 h-10 rounded-full object-cover border-2 border-admin-600 flex-shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-sm truncate" title="<%= user.email %>">
+                                <%= user.email %>
+                            </p>
                             <p class="text-xs text-admin-300">Administrator</p>
                         </div>
                     </div>
