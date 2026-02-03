@@ -63,10 +63,30 @@ function setUserModal({ id, email, role, password, type }) {
     document.getElementById('userId').value = id;
     document.getElementById('userEmail').value = email;
     document.getElementById('userRole').value = role;
-    document.getElementById('userPassword').value = password;
+    document.getElementById('userPassword').value = '';
+    
     document.getElementById('modalTitle').textContent = type === 'add' ? 'Add User' : 'Edit User';
     document.getElementById('userModalAction').onclick = type === 'add' ? addUser : updateUser;
-    document.getElementById('userPasswordRow').style.display = type === 'edit' ? 'none' : '';
+    
+    // Show/hide password helper text and required indicator
+    const passwordInput = document.getElementById('userPassword');
+    const passwordOptionalText = document.getElementById('passwordOptionalText');
+    const passwordRequiredText = document.getElementById('passwordRequiredText');
+    const passwordHelpText = document.getElementById('passwordHelpText');
+    
+    if (type === 'add') {
+        // Add mode: password is required
+        passwordInput.required = true;
+        passwordOptionalText.classList.add('hidden');
+        passwordRequiredText.classList.remove('hidden');
+        passwordHelpText.classList.add('hidden');
+    } else {
+        // Edit mode: password is optional
+        passwordInput.required = false;
+        passwordOptionalText.classList.remove('hidden');
+        passwordRequiredText.classList.add('hidden');
+        passwordHelpText.classList.remove('hidden');
+    }
 }
 
 async function addUser() {
@@ -94,9 +114,24 @@ async function addUser() {
 
 async function updateUser() {
     const id = document.getElementById('userId').value;
-    const email = document.getElementById('userEmail').value;
+    const email = document.getElementById('userEmail').value.trim();
     const role = document.getElementById('userRole').value;
-    if (!id || !email || !role) return alert('Email and Role required');
+    const password = document.getElementById('userPassword').value;
+    
+    if (!id || !email || !role) {
+        return alert('Email and Role are required');
+    }
+    
+    const payload = { email, role };
+    
+    // Only include password if provided
+    if (password && password.trim() !== '') {
+        if (password.length < 6) {
+            return alert('Password must be at least 6 characters');
+        }
+        payload.password = password;
+    }
+    
     try {
         const res = await fetch(`/api/admin/users/${id}`, {
             method: 'PUT',
@@ -104,14 +139,20 @@ async function updateUser() {
                 'Authorization': `Bearer ${getToken()}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ email, role })
+            body: JSON.stringify(payload)
         });
-        if (!res.ok) throw new Error('Failed');
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+            throw new Error(data.message || 'Failed to update user');
+        }
+        
         closeUserModal();
         loadUsers();
-        alert('User updated');
-    } catch {
-        alert('Failed to update user');
+        alert('User updated successfully');
+    } catch (error) {
+        alert('Failed to update user: ' + error.message);
     }
 }
 

@@ -168,8 +168,20 @@
                     </select>
                 </div>
                 <div id="userPasswordRow">
-                    <label class="block text-sm font-medium text-gray-700">Password</label>
-                    <input id="userPassword" type="password" class="mt-1 w-full px-3 py-2 border rounded focus:ring-blue-600" autocomplete="new-password">
+                    <label class="block text-sm font-medium text-gray-700">
+                        Password
+                        <span id="passwordOptionalText" class="text-gray-500 font-normal hidden">(leave blank to keep current)</span>
+                        <span id="passwordRequiredText" class="text-red-500">*</span>
+                    </label>
+                    <input id="userPassword" 
+                           type="password" 
+                           class="mt-1 w-full px-3 py-2 border rounded focus:ring-blue-600"
+                           autocomplete="new-password"
+                           minlength="6"
+                           placeholder="Minimum 6 characters">
+                    <p id="passwordHelpText" class="text-xs text-gray-500 mt-1 hidden">
+                        Only fill this if you want to change the password
+                    </p>
                 </div>
             </div>
         </form>
