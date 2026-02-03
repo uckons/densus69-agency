@@ -116,7 +116,7 @@ async function updateUser() {
     const id = document.getElementById('userId').value;
     const email = document.getElementById('userEmail').value.trim();
     const role = document.getElementById('userRole').value;
-    const password = document.getElementById('userPassword').value;
+    const password = document.getElementById('userPassword').value.trim();
     
     if (!id || !email || !role) {
         return alert('Email and Role are required');
@@ -125,7 +125,7 @@ async function updateUser() {
     const payload = { email, role };
     
     // Only include password if provided
-    if (password && password.trim() !== '') {
+    if (password) {
         if (password.length < 6) {
             return alert('Password must be at least 6 characters');
         }
