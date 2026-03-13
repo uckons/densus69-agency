@@ -1,18 +1,21 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/database'); // Changed from pool
+const { verifyTurnstileToken } = require('../utils/turnstile');
 
 exports.showRegister = (req, res) => {
   res.render('auth/register', {
-    title: 'Register - Densus69 Agency',
-    error: null
+    title: 'Register - SkyLin Agency',
+    error: null,
+    turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
   });
 };
 
 exports.showLogin = (req, res) => {
   res.render('auth/login', {
-    title: 'Login - Densus69 Agency',
-    error: null
+    title: 'Login - SkyLin Agency',
+    error: null,
+    turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
   });
 };
 
@@ -33,11 +36,24 @@ exports.register = async (req, res) => {
       bio
     } = req.body;
 
+    const captchaToken = req.body['cf-turnstile-response'];
+    const clientIp = req.headers['cf-connecting-ip'] || req.ip;
+    const captchaVerification = await verifyTurnstileToken(captchaToken, clientIp);
+
+    if (!captchaVerification.success) {
+      return res.render('auth/register', {
+        title: 'Register - SkyLin Agency',
+        error: captchaVerification.message,
+        turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
+      });
+    }
+
     if (!email || !password || !name) {
       console.log('Validation failed: missing required fields');
       return res.render('auth/register', {
-        title: 'Register - Densus69 Agency',
-        error: 'Email, password, and name are required'
+        title: 'Register - SkyLin Agency',
+        error: 'Email, password, and name are required',
+        turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
       });
     }
 
@@ -47,8 +63,9 @@ exports.register = async (req, res) => {
     if (checkUser.rows.length > 0) {
       console.log('User already exists:', email);
       return res.render('auth/register', {
-        title: 'Register - Densus69 Agency',
-        error: 'Email already registered'
+        title: 'Register - SkyLin Agency',
+        error: 'Email already registered',
+        turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
       });
     }
 
@@ -94,8 +111,9 @@ exports.register = async (req, res) => {
     console.error('❌ Register error:', error);
     console.error('Stack:', error.stack);
     return res.render('auth/register', {
-      title: 'Register - Densus69 Agency',
-      error: 'Registration failed: ' + error.message
+      title: 'Register - SkyLin Agency',
+      error: 'Registration failed: ' + error.message,
+      turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
     });
   }
 };
@@ -106,10 +124,23 @@ exports.login = async (req, res) => {
 
     console.log('Login attempt:', email);
 
+    const captchaToken = req.body['cf-turnstile-response'];
+    const clientIp = req.headers['cf-connecting-ip'] || req.ip;
+    const captchaVerification = await verifyTurnstileToken(captchaToken, clientIp);
+
+    if (!captchaVerification.success) {
+      return res.render('auth/login', {
+        title: 'Login - SkyLin Agency',
+        error: captchaVerification.message,
+        turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
+      });
+    }
+
     if (!email || !password) {
       return res.render('auth/login', {
-        title: 'Login - Densus69 Agency',
-        error: 'Email and password are required'
+        title: 'Login - SkyLin Agency',
+        error: 'Email and password are required',
+        turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
       });
     }
 
@@ -118,8 +149,9 @@ exports.login = async (req, res) => {
     if (userResult.rows.length === 0) {
       console.log('User not found:', email);
       return res.render('auth/login', {
-        title: 'Login - Densus69 Agency',
-        error: 'Invalid email or password'
+        title: 'Login - SkyLin Agency',
+        error: 'Invalid email or password',
+        turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
       });
     }
 
@@ -129,8 +161,9 @@ exports.login = async (req, res) => {
     if (!isMatch) {
       console.log('Password mismatch for:', email);
       return res.render('auth/login', {
-        title: 'Login - Densus69 Agency',
-        error: 'Invalid email or password'
+        title: 'Login - SkyLin Agency',
+        error: 'Invalid email or password',
+        turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
       });
     }
 
@@ -169,8 +202,9 @@ exports.login = async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     return res.render('auth/login', {
-      title: 'Login - Densus69 Agency',
-      error: 'Login failed. Please try again.'
+      title: 'Login - SkyLin Agency',
+      error: 'Login failed. Please try again.',
+      turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
     });
   }
 };
