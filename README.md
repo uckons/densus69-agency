@@ -88,6 +88,10 @@ UPLOAD_PATH=public/uploads
 
 # Admin
 ADMIN_FEE=50000
+
+# Cloudflare Turnstile (Captcha)
+CLOUDFLARE_TURNSTILE_SITE_KEY=your_turnstile_site_key
+CLOUDFLARE_TURNSTILE_SECRET_KEY=your_turnstile_secret_key
 ```
 
 ### 4. Initialize Database

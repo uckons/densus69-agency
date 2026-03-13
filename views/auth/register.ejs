@@ -220,7 +220,16 @@
                     </div>
                 </div>
                 
-                <!-- Submit Button -->
+                <!-- Cloudflare Turnstile -->
+            <div>
+                <% if (turnstileSiteKey) { %>
+                    <div class="cf-turnstile" data-sitekey="<%= turnstileSiteKey %>"></div>
+                <% } else { %>
+                    <p class="text-sm text-red-500">Captcha belum dikonfigurasi. Hubungi admin.</p>
+                <% } %>
+            </div>
+
+            <!-- Submit Button -->
                 <div>
                     <button 
                         type="submit" 
@@ -251,6 +260,8 @@
         </div>
     </div>
 </div>
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
 <script>
     async function handleRegister(event) {
