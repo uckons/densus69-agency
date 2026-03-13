@@ -1,4 +1,4 @@
-# Densus69 Agency - Modeling Agency Management System
+# SkyLin Agency - Modeling Agency Management System
 
 A comprehensive, full-featured web-based modeling agency management system built without Docker, using modern web technologies.
 
@@ -46,8 +46,8 @@ Before you begin, ensure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/uckons/densus69-agency.git
-cd densus69-agency
+git clone https://github.com/uckons/skylin-agency.git
+cd skylin-agency
 ```
 
 ### 2. Install Dependencies
@@ -88,6 +88,10 @@ UPLOAD_PATH=public/uploads
 
 # Admin
 ADMIN_FEE=50000
+
+# Cloudflare Turnstile (Captcha)
+CLOUDFLARE_TURNSTILE_SITE_KEY=your_turnstile_site_key
+CLOUDFLARE_TURNSTILE_SECRET_KEY=your_turnstile_secret_key
 ```
 
 ### 4. Initialize Database
@@ -141,7 +145,7 @@ The application will be available at `http://localhost:3000`
 ## 📁 Project Structure
 
 ```
-densus69-agency/
+skylin-agency/
 ├── config/
 │   └── database.js              # PostgreSQL connection
 ├── middleware/
@@ -215,7 +219,7 @@ Or manually insert an admin user in the database:
 ```sql
 -- Password: admin123
 INSERT INTO users (email, password, role) 
-VALUES ('admin@densus69.com', '$2a$10$YourHashedPasswordHere', 'admin');
+VALUES ('admin@skylinagency.com', '$2a$10$YourHashedPasswordHere', 'admin');
 ```
 
 ## 🔧 API Endpoints
@@ -313,7 +317,7 @@ Example:
 
 ```bash
 npm install -g pm2
-pm2 start server.js --name densus69-agency
+pm2 start server.js --name skylin-agency
 pm2 save
 pm2 startup
 ```
