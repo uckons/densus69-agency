@@ -202,6 +202,31 @@ function syncSelectAllCheckbox() {
     selectAll.indeterminate = selectedOnPage > 0 && selectedOnPage < pageUsers.length;
 }
 
+function updateBulkDeleteState() {
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    const count = selectedUserIds.size;
+
+    bulkDeleteBtn.disabled = count === 0;
+    bulkDeleteBtn.innerHTML = count > 0
+        ? `<i class="fas fa-trash-alt mr-2"></i>Delete Selected (${count})`
+        : '<i class="fas fa-trash-alt mr-2"></i>Delete Selected';
+}
+
+function syncSelectAllCheckbox() {
+    const selectAll = document.getElementById('selectAllUsers');
+    const total = currentUsers.length;
+    const selected = selectedUserIds.size;
+
+    if (total === 0) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+        return;
+    }
+
+    selectAll.checked = selected > 0 && selected === total;
+    selectAll.indeterminate = selected > 0 && selected < total;
+}
+
 function formatDate(str) {
     return str ? new Date(str).toLocaleString('id-ID') : '-';
 }
