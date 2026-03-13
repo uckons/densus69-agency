@@ -82,6 +82,7 @@ app.get('/api/admin/users', auth, isAdmin, userController.getAllUsers);
 app.get('/api/admin/users/:id', auth, isAdmin, userController.getUser);
 app.post('/api/admin/users', auth, isAdmin, userController.createUser);
 app.put('/api/admin/users/:id', auth, isAdmin, userController.updateUser);
+app.delete('/api/admin/users/bulk-delete', auth, isAdmin, userController.bulkDeleteUsers);
 app.delete('/api/admin/users/:id', auth, isAdmin, userController.deleteUser);
 
 // Agent Management API Routes (Admin only)
