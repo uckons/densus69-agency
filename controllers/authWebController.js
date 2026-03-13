@@ -1,18 +1,21 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/database'); // Changed from pool
+const { verifyTurnstileToken } = require('../utils/turnstile');
 
 exports.showRegister = (req, res) => {
   res.render('auth/register', {
     title: 'Register - Densus69 Agency',
-    error: null
+    error: null,
+    turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
   });
 };
 
 exports.showLogin = (req, res) => {
   res.render('auth/login', {
     title: 'Login - Densus69 Agency',
-    error: null
+    error: null,
+    turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
   });
 };
 
@@ -33,11 +36,24 @@ exports.register = async (req, res) => {
       bio
     } = req.body;
 
+    const captchaToken = req.body['cf-turnstile-response'];
+    const clientIp = req.headers['cf-connecting-ip'] || req.ip;
+    const captchaVerification = await verifyTurnstileToken(captchaToken, clientIp);
+
+    if (!captchaVerification.success) {
+      return res.render('auth/register', {
+        title: 'Register - Densus69 Agency',
+        error: captchaVerification.message,
+        turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
+      });
+    }
+
     if (!email || !password || !name) {
       console.log('Validation failed: missing required fields');
       return res.render('auth/register', {
         title: 'Register - Densus69 Agency',
-        error: 'Email, password, and name are required'
+        error: 'Email, password, and name are required',
+        turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
       });
     }
 
@@ -48,7 +64,8 @@ exports.register = async (req, res) => {
       console.log('User already exists:', email);
       return res.render('auth/register', {
         title: 'Register - Densus69 Agency',
-        error: 'Email already registered'
+        error: 'Email already registered',
+        turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
       });
     }
 
@@ -95,7 +112,8 @@ exports.register = async (req, res) => {
     console.error('Stack:', error.stack);
     return res.render('auth/register', {
       title: 'Register - Densus69 Agency',
-      error: 'Registration failed: ' + error.message
+      error: 'Registration failed: ' + error.message,
+      turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
     });
   }
 };
@@ -106,10 +124,23 @@ exports.login = async (req, res) => {
 
     console.log('Login attempt:', email);
 
+    const captchaToken = req.body['cf-turnstile-response'];
+    const clientIp = req.headers['cf-connecting-ip'] || req.ip;
+    const captchaVerification = await verifyTurnstileToken(captchaToken, clientIp);
+
+    if (!captchaVerification.success) {
+      return res.render('auth/login', {
+        title: 'Login - Densus69 Agency',
+        error: captchaVerification.message,
+        turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
+      });
+    }
+
     if (!email || !password) {
       return res.render('auth/login', {
         title: 'Login - Densus69 Agency',
-        error: 'Email and password are required'
+        error: 'Email and password are required',
+        turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
       });
     }
 
@@ -119,7 +150,8 @@ exports.login = async (req, res) => {
       console.log('User not found:', email);
       return res.render('auth/login', {
         title: 'Login - Densus69 Agency',
-        error: 'Invalid email or password'
+        error: 'Invalid email or password',
+        turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
       });
     }
 
@@ -130,7 +162,8 @@ exports.login = async (req, res) => {
       console.log('Password mismatch for:', email);
       return res.render('auth/login', {
         title: 'Login - Densus69 Agency',
-        error: 'Invalid email or password'
+        error: 'Invalid email or password',
+        turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
       });
     }
 
@@ -170,7 +203,8 @@ exports.login = async (req, res) => {
     console.error('Login error:', error);
     return res.render('auth/login', {
       title: 'Login - Densus69 Agency',
-      error: 'Login failed. Please try again.'
+      error: 'Login failed. Please try again.',
+      turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
     });
   }
 };
