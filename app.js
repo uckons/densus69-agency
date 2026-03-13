@@ -37,6 +37,12 @@ app.set('views', path.join(__dirname, 'views'));
 app.locals.formatCurrency = require('./utils/dateHelper').formatCurrency;
 app.locals.formatDate = require('./utils/dateHelper').formatDate;
 app.locals.formatDateTime = require('./utils/dateHelper').formatDateTime;
+app.locals.turnstileSiteKey = process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || '';
+
+app.use((req, res, next) => {
+  res.locals.turnstileSiteKey = process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || '';
+  next();
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -57,11 +63,15 @@ app.get('/', (req, res) => {
 
 // Auth routes
 app.get('/login', (req, res) => {
-  res.render('auth/login');
+  res.render('auth/login', {
+    turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
+  });
 });
 
 app.get('/register', (req, res) => {
-  res.render('auth/register');
+  res.render('auth/register', {
+    turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
+  });
 });
 
 // Admin routes
