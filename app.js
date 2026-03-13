@@ -37,6 +37,12 @@ app.set('views', path.join(__dirname, 'views'));
 app.locals.formatCurrency = require('./utils/dateHelper').formatCurrency;
 app.locals.formatDate = require('./utils/dateHelper').formatDate;
 app.locals.formatDateTime = require('./utils/dateHelper').formatDateTime;
+app.locals.turnstileSiteKey = process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || '';
+
+app.use((req, res, next) => {
+  res.locals.turnstileSiteKey = process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || '';
+  next();
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -57,11 +63,15 @@ app.get('/', (req, res) => {
 
 // Auth routes
 app.get('/login', (req, res) => {
-  res.render('auth/login');
+  res.render('auth/login', {
+    turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
+  });
 });
 
 app.get('/register', (req, res) => {
-  res.render('auth/register');
+  res.render('auth/register', {
+    turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
+  });
 });
 
 // Admin routes
@@ -72,6 +82,7 @@ app.get('/api/admin/users', auth, isAdmin, userController.getAllUsers);
 app.get('/api/admin/users/:id', auth, isAdmin, userController.getUser);
 app.post('/api/admin/users', auth, isAdmin, userController.createUser);
 app.put('/api/admin/users/:id', auth, isAdmin, userController.updateUser);
+app.delete('/api/admin/users/bulk-delete', auth, isAdmin, userController.bulkDeleteUsers);
 app.delete('/api/admin/users/:id', auth, isAdmin, userController.deleteUser);
 
 // Agent Management API Routes (Admin only)
