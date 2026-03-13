@@ -142,6 +142,17 @@ npm start
 
 The application will be available at `http://localhost:3000`
 
+### 7. Upload Logo Asset (Manual)
+
+Auth pages expect logo file at:
+
+```
+public/images/skylin-logo.png
+```
+
+If the file is not present, UI will automatically show text fallback **SkyLin**.
+
+
 ## 📁 Project Structure
 
 ```
