@@ -133,6 +133,21 @@
             </button>
         </div>
     </div>
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+        <div class="relative w-full md:max-w-sm">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <input id="userSearchInput" type="text" placeholder="Cari email / role..." class="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        <div class="flex items-center gap-2 text-sm">
+            <label for="usersPerPage" class="text-gray-600">Rows:</label>
+            <select id="usersPerPage" class="border rounded-lg px-2 py-2">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+    </div>
     <div class="bg-white rounded-lg shadow-sm overflow-hidden">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -149,6 +164,14 @@
             </thead>
             <tbody id="usersTable" class="bg-white divide-y divide-gray-200"></tbody>
         </table>
+    </div>
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-4">
+        <p id="usersSummary" class="text-sm text-gray-600">Showing 0 users</p>
+        <div class="flex items-center gap-2">
+            <button id="prevPageBtn" class="px-3 py-2 border rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">Prev</button>
+            <span id="pageInfo" class="text-sm text-gray-700">Page 1 / 1</span>
+            <button id="nextPageBtn" class="px-3 py-2 border rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+        </div>
     </div>
 </main>
 
