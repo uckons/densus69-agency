@@ -5,7 +5,7 @@ const { verifyTurnstileToken } = require('../utils/turnstile');
 
 exports.showRegister = (req, res) => {
   res.render('auth/register', {
-    title: 'Register - Densus69 Agency',
+    title: 'Register - SkyLin Agency',
     error: null,
     turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
   });
@@ -13,7 +13,7 @@ exports.showRegister = (req, res) => {
 
 exports.showLogin = (req, res) => {
   res.render('auth/login', {
-    title: 'Login - Densus69 Agency',
+    title: 'Login - SkyLin Agency',
     error: null,
     turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
   });
@@ -42,7 +42,7 @@ exports.register = async (req, res) => {
 
     if (!captchaVerification.success) {
       return res.render('auth/register', {
-        title: 'Register - Densus69 Agency',
+        title: 'Register - SkyLin Agency',
         error: captchaVerification.message,
         turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
       });
@@ -51,7 +51,7 @@ exports.register = async (req, res) => {
     if (!email || !password || !name) {
       console.log('Validation failed: missing required fields');
       return res.render('auth/register', {
-        title: 'Register - Densus69 Agency',
+        title: 'Register - SkyLin Agency',
         error: 'Email, password, and name are required',
         turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
       });
@@ -63,7 +63,7 @@ exports.register = async (req, res) => {
     if (checkUser.rows.length > 0) {
       console.log('User already exists:', email);
       return res.render('auth/register', {
-        title: 'Register - Densus69 Agency',
+        title: 'Register - SkyLin Agency',
         error: 'Email already registered',
         turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
       });
@@ -111,7 +111,7 @@ exports.register = async (req, res) => {
     console.error('❌ Register error:', error);
     console.error('Stack:', error.stack);
     return res.render('auth/register', {
-      title: 'Register - Densus69 Agency',
+      title: 'Register - SkyLin Agency',
       error: 'Registration failed: ' + error.message,
       turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
     });
@@ -130,7 +130,7 @@ exports.login = async (req, res) => {
 
     if (!captchaVerification.success) {
       return res.render('auth/login', {
-        title: 'Login - Densus69 Agency',
+        title: 'Login - SkyLin Agency',
         error: captchaVerification.message,
         turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
       });
@@ -138,7 +138,7 @@ exports.login = async (req, res) => {
 
     if (!email || !password) {
       return res.render('auth/login', {
-        title: 'Login - Densus69 Agency',
+        title: 'Login - SkyLin Agency',
         error: 'Email and password are required',
         turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
       });
@@ -149,7 +149,7 @@ exports.login = async (req, res) => {
     if (userResult.rows.length === 0) {
       console.log('User not found:', email);
       return res.render('auth/login', {
-        title: 'Login - Densus69 Agency',
+        title: 'Login - SkyLin Agency',
         error: 'Invalid email or password',
         turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
       });
@@ -161,7 +161,7 @@ exports.login = async (req, res) => {
     if (!isMatch) {
       console.log('Password mismatch for:', email);
       return res.render('auth/login', {
-        title: 'Login - Densus69 Agency',
+        title: 'Login - SkyLin Agency',
         error: 'Invalid email or password',
         turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
       });
@@ -202,7 +202,7 @@ exports.login = async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     return res.render('auth/login', {
-      title: 'Login - Densus69 Agency',
+      title: 'Login - SkyLin Agency',
       error: 'Login failed. Please try again.',
       turnstileSiteKey: process.env.CLOUDFLARE_TURNSTILE_SITE_KEY || ''
     });
