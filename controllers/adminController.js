@@ -23,11 +23,13 @@ async function ensureModelAgentColumns() {
   await db.query('ALTER TABLE models ADD COLUMN IF NOT EXISTS agent_fee_percent DECIMAL(5,2) DEFAULT 0');
   await db.query('ALTER TABLE models ADD COLUMN IF NOT EXISTS grade_id INTEGER REFERENCES model_grades(id) ON DELETE SET NULL');
 
-  await db.query(`
-    INSERT INTO model_grades (grade_name, rate_per_trx)
-    VALUES ('Bronze', 100000), ('Silver', 150000), ('Gold', 250000)
-    ON CONFLICT (grade_name) DO NOTHING
-  `);
+  const gradeCountResult = await db.query('SELECT COUNT(*)::int AS total FROM model_grades');
+  if (gradeCountResult.rows[0].total === 0) {
+    await db.query(`
+      INSERT INTO model_grades (grade_name, rate_per_trx)
+      VALUES ('Bronze', 100000), ('Silver', 150000), ('Gold', 250000)
+    `);
+  }
 }
 
 /**
