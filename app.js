@@ -89,6 +89,7 @@ app.delete('/api/admin/users/:id', auth, isAdmin, userController.deleteUser);
 const agentController = require('./controllers/agentController');
 app.get('/api/admin/agents', auth, isAdmin, agentController.getAllAgents);
 app.get('/api/admin/agents/:id', auth, isAdmin, agentController.getAgent);
+app.get('/api/admin/agents/:id/performance', auth, isAdmin, agentController.getAgentPerformance);
 app.post('/api/admin/agents', auth, isAdmin, agentController.createAgent);
 app.put('/api/admin/agents/:id', auth, isAdmin, agentController.updateAgent);
 app.delete('/api/admin/agents/:id', auth, isAdmin, agentController.deleteAgent);
