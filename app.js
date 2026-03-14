@@ -100,6 +100,10 @@ app.get('/admin/models', auth, isAdmin, (req, res) => {
   res.render('admin/models-list', { user: req.user });
 });
 
+app.get('/admin/model-grades', auth, isAdmin, (req, res) => {
+  res.render('admin/model-grades', { user: req.user });
+});
+
 app.get('/admin/models/:id/edit', auth, isAdmin, (req, res) => {
   res.render('admin/model-edit', { user: req.user, modelId: req.params.id });
 });

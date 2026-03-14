@@ -9,6 +9,18 @@ router.use(auth, isAdmin);
 // GET /api/admin/dashboard
 router.get('/dashboard', adminController.getDashboard);
 
+// GET /api/admin/model-grades
+router.get('/model-grades', adminController.getModelGrades);
+
+// POST /api/admin/model-grades
+router.post('/model-grades', adminController.createModelGrade);
+
+// PUT /api/admin/model-grades/:id
+router.put('/model-grades/:id', adminController.updateModelGrade);
+
+// DELETE /api/admin/model-grades/:id
+router.delete('/model-grades/:id', adminController.deleteModelGrade);
+
 // GET /api/admin/models - Get all models
 router.get('/models', adminController.getModels);
 
