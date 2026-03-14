@@ -12,6 +12,10 @@ router.get('/dashboard', adminController.getDashboard);
 // GET /api/admin/models - Get all models
 router.get('/models', adminController.getModels);
 
+// POST /api/admin/models/manual - Create model manually and bind agent
+router.post('/models/manual', adminController.createManualModel);
+router.put('/models/manual/:id', adminController.updateManualModel);
+
 // GET /api/admin/models/:id - Get model by ID
 router.get('/models/:id', adminController.getModelDetail);
 
