@@ -305,6 +305,42 @@ exports.updateManualModel = async (req, res) => {
 };
 
 /**
+ * Delete model
+ */
+exports.deleteModel = async (req, res) => {
+  const client = await db.pool.connect();
+  try {
+    const { id } = req.params;
+
+    await client.query('BEGIN');
+
+    const modelResult = await client.query('SELECT id, user_id FROM models WHERE id = $1', [id]);
+    if (modelResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ success: false, message: 'Model not found' });
+    }
+
+    const userId = modelResult.rows[0].user_id;
+
+    await client.query('DELETE FROM models WHERE id = $1', [id]);
+
+    if (userId) {
+      await client.query('DELETE FROM users WHERE id = $1', [userId]);
+    }
+
+    await client.query('COMMIT');
+
+    return res.json({ success: true, message: 'Model deleted successfully' });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Delete model error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  } finally {
+    client.release();
+  }
+};
+
+/**
  * Get model detail
  */
 exports.getModelDetail = async (req, res) => {
