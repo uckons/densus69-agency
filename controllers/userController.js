@@ -104,6 +104,48 @@ exports.updateUser = async (req, res) => {
   }
 };
 
+
+// Bulk delete users
+exports.bulkDeleteUsers = async (req, res) => {
+  try {
+    const { userIds } = req.body;
+
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'userIds harus berupa array dan tidak boleh kosong' });
+    }
+
+    const uniqueIds = [...new Set(userIds
+      .map(id => parseInt(id, 10))
+      .filter(id => Number.isInteger(id) && id > 0))];
+
+    if (uniqueIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'Tidak ada user id yang valid' });
+    }
+
+    const selfUserId = parseInt(req.user.userId, 10);
+    const idsToDelete = uniqueIds.filter(id => id !== selfUserId);
+
+    if (idsToDelete.length === 0) {
+      return res.status(400).json({ success: false, message: 'Tidak bisa menghapus akun sendiri' });
+    }
+
+    const result = await db.query(
+      'DELETE FROM users WHERE id = ANY($1::int[]) RETURNING id',
+      [idsToDelete]
+    );
+
+    return res.json({
+      success: true,
+      message: `${result.rowCount} user berhasil dihapus`,
+      deletedIds: result.rows.map(row => row.id),
+      skippedSelf: uniqueIds.includes(selfUserId)
+    });
+  } catch (error) {
+    console.error('Bulk delete users error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // Delete user
 exports.deleteUser = async (req, res) => {
   try {
