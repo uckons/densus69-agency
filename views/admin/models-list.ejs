@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Models Management - Densus69 Agency</title>
+    <title>Models Management - SkyLin Agency</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⭐</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -59,6 +59,11 @@
                         <i class="fas fa-users w-5"></i>
                         <span>Models</span>
                     </a>
+                    <a href="/admin/model-grades" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-layer-group w-5"></i>
+                        <span>Model Grades</span>
+                    </a>
+                    
                     
                     <a href="/admin/agents" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-user-tie w-5"></i>
@@ -148,6 +153,9 @@
         </div>
         
         <div class="flex space-x-3">
+            <button onclick="openManualModelModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                <i class="fas fa-user-plus mr-2"></i>Add Manual Model
+            </button>
             <button onclick="exportModels()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
                 <i class="fas fa-file-export mr-2"></i>Export
             </button>
@@ -223,6 +231,12 @@
                             Rate
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Agent
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Fee Split
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Joined
                         </th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -233,7 +247,7 @@
                 <tbody id="models-table-body" class="bg-white divide-y divide-gray-200">
                     <% if (typeof models !== 'undefined' && models.length > 0) { %>
                         <% models.forEach(model => { %>
-                            <tr class="hover:bg-gray-50 transition" data-model-id="<%= model._id %>">
+                            <tr class="hover:bg-gray-50 transition" data-model-id="<%= model.id %>">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <img src="<%= model.photo || '/images/default-avatar.png' %>" 
@@ -241,7 +255,7 @@
                                              class="w-12 h-12 rounded-full object-cover border-2 border-gray-200">
                                         <div class="ml-4">
                                             <div class="text-sm font-medium text-gray-900"><%= model.name %></div>
-                                            <div class="text-sm text-gray-500">ID: <%= model._id.toString().slice(-8) %></div>
+                                            <div class="text-sm text-gray-500">ID: <%= String(model.id).slice(-8) %></div>
                                         </div>
                                     </div>
                                 </td>
@@ -269,25 +283,25 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                                    <%= model.rate ? formatCurrency(model.rate) + '/day' : 'Not set' %>
+                                    <%= model.rate ? formatCurrency(model.rate) + '/trx' : 'Not set' %>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <%= new Date(model.createdAt).toLocaleDateString('id-ID') %>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex justify-end space-x-2">
-                                        <a href="/admin/model-edit/<%= model._id %>" 
+                                        <a href="/admin/model-edit/<%= model.id %>" 
                                            class="text-admin-600 hover:text-admin-900 transition"
                                            title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="/model/<%= model._id %>/profile" 
+                                        <a href="/model/<%= model.id %>/profile" 
                                            target="_blank"
                                            class="text-green-600 hover:text-green-900 transition"
                                            title="View Profile">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <button onclick="deleteModel('<%= model._id %>')" 
+                                        <button onclick="deleteModel('<%= model.id %>')" 
                                                 class="text-red-600 hover:text-red-900 transition"
                                                 title="Delete">
                                             <i class="fas fa-trash"></i>
@@ -298,7 +312,7 @@
                         <% }) %>
                     <% } else { %>
                         <tr>
-                            <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                            <td colspan="9" class="px-6 py-8 text-center text-gray-500">
                                 <i class="fas fa-users text-4xl mb-2"></i>
                                 <p>No models found</p>
                             </td>
@@ -325,7 +339,79 @@
     </div>
 </div>
 
+
+<!-- Manual Add Model Modal -->
+<div id="manualModelModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 id="manualModelModalTitle" class="text-xl font-bold text-gray-800">Add Manual Model</h3>
+            <button type="button" onclick="closeManualModelModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+        </div>
+        <form id="manualModelForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input id="manualModelId" type="hidden">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                <input id="manualModelName" type="text" class="w-full border rounded-lg px-3 py-2" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                <input id="manualModelEmail" type="email" class="w-full border rounded-lg px-3 py-2" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                <input id="manualModelPassword" type="password" class="w-full border rounded-lg px-3 py-2" minlength="6" required>
+                <p id="manualModelPasswordHint" class="text-xs text-gray-500 mt-1">Wajib untuk tambah model baru.</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <input id="manualModelPhone" type="text" class="w-full border rounded-lg px-3 py-2">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                <select id="manualModelGender" class="w-full border rounded-lg px-3 py-2">
+                    <option value="">-</option>
+                    <option value="female">Female</option>
+                    <option value="male">Male</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Model Grade *</label>
+                <select id="manualModelGrade" class="w-full border rounded-lg px-3 py-2" required>
+                    <option value="">Pilih grade</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select id="manualModelStatus" class="w-full border rounded-lg px-3 py-2">
+                    <option value="vacant">Vacant</option>
+                    <option value="working">Working</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Agent</label>
+                <select id="manualModelAgent" class="w-full border rounded-lg px-3 py-2"></select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Agent Fee (%)</label>
+                <input id="manualModelAgentFee" type="number" min="0" max="100" class="w-full border rounded-lg px-3 py-2" value="10">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Address / City</label>
+                <input id="manualModelAddress" type="text" class="w-full border rounded-lg px-3 py-2">
+            </div>
+        </form>
+        <div class="flex justify-end gap-2 mt-6">
+            <button type="button" onclick="closeManualModelModal()" class="px-4 py-2 border rounded-lg">Cancel</button>
+            <button id="manualModelSubmitBtn" type="button" onclick="submitManualModel()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Model</button>
+        </div>
+    </div>
+</div>
+
 <script>
+    let modelsCache = [];
+    let gradesCache = [];
+
     function filterModels() {
         const search = document.getElementById('search').value.toLowerCase();
         const status = document.getElementById('statusFilter').value.toLowerCase();
@@ -356,17 +442,18 @@
         
         try {
             showLoading();
-            const response = await fetch(`/admin/models/${modelId}`, {
+            const response = await fetch(`/api/admin/models/${modelId}`, {
                 method: 'DELETE',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
             
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
             hideLoading();
             
-            if (data.success) {
+            if (response.ok && data.success) {
                 showToast('Model deleted successfully', 'success');
                 // Remove row from table
                 document.querySelector(`tr[data-model-id="${modelId}"]`)?.remove();
@@ -384,6 +471,211 @@
         window.location.href = '/admin/models/export';
         setTimeout(hideLoading, 2000);
     }
+
+    async function loadModelsData() {
+        try {
+            const response = await fetch('/api/admin/models', { credentials: 'include' });
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'Failed to load models');
+            }
+            modelsCache = data.data || [];
+            renderModelsFromApi(modelsCache);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    function renderModelsFromApi(models) {
+        const tbody = document.getElementById('models-table-body');
+        if (!models.length) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="px-6 py-8 text-center text-gray-500">
+                        <i class="fas fa-users text-4xl mb-2"></i>
+                        <p>No models found</p>
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        const formatCurrencySafe = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+
+        tbody.innerHTML = models.map((model) => {
+            const agentName = model.agent_name || '-';
+            const agentFee = Number(model.estimated_agent_fee || 0);
+            const modelFee = Number(model.estimated_model_fee || 0);
+            return `
+                <tr class="hover:bg-gray-50 transition" data-model-id="${model.id}">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <img src="${model.photo || '/images/default-avatar.png'}" class="w-10 h-10 rounded-full object-cover mr-3">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">${model.full_name || '-'}</div>
+                                <div class="text-sm text-gray-500">${model.email || '-'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-700">${model.phone || '-'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">${model.gender || '-'} / ${model.address || '-'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">${model.status || '-'}</td>
+                    <td class="px-6 py-4 text-sm font-semibold text-gray-900">${model.grade_name || '-'} (${formatCurrencySafe(model.rate)}/trx)</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">${agentName}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">Model: ${formatCurrencySafe(modelFee)} | Agent: ${formatCurrencySafe(agentFee)} (${Number(model.agent_fee_percent || 0)}%)</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${new Date(model.created_at || Date.now()).toLocaleDateString('id-ID')}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div class="flex justify-end space-x-2">
+                            <button onclick="openEditModelModal('${model.id}')" class="text-blue-600 hover:text-blue-900 transition" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteModel('${model.id}')" class="text-red-600 hover:text-red-900 transition" title="Delete"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+        }).join('');
+    }
+
+    async function loadAgentOptions() {
+        const select = document.getElementById('manualModelAgent');
+        select.innerHTML = '<option value="">No Agent</option>';
+        try {
+            const res = await fetch('/api/admin/agents', { credentials: 'include' });
+            const data = await res.json();
+            if (!res.ok || !data.success) return;
+            (data.agents || []).forEach((agent) => {
+                const option = document.createElement('option');
+                option.value = agent.id;
+                option.textContent = `${agent.full_name} (${agent.email})`;
+                select.appendChild(option);
+            });
+        } catch (_) {}
+    }
+
+    async function loadGradeOptions(selectedValue = '') {
+        const select = document.getElementById('manualModelGrade');
+        select.innerHTML = '<option value="">Pilih grade</option>';
+        try {
+            const res = await fetch('/api/admin/model-grades', { credentials: 'include' });
+            const data = await res.json();
+            if (!res.ok || !data.success) return;
+            gradesCache = data.data || [];
+            gradesCache.forEach((grade) => {
+                const option = document.createElement('option');
+                option.value = grade.id;
+                option.textContent = `${grade.grade_name} - Rp ${Number(grade.rate_per_trx || 0).toLocaleString('id-ID')}/trx`;
+                select.appendChild(option);
+            });
+            if (selectedValue) {
+                select.value = String(selectedValue);
+            }
+        } catch (_) {}
+    }
+
+    function openManualModelModal() {
+        document.getElementById('manualModelForm').reset();
+        document.getElementById('manualModelId').value = '';
+        document.getElementById('manualModelModalTitle').textContent = 'Add Manual Model';
+        document.getElementById('manualModelSubmitBtn').textContent = 'Save Model';
+        document.getElementById('manualModelPassword').required = true;
+        document.getElementById('manualModelPasswordHint').textContent = 'Wajib untuk tambah model baru.';
+        document.getElementById('manualModelStatus').value = 'vacant';
+        document.getElementById('manualModelModal').classList.remove('hidden');
+        loadAgentOptions();
+        loadGradeOptions();
+    }
+
+    function openEditModelModal(modelId) {
+        const model = modelsCache.find((item) => String(item.id) === String(modelId));
+        if (!model) {
+            showToast('Data model tidak ditemukan', 'error');
+            return;
+        }
+
+        document.getElementById('manualModelId').value = model.id;
+        document.getElementById('manualModelName').value = model.full_name || '';
+        document.getElementById('manualModelEmail').value = model.email || '';
+        document.getElementById('manualModelPassword').value = '';
+        document.getElementById('manualModelPhone').value = model.phone || '';
+        document.getElementById('manualModelGender').value = model.gender || '';
+        document.getElementById('manualModelAddress').value = model.address || '';
+        document.getElementById('manualModelGrade').value = model.grade_id || '';
+        document.getElementById('manualModelStatus').value = model.status || 'vacant';
+        document.getElementById('manualModelAgentFee').value = Number(model.agent_fee_percent || 0);
+
+        document.getElementById('manualModelModalTitle').textContent = 'Edit Model';
+        document.getElementById('manualModelSubmitBtn').textContent = 'Update Model';
+        document.getElementById('manualModelPassword').required = false;
+        document.getElementById('manualModelPasswordHint').textContent = 'Kosongkan jika password tidak diubah.';
+
+        loadAgentOptions().then(() => {
+            document.getElementById('manualModelAgent').value = model.agent_id || '';
+        });
+        loadGradeOptions(model.grade_id || '');
+
+        document.getElementById('manualModelModal').classList.remove('hidden');
+    }
+
+    function closeManualModelModal() {
+        document.getElementById('manualModelModal').classList.add('hidden');
+    }
+
+    async function submitManualModel() {
+        const modelId = document.getElementById('manualModelId').value;
+        const payload = {
+            full_name: document.getElementById('manualModelName').value,
+            email: document.getElementById('manualModelEmail').value,
+            phone: document.getElementById('manualModelPhone').value,
+            gender: document.getElementById('manualModelGender').value,
+            address: document.getElementById('manualModelAddress').value,
+            grade_id: document.getElementById('manualModelGrade').value,
+            status: document.getElementById('manualModelStatus').value,
+            agent_id: document.getElementById('manualModelAgent').value || null,
+            agent_fee_percent: document.getElementById('manualModelAgentFee').value || 0
+        };
+
+        const password = document.getElementById('manualModelPassword').value;
+        if (!modelId) {
+            payload.password = password;
+        } else if (password) {
+            payload.password = password;
+        }
+
+        if (!payload.full_name || !payload.email || !payload.grade_id) {
+            showToast('Nama, email, dan grade wajib diisi', 'error');
+            return;
+        }
+
+        if (!modelId && !payload.password) {
+            showToast('Password wajib untuk tambah model baru', 'error');
+            return;
+        }
+
+        try {
+            const url = modelId ? `/api/admin/models/manual/${modelId}` : '/api/admin/models/manual';
+            const method = modelId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method,
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'Gagal menambah model manual');
+            }
+
+            closeManualModelModal();
+            showToast(data.message || (modelId ? 'Model berhasil diupdate' : 'Model berhasil ditambahkan'), 'success');
+            loadModelsData();
+        } catch (error) {
+            showToast(error.message || 'Terjadi kesalahan', 'error');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadModelsData();
+    });
+
 </script>
             </main>
         </div>
