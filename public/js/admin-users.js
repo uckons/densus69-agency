@@ -8,6 +8,22 @@ function getToken() {
     return localStorage.getItem('token');
 }
 
+function buildAuthHeaders(extra = {}) {
+    const token = getToken();
+    return token
+        ? { ...extra, Authorization: `Bearer ${token}` }
+        : { ...extra };
+}
+
+async function parseJsonSafe(response) {
+    const text = await response.text();
+    try {
+        return text ? JSON.parse(text) : {};
+    } catch (_) {
+        return { message: text || 'Unknown server response' };
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadUsers();
 
@@ -90,15 +106,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadUsers() {
     try {
-        const data = await fetch('/api/admin/users', {
-            headers: { Authorization: `Bearer ${getToken()}` }
-        }).then((res) => res.json());
+        const response = await fetch('/api/admin/users', {
+            credentials: 'include',
+            headers: buildAuthHeaders()
+        });
+
+        const data = await parseJsonSafe(response);
+        if (!response.ok || data.success === false) {
+            throw new Error(data.message || 'Failed to load users');
+        }
 
         allUsers = data.users || [];
         selectedUserIds.clear();
         applyFiltersAndRender();
     } catch (err) {
-        alert('Error loading users');
+        alert(err.message || 'Error loading users');
     }
 }
 
@@ -202,31 +224,6 @@ function syncSelectAllCheckbox() {
     selectAll.indeterminate = selectedOnPage > 0 && selectedOnPage < pageUsers.length;
 }
 
-function updateBulkDeleteState() {
-    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
-    const count = selectedUserIds.size;
-
-    bulkDeleteBtn.disabled = count === 0;
-    bulkDeleteBtn.innerHTML = count > 0
-        ? `<i class="fas fa-trash-alt mr-2"></i>Delete Selected (${count})`
-        : '<i class="fas fa-trash-alt mr-2"></i>Delete Selected';
-}
-
-function syncSelectAllCheckbox() {
-    const selectAll = document.getElementById('selectAllUsers');
-    const total = currentUsers.length;
-    const selected = selectedUserIds.size;
-
-    if (total === 0) {
-        selectAll.checked = false;
-        selectAll.indeterminate = false;
-        return;
-    }
-
-    selectAll.checked = selected > 0 && selected === total;
-    selectAll.indeterminate = selected > 0 && selected < total;
-}
-
 function formatDate(str) {
     return str ? new Date(str).toLocaleString('id-ID') : '-';
 }
@@ -264,14 +261,16 @@ async function addUser() {
     try {
         const res = await fetch('/api/admin/users', {
             method: 'POST',
-            headers: { Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
+            credentials: 'include',
+            headers: buildAuthHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ email, role, password })
         });
 
-        if (!res.ok) throw new Error('Failed');
+        const result = await parseJsonSafe(res);
+        if (!res.ok || result.success === false) throw new Error(result.message || 'Failed');
         closeUserModal();
         loadUsers();
-        alert('User added');
+        alert(result.message || 'User added');
     } catch {
         alert('Failed to add user');
     }
@@ -286,14 +285,16 @@ async function updateUser() {
     try {
         const res = await fetch(`/api/admin/users/${id}`, {
             method: 'PUT',
-            headers: { Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
+            credentials: 'include',
+            headers: buildAuthHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ email, role })
         });
 
-        if (!res.ok) throw new Error('Failed');
+        const result = await parseJsonSafe(res);
+        if (!res.ok || result.success === false) throw new Error(result.message || 'Failed');
         closeUserModal();
         loadUsers();
-        alert('User updated');
+        alert(result.message || 'User updated');
     } catch {
         alert('Failed to update user');
     }
@@ -306,12 +307,13 @@ async function bulkDeleteUsers() {
     try {
         const res = await fetch('/api/admin/users/bulk-delete', {
             method: 'DELETE',
-            headers: { Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
+            credentials: 'include',
+            headers: buildAuthHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ userIds: Array.from(selectedUserIds) })
         });
 
-        const result = await res.json();
-        if (!res.ok) throw new Error(result.message || 'Failed');
+        const result = await parseJsonSafe(res);
+        if (!res.ok || result.success === false) throw new Error(result.message || 'Failed');
 
         await loadUsers();
         alert(result.message || 'Selected users deleted');
@@ -326,10 +328,12 @@ window.deleteUser = async function (id) {
     try {
         const res = await fetch(`/api/admin/users/${id}`, {
             method: 'DELETE',
-            headers: { Authorization: `Bearer ${getToken()}` }
+            credentials: 'include',
+            headers: buildAuthHeaders()
         });
 
-        if (!res.ok) throw new Error('Failed');
+        const result = await parseJsonSafe(res);
+        if (!res.ok || result.success === false) throw new Error(result.message || 'Failed');
         loadUsers();
         alert('User deleted');
     } catch {
