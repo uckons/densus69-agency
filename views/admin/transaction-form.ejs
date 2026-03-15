@@ -163,11 +163,16 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             <i class="fas fa-user mr-2"></i>Assigned Model *
                         </label>
-                        <select id="model_id" name="model_id" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
-                                onchange="updateModelRate(this)">
-                            <option value="">Choose assigned model...</option>
-                        </select>
+                        <div class="flex gap-2">
+                            <select id="model_id" name="model_id" required
+                                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
+                                    onchange="updateModelRate(this)" onfocus="loadAssignedModels()">
+                                <option value="">Choose assigned model...</option>
+                            </select>
+                            <button type="button" onclick="loadAssignedModels()" class="px-3 py-3 border border-gray-300 rounded-lg hover:bg-gray-50" title="Reload assigned models">
+                                <i class="fas fa-rotate"></i>
+                            </button>
+                        </div>
                         <p id="model-assignment-info" class="text-xs text-gray-500 mt-1">Hanya model yang sedang di-assign pada job aktif.</p>
                     </div>
 
@@ -215,7 +220,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         <i class="fas fa-building mr-2"></i>Client Name *
                     </label>
-                    <input type="text" name="client_name" required
+                    <input type="text" id="client_name" name="client_name" required
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
                            placeholder="Client atau brand">
                 </div>
@@ -252,6 +257,7 @@
     async function loadAssignedModels() {
         const select = document.getElementById('model_id');
         const assignmentInfo = document.getElementById('model-assignment-info');
+        const previousSelection = select.value;
 
         select.innerHTML = '<option value="">Choose assigned model...</option>';
 
@@ -267,16 +273,26 @@
 
             if (!assignedModels.length) {
                 assignmentInfo.textContent = 'Belum ada model yang di-assign ke job aktif.';
+                updateModelRate(select);
                 return;
             }
+
+            assignmentInfo.textContent = `Assigned models loaded: ${assignedModels.length}`;
 
             assignedModels.forEach((item) => {
                 const option = document.createElement('option');
                 option.value = item.id;
                 option.setAttribute('data-rate', item.rate || 0);
+                option.setAttribute('data-client', item.client_name || '');
                 option.textContent = `${item.full_name} - ${item.job_title || '-'} (${item.client_name || '-'})`;
                 select.appendChild(option);
             });
+
+            if (previousSelection && Array.from(select.options).some(opt => opt.value === previousSelection)) {
+                select.value = previousSelection;
+            }
+
+            updateModelRate(select);
         } catch (error) {
             assignmentInfo.textContent = 'Gagal memuat assigned models.';
         }
@@ -285,7 +301,14 @@
     function updateModelRate(select) {
         const selectedOption = select.options[select.selectedIndex];
         const rate = Number(selectedOption?.getAttribute('data-rate') || 0);
+        const clientName = selectedOption?.getAttribute('data-client') || '';
         document.getElementById('model_rate_display').value = formatCurrencySafe(rate);
+
+        const clientInput = document.getElementById('client_name');
+        if (clientInput && clientName) {
+            clientInput.value = clientName;
+        }
+
         calculateRevenue();
     }
 
@@ -340,6 +363,12 @@
     document.addEventListener('DOMContentLoaded', () => {
         loadAssignedModels();
         calculateRevenue();
+
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                loadAssignedModels();
+            }
+        }, 15000);
     });
 </script>
             </main>
