@@ -6,6 +6,9 @@ const { auth, isAdmin, isModel } = require('../middleware/auth');
 // POST /api/jobs - Create new job (admin only)
 router.post('/', auth, isAdmin, jobController.createJob);
 
+// PUT /api/jobs/:id - Update job (admin only)
+router.put('/:id', auth, isAdmin, jobController.updateJob);
+
 // GET /api/jobs/my-bookings - Get model's bookings (model only)
 // This must come before /:id route
 router.get('/my-bookings', auth, isModel, jobController.getMyBookings);

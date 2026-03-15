@@ -11,29 +11,26 @@ exports.createJob = async (req, res) => {
       client_name,
       client_contact,
       job_date,
-      location,
-      payment,
-      requirements
+      payment_offered,
+      status
     } = req.body;
 
     // Validate required fields
-    if (!title || !description || !client_name || !job_date || !location || !payment) {
+    if (!title || !client_name || !job_date || payment_offered === undefined || payment_offered === null || payment_offered === '') {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields'
+        message: 'title, client_name, job_date, dan payment_offered wajib diisi'
       });
     }
 
     const job = await Job.create({
       title,
-      description,
+      description: description || null,
       client_name,
-      client_contact,
+      client_contact: client_contact || null,
       job_date,
-      location,
-      payment: parseFloat(payment),
-      requirements,
-      status: 'open'
+      payment_offered: Number(payment_offered),
+      status: status || 'open'
     });
 
     res.status(201).json({
@@ -44,6 +41,71 @@ exports.createJob = async (req, res) => {
   } catch (error) {
     console.error('Create job error:', error);
     res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+
+/**
+ * Update job (admin)
+ */
+exports.updateJob = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      title,
+      description,
+      client_name,
+      client_contact,
+      job_date,
+      payment_offered,
+      status
+    } = req.body;
+
+    const existing = await Job.findById(id);
+    if (!existing) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+
+    if (status && !['open', 'assigned', 'completed', 'cancelled'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status value'
+      });
+    }
+
+    const payload = {};
+    if (title !== undefined) payload.title = String(title).trim();
+    if (description !== undefined) payload.description = description || null;
+    if (client_name !== undefined) payload.client_name = String(client_name).trim();
+    if (client_contact !== undefined) payload.client_contact = client_contact || null;
+    if (job_date !== undefined) payload.job_date = job_date;
+    if (payment_offered !== undefined && payment_offered !== null && payment_offered !== '') payload.payment_offered = Number(payment_offered);
+    if (status !== undefined) payload.status = status;
+
+    if (Object.keys(payload).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No fields to update'
+      });
+    }
+
+    const updated = await Job.update(id, payload);
+
+    return res.json({
+      success: true,
+      message: 'Job updated successfully',
+      data: updated
+    });
+  } catch (error) {
+    console.error('Update job error:', error);
+    return res.status(500).json({
       success: false,
       message: 'Server error',
       error: error.message
@@ -284,7 +346,7 @@ exports.updateBookingStatus = async (req, res) => {
 
     // If booking is confirmed, update job status
     if (status === 'confirmed') {
-      await Job.update(booking.job_id, { status: 'booked' });
+      await Job.update(booking.job_id, { status: 'assigned' });
     }
 
     const updatedBooking = await Booking.findById(id);
@@ -312,7 +374,7 @@ exports.updateJobStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!['open', 'booked', 'completed', 'cancelled'].includes(status)) {
+    if (!['open', 'assigned', 'completed', 'cancelled'].includes(status)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid status value'
