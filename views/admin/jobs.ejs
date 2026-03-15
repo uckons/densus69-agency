@@ -206,6 +206,7 @@
                                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Client</th>
                                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
                                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Payment / Trx</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Assigned Models</th>
                                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                                     </tr>
@@ -524,7 +525,7 @@
             if (!jobs.length) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center">
+                        <td colspan="7" class="px-6 py-12 text-center">
                             <i class="fas fa-briefcase text-6xl text-gray-300 mb-4"></i>
                             <h3 class="text-xl font-semibold text-gray-600 mb-2">No Jobs Found</h3>
                             <p class="text-gray-500 mb-4">Start by creating your first job posting</p>
@@ -549,6 +550,11 @@
                     <td class="px-6 py-4 text-sm text-gray-700">${job.client_name || '-'}</td>
                     <td class="px-6 py-4 text-sm text-gray-700">${formatDate(job.job_date)}</td>
                     <td class="px-6 py-4 text-sm text-gray-700">${formatCurrency(job.payment_offered)}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">
+                        ${Number(job.assigned_model_count || 0) > 0
+                            ? `<span class="font-semibold">${Number(job.assigned_model_count || 0)} model</span><br><span class="text-xs text-gray-500">${job.assigned_model_names || ''}</span>`
+                            : '<span class="text-gray-400">Belum ada</span>'}
+                    </td>
                     <td class="px-6 py-4 text-sm">
                         <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 uppercase">${job.status || '-'}</span>
                     </td>

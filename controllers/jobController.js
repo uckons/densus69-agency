@@ -204,26 +204,43 @@ exports.getJobs = async (req, res) => {
   try {
     const { status, search, limit } = req.query;
 
-    let jobs = await Job.findAll();
+    const params = [];
+    let paramCount = 1;
+    let query = `
+      SELECT
+        j.*,
+        COUNT(b.id)::int AS assigned_model_count,
+        COALESCE(
+          STRING_AGG(DISTINCT m.full_name, ', ') FILTER (WHERE b.id IS NOT NULL),
+          ''
+        ) AS assigned_model_names
+      FROM jobs j
+      LEFT JOIN bookings b ON j.id = b.job_id AND b.status IN ('pending', 'confirmed', 'completed')
+      LEFT JOIN models m ON b.model_id = m.id
+      WHERE 1=1
+    `;
 
-    // Filter by status
     if (status) {
-      jobs = jobs.filter(j => j.status === status);
+      query += ` AND j.status = $${paramCount}`;
+      params.push(status);
+      paramCount++;
     }
 
-    // Search by title or client name
     if (search) {
-      const searchLower = search.toLowerCase();
-      jobs = jobs.filter(j => 
-        j.title.toLowerCase().includes(searchLower) ||
-        j.client_name.toLowerCase().includes(searchLower)
-      );
+      query += ` AND (j.title ILIKE $${paramCount} OR j.client_name ILIKE $${paramCount})`;
+      params.push(`%${search}%`);
+      paramCount++;
     }
 
-    // Limit results
+    query += ' GROUP BY j.id ORDER BY j.job_date DESC, j.created_at DESC';
+
     if (limit) {
-      jobs = jobs.slice(0, parseInt(limit));
+      query += ` LIMIT $${paramCount}`;
+      params.push(parseInt(limit, 10));
     }
+
+    const result = await db.query(query, params);
+    const jobs = result.rows;
 
     res.json({
       success: true,

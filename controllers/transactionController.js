@@ -20,9 +20,8 @@ exports.getAssignedModels = async (req, res) => {
       FROM bookings b
       INNER JOIN models m ON m.id = b.model_id
       INNER JOIN jobs j ON j.id = b.job_id
-      WHERE b.status IN ('pending', 'confirmed')
-        AND j.status IN ('open', 'assigned')
-        AND COALESCE(m.is_active, true) = true
+      WHERE b.status IN ('pending', 'confirmed', 'completed')
+        AND j.status IN ('open', 'assigned', 'completed')
       ORDER BY m.full_name ASC
     `);
 
