@@ -61,7 +61,7 @@ exports.register = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Registration successful. Welcome to Densus69 Agency!',
+      message: 'Registration successful. Welcome to SkyLin Agency!',
       data: {
         user_id: user.id,
         email: user.email,
