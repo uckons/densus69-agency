@@ -1,5 +1,36 @@
 const { Transaction, Model } = require('../models');
+const db = require('../config/database');
 const { calculateSalary } = require('../utils/calculation');
+
+/**
+ * Get models that are assigned to jobs
+ */
+exports.getAssignedModels = async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT DISTINCT
+        m.id,
+        m.full_name,
+        m.rate,
+        m.status,
+        m.is_active,
+        j.id AS job_id,
+        j.title AS job_title,
+        j.client_name
+      FROM bookings b
+      INNER JOIN models m ON m.id = b.model_id
+      INNER JOIN jobs j ON j.id = b.job_id
+      WHERE b.status IN ('pending', 'confirmed', 'completed')
+        AND j.status IN ('open', 'assigned', 'completed')
+      ORDER BY m.full_name ASC
+    `);
+
+    return res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('Get assigned models error:', error);
+    return res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
 
 /**
  * Create a new transaction
@@ -8,16 +39,17 @@ exports.createTransaction = async (req, res) => {
   try {
     const {
       model_id,
+      client_name,
       transaction_count,
       transaction_date,
       description
     } = req.body;
 
     // Validate required fields
-    if (!model_id || !transaction_count || !transaction_date) {
+    if (!model_id || !client_name || !transaction_count || !transaction_date) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields'
+        message: 'model_id, client_name, transaction_count, dan transaction_date wajib diisi'
       });
     }
 
@@ -29,14 +61,6 @@ exports.createTransaction = async (req, res) => {
         message: 'Model not found'
       });
     }
-
-    if (model.status !== 'active') {
-      return res.status(400).json({
-        success: false,
-        message: 'Model is not active'
-      });
-    }
-
     if (!model.rate || model.rate <= 0) {
       return res.status(400).json({
         success: false,
@@ -44,21 +68,41 @@ exports.createTransaction = async (req, res) => {
       });
     }
 
+    // Ensure model is assigned to at least one relevant job
+    const assignmentCheck = await db.query(`
+      SELECT b.id
+      FROM bookings b
+      INNER JOIN jobs j ON j.id = b.job_id
+      WHERE b.model_id = $1
+        AND b.status IN ('pending', 'confirmed', 'completed')
+        AND j.status IN ('open', 'assigned', 'completed')
+      LIMIT 1
+    `, [model_id]);
+
+    if (assignmentCheck.rows.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Model belum ter-assign pada job aktif'
+      });
+    }
+
     // Calculate amounts
     const { grossAmount, adminFee, netAmount } = calculateSalary(
       parseInt(transaction_count),
-      parseFloat(model.rate)
+      parseFloat(model.rate),
+      0
     );
 
     // Create transaction
     const transaction = await Transaction.create({
       model_id,
+      client_name,
       transaction_count: parseInt(transaction_count),
       transaction_date,
-      gross_amount: grossAmount,
+      model_rate: parseFloat(model.rate),
       admin_fee: adminFee,
-      net_amount: netAmount,
-      description: description || null
+      notes: description || null,
+      created_by: req.user?.id || null
     });
 
     res.status(201).json({
@@ -73,6 +117,47 @@ exports.createTransaction = async (req, res) => {
       message: 'Server error',
       error: error.message
     });
+  }
+};
+
+
+/**
+ * Get client KPI summary
+ */
+exports.getClientKpis = async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT
+        COUNT(DISTINCT client_name) AS total_clients,
+        COALESCE(SUM(gross_amount), 0) AS total_revenue
+      FROM transactions
+      WHERE client_name IS NOT NULL AND TRIM(client_name) <> ''
+    `);
+
+    const topClientResult = await db.query(`
+      SELECT
+        client_name,
+        COUNT(*)::int AS total_records,
+        COALESCE(SUM(transaction_count), 0)::int AS total_trx,
+        COALESCE(SUM(gross_amount), 0) AS total_revenue
+      FROM transactions
+      WHERE client_name IS NOT NULL AND TRIM(client_name) <> ''
+      GROUP BY client_name
+      ORDER BY total_revenue DESC
+      LIMIT 1
+    `);
+
+    return res.json({
+      success: true,
+      data: {
+        total_clients: Number(result.rows[0]?.total_clients || 0),
+        total_revenue: Number(result.rows[0]?.total_revenue || 0),
+        top_client: topClientResult.rows[0] || null
+      }
+    });
+  } catch (error) {
+    console.error('Get client KPI error:', error);
+    return res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 

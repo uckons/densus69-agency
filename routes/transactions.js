@@ -13,6 +13,12 @@ router.post('/', validateTransaction, checkValidation, transactionController.cre
 // GET /api/transactions - Get all transactions
 router.get('/', transactionController.getTransactions);
 
+// GET /api/transactions/assigned-models - Get models assigned to active jobs
+router.get('/assigned-models', transactionController.getAssignedModels);
+
+// GET /api/transactions/client-kpis - Get KPI summary by client
+router.get('/client-kpis', transactionController.getClientKpis);
+
 // GET /api/transactions/:id - Get transaction by ID
 router.get('/:id', transactionController.getTransactionById);
 
