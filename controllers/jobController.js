@@ -213,7 +213,12 @@ exports.getJobs = async (req, res) => {
         COALESCE(
           STRING_AGG(DISTINCT m.full_name, ', ') FILTER (WHERE b.id IS NOT NULL),
           ''
-        ) AS assigned_model_names
+        ) AS assigned_model_names,
+        (
+          SELECT COUNT(*)::int
+          FROM models mx
+          WHERE COALESCE(mx.is_active, true) = true
+        ) AS total_model_count
       FROM jobs j
       LEFT JOIN bookings b ON j.id = b.job_id AND b.status IN ('pending', 'confirmed', 'completed')
       LEFT JOIN models m ON b.model_id = m.id
@@ -240,7 +245,16 @@ exports.getJobs = async (req, res) => {
     }
 
     const result = await db.query(query, params);
-    const jobs = result.rows;
+    const jobs = result.rows.map((job) => {
+      const totalModelCount = Number(job.total_model_count || 0);
+      const assignedModelCount = Number(job.assigned_model_count || 0);
+      return {
+        ...job,
+        total_model_count: totalModelCount,
+        assigned_model_count: assignedModelCount,
+        unassigned_model_count: Math.max(totalModelCount - assignedModelCount, 0)
+      };
+    });
 
     res.json({
       success: true,

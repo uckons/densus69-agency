@@ -112,9 +112,7 @@ app.get('/admin/jobs', auth, isAdmin, (req, res) => {
   res.render('admin/jobs', { user: req.user });
 });
 
-app.get('/admin/transactions', auth, isAdmin, (req, res) => {
-  res.render('admin/transactions', { user: req.user });
-});
+app.get('/admin/transactions', auth, isAdmin, adminWebController.showTransactions);
 
 app.get('/admin/transactions/new', auth, isAdmin, (req, res) => {
   res.render('admin/transaction-form', { user: req.user });

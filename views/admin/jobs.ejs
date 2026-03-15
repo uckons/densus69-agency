@@ -206,7 +206,7 @@
                                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Client</th>
                                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
                                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Payment / Trx</th>
-                                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Assigned Models</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Assigned / Unassigned</th>
                                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                                     </tr>
@@ -551,9 +551,12 @@
                     <td class="px-6 py-4 text-sm text-gray-700">${formatDate(job.job_date)}</td>
                     <td class="px-6 py-4 text-sm text-gray-700">${formatCurrency(job.payment_offered)}</td>
                     <td class="px-6 py-4 text-sm text-gray-700">
+                        <span class="font-semibold text-emerald-700">Assigned: ${Number(job.assigned_model_count || 0)}</span>
+                        <span class="mx-2 text-gray-300">|</span>
+                        <span class="font-semibold text-amber-700">Unassigned: ${Number(job.unassigned_model_count || 0)}</span>
                         ${Number(job.assigned_model_count || 0) > 0
-                            ? `<span class="font-semibold">${Number(job.assigned_model_count || 0)} model</span><br><span class="text-xs text-gray-500">${job.assigned_model_names || ''}</span>`
-                            : '<span class="text-gray-400">Belum ada</span>'}
+                            ? `<br><span class="text-xs text-gray-500">${job.assigned_model_names || ''}</span>`
+                            : ''}
                     </td>
                     <td class="px-6 py-4 text-sm">
                         <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 uppercase">${job.status || '-'}</span>
