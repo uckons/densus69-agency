@@ -11,29 +11,26 @@ exports.createJob = async (req, res) => {
       client_name,
       client_contact,
       job_date,
-      location,
-      payment,
-      requirements
+      payment_offered,
+      status
     } = req.body;
 
     // Validate required fields
-    if (!title || !description || !client_name || !job_date || !location || !payment) {
+    if (!title || !client_name || !job_date || payment_offered === undefined || payment_offered === null || payment_offered === '') {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields'
+        message: 'title, client_name, job_date, dan payment_offered wajib diisi'
       });
     }
 
     const job = await Job.create({
       title,
-      description,
+      description: description || null,
       client_name,
-      client_contact,
+      client_contact: client_contact || null,
       job_date,
-      location,
-      payment: parseFloat(payment),
-      requirements,
-      status: 'open'
+      payment_offered: Number(payment_offered),
+      status: status || 'open'
     });
 
     res.status(201).json({
