@@ -426,6 +426,80 @@ exports.applyToJob = async (req, res) => {
   }
 };
 
+
+/**
+ * Get assigned models for a specific job (admin)
+ */
+exports.getAssignedModelsByJob = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await db.query(`
+      SELECT DISTINCT
+        m.id,
+        m.full_name,
+        u.email,
+        b.status AS booking_status
+      FROM bookings b
+      INNER JOIN models m ON m.id = b.model_id
+      LEFT JOIN users u ON u.id = m.user_id
+      WHERE b.job_id = $1
+        AND b.status IN ('pending', 'confirmed', 'completed')
+      ORDER BY m.full_name ASC
+    `, [id]);
+
+    return res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('Get assigned models by job error:', error);
+    return res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+/**
+ * Unassign model from job (admin)
+ */
+exports.unassignModelFromJob = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { model_id } = req.body;
+
+    const parsedModelId = Number(model_id);
+    if (!parsedModelId) {
+      return res.status(400).json({ success: false, message: 'model_id wajib diisi' });
+    }
+
+    const deleteResult = await db.query(
+      `DELETE FROM bookings
+       WHERE job_id = $1
+         AND model_id = $2
+         AND status IN ('pending', 'confirmed')
+       RETURNING id`,
+      [id, parsedModelId]
+    );
+
+    if (deleteResult.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Assignment aktif tidak ditemukan' });
+    }
+
+    const remaining = await db.query(
+      `SELECT COUNT(*)::int AS total
+       FROM bookings
+       WHERE job_id = $1
+         AND status IN ('pending', 'confirmed')`,
+      [id]
+    );
+
+    if (Number(remaining.rows[0]?.total || 0) === 0) {
+      await Job.update(id, { status: 'open' });
+    }
+
+    return res.json({ success: true, message: 'Model berhasil di-unassign dari job' });
+  } catch (error) {
+    console.error('Unassign model from job error:', error);
+    return res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
 /**
  * Get model's bookings
  */

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clients Management - SkyLin Agency</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+<%- include('../partials/header') %>
+<div class="flex h-screen bg-gray-100">
+    <aside id="sidebar" class="sidebar fixed md:relative inset-y-0 left-0 z-30 w-64 bg-admin-800 text-white transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+        <div class="flex flex-col h-full">
+            <div class="flex items-center justify-between h-16 px-6 bg-admin-900">
+                <div class="flex items-center space-x-2"><i class="fas fa-star text-admin-400 text-xl"></i><span class="text-xl font-bold">Admin Panel</span></div>
+                <button id="close-sidebar" class="md:hidden text-white hover:text-admin-300"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                <a href="/admin/dashboard" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition"><i class="fas fa-tachometer-alt w-5"></i><span>Dashboard</span></a>
+                <a href="/admin/models" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition"><i class="fas fa-users w-5"></i><span>Models</span></a>
+                <a href="/admin/model-grades" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition"><i class="fas fa-layer-group w-5"></i><span>Model Grades</span></a>
+                <a href="/admin/agents" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition"><i class="fas fa-user-tie w-5"></i><span>Agents</span></a>
+                <a href="/admin/clients" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition bg-admin-700"><i class="fas fa-building w-5"></i><span>Clients</span></a>
+                <a href="/admin/jobs" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition"><i class="fas fa-briefcase w-5"></i><span>Jobs</span></a>
+                <a href="/admin/transactions" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition"><i class="fas fa-exchange-alt w-5"></i><span>Transactions</span></a>
+            </nav>
+        </div>
+    </aside>
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6">
+            <button id="open-sidebar" class="md:hidden text-gray-600 hover:text-gray-900"><i class="fas fa-bars text-2xl"></i></button>
+            <h1 class="text-xl font-semibold text-gray-800">Clients Management</h1>
+        </header>
+        <main class="flex-1 overflow-y-auto p-6 space-y-6">
+            <div class="flex justify-between items-center">
+                <div><h2 class="text-2xl font-bold text-gray-800">Clients</h2><p class="text-sm text-gray-600">Kelola data master client untuk job.</p></div>
+                <button onclick="openClientModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"><i class="fas fa-plus mr-2"></i>Tambah Client</button>
+            </div>
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs uppercase">Client</th><th class="px-6 py-3 text-left text-xs uppercase">Alamat</th><th class="px-6 py-3 text-left text-xs uppercase">Contact</th><th class="px-6 py-3 text-right text-xs uppercase">Aksi</th></tr></thead>
+                    <tbody id="clientsBody" class="divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div id="clientModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-xl p-6">
+        <h3 id="clientModalTitle" class="text-xl font-bold mb-4">Tambah Client</h3>
+        <input type="hidden" id="clientId">
+        <div class="space-y-3">
+            <input id="clientName" type="text" placeholder="Nama Client" class="w-full border rounded-lg px-3 py-2">
+            <textarea id="clientAddress" rows="2" placeholder="Alamat" class="w-full border rounded-lg px-3 py-2"></textarea>
+            <input id="clientContactName" type="text" placeholder="Nama Contact" class="w-full border rounded-lg px-3 py-2">
+            <input id="clientContactPhone" type="text" placeholder="No Contact" class="w-full border rounded-lg px-3 py-2">
+        </div>
+        <div class="flex justify-end gap-2 mt-6">
+            <button onclick="closeClientModal()" class="px-4 py-2 border rounded-lg">Cancel</button>
+            <button onclick="submitClient()" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Save</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let clientsCache = [];
+async function loadClients(){
+  const res = await fetch('/api/admin/clients',{credentials:'include'});
+  const data = await res.json();
+  if(!res.ok||!data.success) return;
+  clientsCache = data.data || [];
+  renderClients();
+}
+function renderClients(){
+  const body=document.getElementById('clientsBody');
+  if(!clientsCache.length){body.innerHTML='<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">Belum ada client</td></tr>';return;}
+  body.innerHTML=clientsCache.map(c=>`<tr><td class="px-6 py-4">${c.client_name||'-'}</td><td class="px-6 py-4">${c.address||'-'}</td><td class="px-6 py-4">${c.contact_name||'-'} (${c.contact_phone||'-'})</td><td class="px-6 py-4 text-right"><button onclick="openClientModal(${c.id})" class="text-blue-600 mr-2"><i class="fas fa-edit"></i></button><button onclick="deleteClient(${c.id})" class="text-red-600"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+}
+function openClientModal(id=null){
+  document.getElementById('clientId').value='';
+  document.getElementById('clientName').value='';
+  document.getElementById('clientAddress').value='';
+  document.getElementById('clientContactName').value='';
+  document.getElementById('clientContactPhone').value='';
+  document.getElementById('clientModalTitle').textContent='Tambah Client';
+  if(id){
+    const c=clientsCache.find(x=>Number(x.id)===Number(id));
+    if(!c) return;
+    document.getElementById('clientId').value=c.id;
+    document.getElementById('clientName').value=c.client_name||'';
+    document.getElementById('clientAddress').value=c.address||'';
+    document.getElementById('clientContactName').value=c.contact_name||'';
+    document.getElementById('clientContactPhone').value=c.contact_phone||'';
+    document.getElementById('clientModalTitle').textContent='Edit Client';
+  }
+  document.getElementById('clientModal').classList.remove('hidden');
+}
+function closeClientModal(){document.getElementById('clientModal').classList.add('hidden');}
+async function submitClient(){
+  const id=document.getElementById('clientId').value;
+  const payload={
+    client_name:document.getElementById('clientName').value.trim(),
+    address:document.getElementById('clientAddress').value.trim(),
+    contact_name:document.getElementById('clientContactName').value.trim(),
+    contact_phone:document.getElementById('clientContactPhone').value.trim()
+  };
+  if(!payload.client_name){showToast('Nama client wajib diisi','error');return;}
+  const url=id?`/api/admin/clients/${id}`:'/api/admin/clients';
+  const method=id?'PUT':'POST';
+  const res=await fetch(url,{method,credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const data=await res.json();
+  if(!res.ok||!data.success){showToast(data.message||'Gagal simpan client','error');return;}
+  closeClientModal();showToast('Berhasil simpan client','success');loadClients();
+}
+async function deleteClient(id){
+  if(!confirm('Hapus client ini?')) return;
+  const res=await fetch(`/api/admin/clients/${id}`,{method:'DELETE',credentials:'include'});
+  const data=await res.json();
+  if(!res.ok||!data.success){showToast(data.message||'Gagal hapus client','error');return;}
+  showToast('Client berhasil dihapus','success');loadClients();
+}
+document.addEventListener('DOMContentLoaded',loadClients);
+</script>
+<%- include('../partials/footer') %>
+</body>
+</html>

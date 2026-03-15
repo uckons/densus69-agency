@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
+const clientController = require('../controllers/clientController');
 const { auth, isAdmin } = require('../middleware/auth');
 
 // All routes require authentication and admin role
@@ -11,6 +12,18 @@ router.get('/dashboard', adminController.getDashboard);
 
 // GET /api/admin/model-grades
 router.get('/model-grades', adminController.getModelGrades);
+
+// GET /api/admin/clients
+router.get('/clients', clientController.getClients);
+
+// POST /api/admin/clients
+router.post('/clients', clientController.createClient);
+
+// PUT /api/admin/clients/:id
+router.put('/clients/:id', clientController.updateClient);
+
+// DELETE /api/admin/clients/:id
+router.delete('/clients/:id', clientController.deleteClient);
 
 // POST /api/admin/model-grades
 router.post('/model-grades', adminController.createModelGrade);
