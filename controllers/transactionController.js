@@ -61,18 +61,28 @@ exports.createTransaction = async (req, res) => {
         message: 'Model not found'
       });
     }
-
-    if (!model.is_active) {
-      return res.status(400).json({
-        success: false,
-        message: 'Model tidak aktif'
-      });
-    }
-
     if (!model.rate || model.rate <= 0) {
       return res.status(400).json({
         success: false,
         message: 'Model rate not set'
+      });
+    }
+
+    // Ensure model is assigned to at least one relevant job
+    const assignmentCheck = await db.query(`
+      SELECT b.id
+      FROM bookings b
+      INNER JOIN jobs j ON j.id = b.job_id
+      WHERE b.model_id = $1
+        AND b.status IN ('pending', 'confirmed', 'completed')
+        AND j.status IN ('open', 'assigned', 'completed')
+      LIMIT 1
+    `, [model_id]);
+
+    if (assignmentCheck.rows.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Model belum ter-assign pada job aktif'
       });
     }
 
