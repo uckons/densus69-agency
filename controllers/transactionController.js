@@ -1,5 +1,37 @@
 const { Transaction, Model } = require('../models');
+const db = require('../config/database');
 const { calculateSalary } = require('../utils/calculation');
+
+/**
+ * Get models that are assigned to jobs
+ */
+exports.getAssignedModels = async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT DISTINCT
+        m.id,
+        m.full_name,
+        m.rate,
+        m.status,
+        m.is_active,
+        j.id AS job_id,
+        j.title AS job_title,
+        j.client_name
+      FROM bookings b
+      INNER JOIN models m ON m.id = b.model_id
+      INNER JOIN jobs j ON j.id = b.job_id
+      WHERE b.status IN ('pending', 'confirmed')
+        AND j.status IN ('open', 'assigned')
+        AND m.is_active = true
+      ORDER BY m.full_name ASC
+    `);
+
+    return res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('Get assigned models error:', error);
+    return res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
 
 /**
  * Create a new transaction
@@ -8,16 +40,17 @@ exports.createTransaction = async (req, res) => {
   try {
     const {
       model_id,
+      client_name,
       transaction_count,
       transaction_date,
       description
     } = req.body;
 
     // Validate required fields
-    if (!model_id || !transaction_count || !transaction_date) {
+    if (!model_id || !client_name || !transaction_count || !transaction_date) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields'
+        message: 'model_id, client_name, transaction_count, dan transaction_date wajib diisi'
       });
     }
 
@@ -30,10 +63,10 @@ exports.createTransaction = async (req, res) => {
       });
     }
 
-    if (model.status !== 'active') {
+    if (!model.is_active) {
       return res.status(400).json({
         success: false,
-        message: 'Model is not active'
+        message: 'Model tidak aktif'
       });
     }
 
@@ -47,18 +80,20 @@ exports.createTransaction = async (req, res) => {
     // Calculate amounts
     const { grossAmount, adminFee, netAmount } = calculateSalary(
       parseInt(transaction_count),
-      parseFloat(model.rate)
+      parseFloat(model.rate),
+      0
     );
 
     // Create transaction
     const transaction = await Transaction.create({
       model_id,
+      client_name,
       transaction_count: parseInt(transaction_count),
       transaction_date,
-      gross_amount: grossAmount,
+      model_rate: parseFloat(model.rate),
       admin_fee: adminFee,
-      net_amount: netAmount,
-      description: description || null
+      notes: description || null,
+      created_by: req.user?.id || null
     });
 
     res.status(201).json({
