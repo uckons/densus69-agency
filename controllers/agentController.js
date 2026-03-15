@@ -1,16 +1,33 @@
 const db = require('../config/database');
 const bcrypt = require('bcryptjs');
 
+
+async function ensureModelAgentColumns() {
+  await db.query('ALTER TABLE models ADD COLUMN IF NOT EXISTS agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL');
+  await db.query('ALTER TABLE models ADD COLUMN IF NOT EXISTS agent_fee_percent DECIMAL(5,2) DEFAULT 0');
+}
+
+
 // Get all agents
 exports.getAllAgents = async (req, res) => {
   try {
+    await ensureModelAgentColumns();
+
     const result = await db.query(`
-      SELECT a.*, u.email
+      SELECT
+        a.*, u.email,
+        COUNT(DISTINCT m.id) AS managed_models,
+        COALESCE(SUM(t.gross_amount), 0) AS total_revenue,
+        COALESCE(SUM(t.gross_amount * COALESCE(m.agent_fee_percent, 0) / 100), 0) AS total_agent_fee,
+        COALESCE(SUM(t.gross_amount - t.admin_fee - (t.gross_amount * COALESCE(m.agent_fee_percent, 0) / 100)), 0) AS total_model_fee
       FROM agents a
       JOIN users u ON a.user_id = u.id
+      LEFT JOIN models m ON m.agent_id = a.id
+      LEFT JOIN transactions t ON t.model_id = m.id
+      GROUP BY a.id, u.email
       ORDER BY a.created_at DESC
     `);
-    
+
     res.json({ success: true, agents: result.rows });
   } catch (error) {
     console.error('Get agents error:', error);
@@ -185,6 +202,56 @@ exports.deleteAgent = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   } finally {
     client.release();
+  }
+};
+
+
+// Get agent performance details
+exports.getAgentPerformance = async (req, res) => {
+  try {
+    await ensureModelAgentColumns();
+    const { id } = req.params;
+
+    const agentInfo = await db.query(
+      `SELECT a.id, a.full_name, a.commission_rate, u.email
+       FROM agents a
+       JOIN users u ON a.user_id = u.id
+       WHERE a.id = $1`,
+      [id]
+    );
+
+    if (agentInfo.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Agent not found' });
+    }
+
+    const models = await db.query(
+      `SELECT m.id, m.full_name, m.rate, COALESCE(m.agent_fee_percent, 0) AS agent_fee_percent,
+              COUNT(t.id) AS transaction_count,
+              COALESCE(SUM(t.gross_amount), 0) AS revenue,
+              COALESCE(SUM(t.gross_amount * COALESCE(m.agent_fee_percent, 0) / 100), 0) AS agent_fee,
+              COALESCE(SUM(t.gross_amount - t.admin_fee - (t.gross_amount * COALESCE(m.agent_fee_percent, 0) / 100)), 0) AS model_fee
+       FROM models m
+       LEFT JOIN transactions t ON t.model_id = m.id
+       WHERE m.agent_id = $1
+       GROUP BY m.id
+       ORDER BY revenue DESC`,
+      [id]
+    );
+
+    return res.json({
+      success: true,
+      agent: agentInfo.rows[0],
+      models: models.rows,
+      summary: {
+        totalModels: models.rows.length,
+        totalRevenue: models.rows.reduce((sum, row) => sum + Number(row.revenue || 0), 0),
+        totalAgentFee: models.rows.reduce((sum, row) => sum + Number(row.agent_fee || 0), 0),
+        totalModelFee: models.rows.reduce((sum, row) => sum + Number(row.model_fee || 0), 0)
+      }
+    });
+  } catch (error) {
+    console.error('Get agent performance error:', error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 

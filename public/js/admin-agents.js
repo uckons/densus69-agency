@@ -28,10 +28,14 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function formatCurrency(value) {
+    return 'Rp ' + Number(value || 0).toLocaleString('id-ID');
+}
+
 function renderAgentsTable(agents) {
     const tbody = document.getElementById('agentsTable');
     if (!agents.length) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-gray-500">No agents found</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-10 text-gray-500">No agents found</td></tr>`;
         return;
     }
     tbody.innerHTML = agents.map(a => {
@@ -45,7 +49,12 @@ function renderAgentsTable(agents) {
             <td class="px-4 py-3">${name}</td>
             <td class="px-4 py-3">${email}</td>
             <td class="px-4 py-3">${phone}</td>
+            <td class="px-4 py-3">${Number(a.managed_models || 0)}</td>
+            <td class="px-4 py-3">${formatCurrency(a.total_revenue)}</td>
+            <td class="px-4 py-3 text-green-700 font-medium">${formatCurrency(a.total_agent_fee)}</td>
+            <td class="px-4 py-3 text-blue-700 font-medium">${formatCurrency(a.total_model_fee)}</td>
             <td class="px-4 py-3 flex space-x-2">
+                <button class="text-indigo-600 hover:text-indigo-800 view-agent-performance-btn" data-id="${a.id}" title="Performance"><i class="fas fa-chart-line"></i></button>
                 <button class="text-blue-600 hover:text-blue-800 edit-agent-btn" data-id="${a.id}" data-name="${a.full_name || a.name || ''}" data-email="${a.email || ''}" data-phone="${a.phone || ''}"><i class="fas fa-edit"></i></button>
                 <button class="text-red-600 hover:text-red-800 delete-agent-btn" data-id="${a.id}"><i class="fas fa-trash"></i></button>
             </td>
@@ -64,6 +73,27 @@ function renderAgentsTable(agents) {
         });
     });
     
+    document.querySelectorAll('.view-agent-performance-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const id = this.getAttribute('data-id');
+            try {
+                const res = await fetch(`/api/admin/agents/${id}/performance`, {
+                    headers: { Authorization: 'Bearer ' + getToken() },
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.message || 'Failed');
+                alert(`Agent: ${data.agent.full_name}
+Models: ${data.summary.totalModels}
+Revenue: ${formatCurrency(data.summary.totalRevenue)}
+Fee Agent: ${formatCurrency(data.summary.totalAgentFee)}
+Fee Model: ${formatCurrency(data.summary.totalModelFee)}`);
+            } catch (error) {
+                alert('Failed to load agent performance: ' + error.message);
+            }
+        });
+    });
+
     document.querySelectorAll('.delete-agent-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const id = this.getAttribute('data-id');

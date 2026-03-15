@@ -1,4 +1,5 @@
 const { Job, Booking, Model } = require('../models');
+const db = require('../config/database');
 
 /**
  * Create a new job posting
@@ -11,29 +12,26 @@ exports.createJob = async (req, res) => {
       client_name,
       client_contact,
       job_date,
-      location,
-      payment,
-      requirements
+      payment_offered,
+      status
     } = req.body;
 
     // Validate required fields
-    if (!title || !description || !client_name || !job_date || !location || !payment) {
+    if (!title || !client_name || !job_date || payment_offered === undefined || payment_offered === null || payment_offered === '') {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields'
+        message: 'title, client_name, job_date, dan payment_offered wajib diisi'
       });
     }
 
     const job = await Job.create({
       title,
-      description,
+      description: description || null,
       client_name,
-      client_contact,
+      client_contact: client_contact || null,
       job_date,
-      location,
-      payment: parseFloat(payment),
-      requirements,
-      status: 'open'
+      payment_offered: Number(payment_offered),
+      status: status || 'open'
     });
 
     res.status(201).json({
@@ -51,6 +49,187 @@ exports.createJob = async (req, res) => {
   }
 };
 
+
+/**
+ * Update job (admin)
+ */
+exports.updateJob = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      title,
+      description,
+      client_name,
+      client_contact,
+      job_date,
+      payment_offered,
+      status
+    } = req.body;
+
+    const existing = await Job.findById(id);
+    if (!existing) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+
+    if (status && !['open', 'assigned', 'completed', 'cancelled'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status value'
+      });
+    }
+
+    const payload = {};
+    if (title !== undefined) payload.title = String(title).trim();
+    if (description !== undefined) payload.description = description || null;
+    if (client_name !== undefined) payload.client_name = String(client_name).trim();
+    if (client_contact !== undefined) payload.client_contact = client_contact || null;
+    if (job_date !== undefined) payload.job_date = job_date;
+    if (payment_offered !== undefined && payment_offered !== null && payment_offered !== '') payload.payment_offered = Number(payment_offered);
+    if (status !== undefined) payload.status = status;
+
+    if (Object.keys(payload).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No fields to update'
+      });
+    }
+
+    const updated = await Job.update(id, payload);
+
+    return res.json({
+      success: true,
+      message: 'Job updated successfully',
+      data: updated
+    });
+  } catch (error) {
+    console.error('Update job error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+
+/**
+ * Assign job to model (admin)
+ */
+exports.assignModelToJob = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { model_id, trx_count } = req.body;
+
+    const parsedModelId = Number(model_id);
+    const parsedTrxCount = Math.max(Number(trx_count || 1), 1);
+
+    if (!parsedModelId) {
+      return res.status(400).json({
+        success: false,
+        message: 'model_id wajib diisi'
+      });
+    }
+
+    const job = await Job.findById(id);
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+
+    if (['completed', 'cancelled'].includes(job.status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Job yang sudah selesai/dibatalkan tidak bisa di-assign'
+      });
+    }
+
+    const model = await Model.findById(parsedModelId);
+    if (!model) {
+      return res.status(404).json({
+        success: false,
+        message: 'Model not found'
+      });
+    }
+
+    const existing = await db.query(
+      `SELECT id FROM bookings WHERE job_id = $1 AND model_id = $2 AND status IN ('pending', 'confirmed') LIMIT 1`,
+      [id, parsedModelId]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Model sudah ter-assign ke job ini'
+      });
+    }
+
+    const paymentAmount = Number(job.payment_offered || 0) * parsedTrxCount;
+
+    const booking = await Booking.create({
+      job_id: id,
+      model_id: parsedModelId,
+      status: 'confirmed',
+      payment_amount: paymentAmount,
+      notes: `Assigned by admin (trx_count: ${parsedTrxCount})`
+    });
+
+    if (job.status === 'open') {
+      await Job.update(id, { status: 'assigned' });
+    }
+
+    return res.json({
+      success: true,
+      message: 'Model berhasil di-assign ke job',
+      data: booking
+    });
+  } catch (error) {
+    console.error('Assign model to job error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+
+/**
+ * Get unassigned models for a specific job (admin)
+ */
+exports.getUnassignedModels = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const job = await Job.findById(id);
+    if (!job) {
+      return res.status(404).json({ success: false, message: 'Job not found' });
+    }
+
+    const result = await db.query(`
+      SELECT m.id, m.full_name, u.email, m.rate
+      FROM models m
+      LEFT JOIN users u ON u.id = m.user_id
+      LEFT JOIN bookings b
+        ON b.model_id = m.id
+       AND b.job_id = $1
+       AND b.status IN ('pending', 'confirmed', 'completed')
+      WHERE b.id IS NULL
+        AND COALESCE(m.is_active, true) = true
+      ORDER BY m.full_name ASC
+    `, [id]);
+
+    return res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('Get unassigned models error:', error);
+    return res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
 /**
  * Get all jobs with filters
  */
@@ -58,26 +237,57 @@ exports.getJobs = async (req, res) => {
   try {
     const { status, search, limit } = req.query;
 
-    let jobs = await Job.findAll();
+    const params = [];
+    let paramCount = 1;
+    let query = `
+      SELECT
+        j.*,
+        COUNT(b.id)::int AS assigned_model_count,
+        COALESCE(
+          STRING_AGG(DISTINCT m.full_name, ', ') FILTER (WHERE b.id IS NOT NULL),
+          ''
+        ) AS assigned_model_names,
+        (
+          SELECT COUNT(*)::int
+          FROM models mx
+          WHERE COALESCE(mx.is_active, true) = true
+        ) AS total_model_count
+      FROM jobs j
+      LEFT JOIN bookings b ON j.id = b.job_id AND b.status IN ('pending', 'confirmed', 'completed')
+      LEFT JOIN models m ON b.model_id = m.id
+      WHERE 1=1
+    `;
 
-    // Filter by status
     if (status) {
-      jobs = jobs.filter(j => j.status === status);
+      query += ` AND j.status = $${paramCount}`;
+      params.push(status);
+      paramCount++;
     }
 
-    // Search by title or client name
     if (search) {
-      const searchLower = search.toLowerCase();
-      jobs = jobs.filter(j => 
-        j.title.toLowerCase().includes(searchLower) ||
-        j.client_name.toLowerCase().includes(searchLower)
-      );
+      query += ` AND (j.title ILIKE $${paramCount} OR j.client_name ILIKE $${paramCount})`;
+      params.push(`%${search}%`);
+      paramCount++;
     }
 
-    // Limit results
+    query += ' GROUP BY j.id ORDER BY j.job_date DESC, j.created_at DESC';
+
     if (limit) {
-      jobs = jobs.slice(0, parseInt(limit));
+      query += ` LIMIT $${paramCount}`;
+      params.push(parseInt(limit, 10));
     }
+
+    const result = await db.query(query, params);
+    const jobs = result.rows.map((job) => {
+      const totalModelCount = Number(job.total_model_count || 0);
+      const assignedModelCount = Number(job.assigned_model_count || 0);
+      return {
+        ...job,
+        total_model_count: totalModelCount,
+        assigned_model_count: assignedModelCount,
+        unassigned_model_count: Math.max(totalModelCount - assignedModelCount, 0)
+      };
+    });
 
     res.json({
       success: true,
@@ -284,7 +494,7 @@ exports.updateBookingStatus = async (req, res) => {
 
     // If booking is confirmed, update job status
     if (status === 'confirmed') {
-      await Job.update(booking.job_id, { status: 'booked' });
+      await Job.update(booking.job_id, { status: 'assigned' });
     }
 
     const updatedBooking = await Booking.findById(id);
@@ -312,7 +522,7 @@ exports.updateJobStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!['open', 'booked', 'completed', 'cancelled'].includes(status)) {
+    if (!['open', 'assigned', 'completed', 'cancelled'].includes(status)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid status value'
