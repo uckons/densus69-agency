@@ -1,0 +1,14 @@
+<svg width="720" height="240" viewBox="0 0 720 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="6" y="6" width="708" height="228" rx="36" fill="#0F1B4C" stroke="#EC4899" stroke-width="8"/>
+  <circle cx="96" cy="105" r="56" fill="white" stroke="#102A73" stroke-width="6"/>
+  <circle cx="62" cy="62" r="22" fill="#102A73"/>
+  <circle cx="132" cy="62" r="22" fill="#102A73"/>
+  <ellipse cx="82" cy="103" rx="14" ry="16" fill="#102A73"/>
+  <ellipse cx="111" cy="103" rx="14" ry="16" fill="#102A73"/>
+  <circle cx="82" cy="99" r="4" fill="white"/>
+  <circle cx="111" cy="99" r="4" fill="white"/>
+  <ellipse cx="97" cy="124" rx="8" ry="6" fill="#102A73"/>
+  <text x="180" y="120" font-size="92" font-family="Arial, sans-serif" font-weight="700" fill="#38BDF8">Sky</text>
+  <text x="380" y="120" font-size="92" font-family="Arial, sans-serif" font-weight="700" fill="#F472B6">Lin</text>
+  <text x="250" y="190" font-size="56" font-family="Arial, sans-serif" font-weight="700" letter-spacing="6" fill="white">AGENCY</text>
+</svg>
