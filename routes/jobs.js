@@ -9,6 +9,10 @@ router.post('/', auth, isAdmin, jobController.createJob);
 // PUT /api/jobs/:id - Update job (admin only)
 router.put('/:id', auth, isAdmin, jobController.updateJob);
 
+// POST /api/jobs/:id/assign-model - Assign model to job (admin only)
+router.post('/:id/assign-model', auth, isAdmin, jobController.assignModelToJob);
+
+
 // GET /api/jobs/my-bookings - Get model's bookings (model only)
 // This must come before /:id route
 router.get('/my-bookings', auth, isModel, jobController.getMyBookings);

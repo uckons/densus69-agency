@@ -1,4 +1,5 @@
 const { Job, Booking, Model } = require('../models');
+const db = require('../config/database');
 
 /**
  * Create a new job posting
@@ -105,6 +106,89 @@ exports.updateJob = async (req, res) => {
     });
   } catch (error) {
     console.error('Update job error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+
+/**
+ * Assign job to model (admin)
+ */
+exports.assignModelToJob = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { model_id, trx_count } = req.body;
+
+    const parsedModelId = Number(model_id);
+    const parsedTrxCount = Math.max(Number(trx_count || 1), 1);
+
+    if (!parsedModelId) {
+      return res.status(400).json({
+        success: false,
+        message: 'model_id wajib diisi'
+      });
+    }
+
+    const job = await Job.findById(id);
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+
+    if (['completed', 'cancelled'].includes(job.status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Job yang sudah selesai/dibatalkan tidak bisa di-assign'
+      });
+    }
+
+    const model = await Model.findById(parsedModelId);
+    if (!model) {
+      return res.status(404).json({
+        success: false,
+        message: 'Model not found'
+      });
+    }
+
+    const existing = await db.query(
+      `SELECT id FROM bookings WHERE job_id = $1 AND model_id = $2 AND status IN ('pending', 'confirmed') LIMIT 1`,
+      [id, parsedModelId]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Model sudah ter-assign ke job ini'
+      });
+    }
+
+    const paymentAmount = Number(job.payment_offered || 0) * parsedTrxCount;
+
+    const booking = await Booking.create({
+      job_id: id,
+      model_id: parsedModelId,
+      status: 'confirmed',
+      payment_amount: paymentAmount,
+      notes: `Assigned by admin (trx_count: ${parsedTrxCount})`
+    });
+
+    if (job.status === 'open') {
+      await Job.update(id, { status: 'assigned' });
+    }
+
+    return res.json({
+      success: true,
+      message: 'Model berhasil di-assign ke job',
+      data: booking
+    });
+  } catch (error) {
+    console.error('Assign model to job error:', error);
     return res.status(500).json({
       success: false,
       message: 'Server error',
