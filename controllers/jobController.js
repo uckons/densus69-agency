@@ -197,6 +197,39 @@ exports.assignModelToJob = async (req, res) => {
   }
 };
 
+
+/**
+ * Get unassigned models for a specific job (admin)
+ */
+exports.getUnassignedModels = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const job = await Job.findById(id);
+    if (!job) {
+      return res.status(404).json({ success: false, message: 'Job not found' });
+    }
+
+    const result = await db.query(`
+      SELECT m.id, m.full_name, u.email, m.rate
+      FROM models m
+      LEFT JOIN users u ON u.id = m.user_id
+      LEFT JOIN bookings b
+        ON b.model_id = m.id
+       AND b.job_id = $1
+       AND b.status IN ('pending', 'confirmed', 'completed')
+      WHERE b.id IS NULL
+        AND COALESCE(m.is_active, true) = true
+      ORDER BY m.full_name ASC
+    `, [id]);
+
+    return res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('Get unassigned models error:', error);
+    return res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
 /**
  * Get all jobs with filters
  */

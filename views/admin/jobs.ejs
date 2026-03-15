@@ -403,11 +403,11 @@
         }
 
 
-        async function loadModelOptions() {
+        async function loadModelOptions(jobId) {
             const select = document.getElementById('assignModelId');
             select.innerHTML = '<option value="">Pilih model</option>';
             try {
-                const response = await fetch('/api/admin/models', { credentials: 'include' });
+                const response = await fetch(`/api/jobs/${jobId}/unassigned-models`, { credentials: 'include' });
                 const data = await response.json();
                 if (!response.ok || !data.success) return;
                 modelOptionsCache = data.data || [];
@@ -423,7 +423,7 @@
         async function openAssignModal(jobId) {
             document.getElementById('assignJobId').value = jobId;
             document.getElementById('assignTrxCount').value = 1;
-            await loadModelOptions();
+            await loadModelOptions(jobId);
             document.getElementById('assignModal').classList.remove('hidden');
         }
 

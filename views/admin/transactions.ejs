@@ -276,39 +276,31 @@
                         <% transactions.forEach(transaction => { %>
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <%= new Date(transaction.date).toLocaleDateString('id-ID') %>
+                                    <%= transaction.transaction_date ? new Date(transaction.transaction_date).toLocaleDateString('id-ID') : '-' %>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <img src="<%= transaction.model?.photo || '/images/default-avatar.png' %>" 
-                                             alt="<%= transaction.model?.name %>" 
-                                             class="w-8 h-8 rounded-full object-cover mr-3">
-                                        <span class="text-sm font-medium text-gray-900"><%= transaction.model?.name %></span>
-                                    </div>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <%= transaction.model_name || '-' %>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <%= transaction.jobType %>
+                                    Trx x <%= transaction.transaction_count || 0 %>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <%= transaction.clientName || 'N/A' %>
+                                    <%= transaction.client_name || 'N/A' %>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                                    <%= formatCurrency(transaction.amount) %>
+                                    <%= formatCurrency(Number(transaction.gross_amount || 0)) %>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        <%= transaction.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                                            transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                            'bg-red-100 text-red-800' %>">
-                                        <%= transaction.status %>
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        recorded
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <button onclick="viewTransaction('<%= transaction._id %>')" 
+                                    <button onclick="viewTransaction('<%= transaction.id %>')" 
                                             class="text-admin-600 hover:text-admin-900 mr-3">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button onclick="deleteTransaction('<%= transaction._id %>')" 
+                                    <button onclick="deleteTransaction('<%= transaction.id %>')" 
                                             class="text-red-600 hover:text-red-900">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -358,8 +350,9 @@
         
         try {
             showLoading();
-            const response = await fetch(`/admin/transactions/${id}`, {
-                method: 'DELETE'
+            const response = await fetch(`/api/transactions/${id}`, {
+                method: 'DELETE',
+                credentials: 'include'
             });
             
             const data = await response.json();

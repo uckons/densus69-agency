@@ -17,6 +17,9 @@ router.post('/:id/assign-model', auth, isAdmin, jobController.assignModelToJob);
 // This must come before /:id route
 router.get('/my-bookings', auth, isModel, jobController.getMyBookings);
 
+// GET /api/jobs/:id/unassigned-models - Get unassigned models for job (admin only)
+router.get('/:id/unassigned-models', auth, isAdmin, jobController.getUnassignedModels);
+
 // GET /api/jobs - Get all jobs (public and models)
 router.get('/', jobController.getJobs);
 
