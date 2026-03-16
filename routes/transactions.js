@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const transactionController = require('../controllers/transactionController');
 const { auth, isAdmin } = require('../middleware/auth');
-const { validateTransaction, checkValidation } = require('../utils/validation');
+const { validateTransaction, validateTransactionUpdate, checkValidation } = require('../utils/validation');
 
 // All routes require authentication and admin role
 router.use(auth, isAdmin);
@@ -23,7 +23,7 @@ router.get('/client-kpis', transactionController.getClientKpis);
 router.get('/:id', transactionController.getTransactionById);
 
 // PUT /api/transactions/:id - Update transaction
-router.put('/:id', validateTransaction, checkValidation, transactionController.updateTransaction);
+router.put('/:id', validateTransactionUpdate, checkValidation, transactionController.updateTransaction);
 
 // DELETE /api/transactions/:id - Delete transaction
 router.delete('/:id', transactionController.deleteTransaction);

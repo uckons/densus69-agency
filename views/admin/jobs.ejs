@@ -319,6 +319,22 @@
         </div>
     </div>
 
+
+    <!-- Manage Assigned Models Modal -->
+    <div id="assignedModelsModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-xl p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Assigned Models</h3>
+                <button type="button" onclick="closeAssignedModelsModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+            </div>
+            <input id="assignedJobId" type="hidden">
+            <div id="assignedModelsList" class="space-y-2 max-h-80 overflow-y-auto"></div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button type="button" onclick="closeAssignedModelsModal()" class="px-4 py-2 border rounded-lg">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Sidebar Toggle Script -->
     <script>
         let jobsCache = [];
@@ -484,6 +500,77 @@
             document.getElementById('assignModal').classList.add('hidden');
         }
 
+        function closeAssignedModelsModal() {
+            document.getElementById('assignedModelsModal').classList.add('hidden');
+        }
+
+        async function openAssignedModelsModal(jobId) {
+            const listEl = document.getElementById('assignedModelsList');
+            document.getElementById('assignedJobId').value = jobId;
+            listEl.innerHTML = '<div class="text-sm text-gray-500">Memuat model ter-assign...</div>';
+            document.getElementById('assignedModelsModal').classList.remove('hidden');
+
+            try {
+                const response = await fetch(`/api/jobs/${jobId}/assigned-models`, { credentials: 'include' });
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Gagal memuat assigned models');
+                }
+
+                const assignedModels = data.data || [];
+                if (!assignedModels.length) {
+                    listEl.innerHTML = '<div class="text-sm text-gray-500">Belum ada model yang di-assign di job ini.</div>';
+                    return;
+                }
+
+                listEl.innerHTML = assignedModels.map((model) => {
+                    const canUnassign = ['pending', 'confirmed'].includes(String(model.booking_status || '').toLowerCase());
+                    return `
+                        <div class="flex items-center justify-between border rounded-lg px-3 py-2">
+                            <div>
+                                <p class="font-medium text-gray-800">${model.full_name || '-'}</p>
+                                <p class="text-xs text-gray-500">${model.email || '-'} • booking: ${model.booking_status || '-'}</p>
+                            </div>
+                            <button
+                                onclick="unassignModel('${jobId}', '${model.id}')"
+                                class="px-3 py-1 rounded-md text-sm ${canUnassign ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}"
+                                ${canUnassign ? '' : 'disabled'}
+                            >
+                                Unassign
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                listEl.innerHTML = `<div class="text-sm text-red-600">${error.message || 'Terjadi kesalahan'}</div>`;
+            }
+        }
+
+        async function unassignModel(jobId, modelId) {
+            if (!confirm('Unassign model ini dari job?')) return;
+
+            try {
+                const response = await fetch(`/api/jobs/${jobId}/unassign-model`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model_id: modelId })
+                });
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Gagal unassign model');
+                }
+
+                showToast('Model berhasil di-unassign', 'success');
+                await loadJobs();
+                await openAssignedModelsModal(jobId);
+            } catch (error) {
+                showToast(error.message || 'Terjadi kesalahan', 'error');
+            }
+        }
+
         async function submitAssignModel() {
             const jobId = document.getElementById('assignJobId').value;
             const payload = {
@@ -607,8 +694,8 @@
                         <span class="font-semibold text-emerald-700">Assigned: ${Number(job.assigned_model_count || 0)}</span>
                         <span class="mx-2 text-gray-300">|</span>
                         <span class="font-semibold text-amber-700">Unassigned: ${Number(job.unassigned_model_count || 0)}</span>
-                        ${Number(job.assigned_model_count || 0) > 0
-                            ? `<br><span class="text-xs text-gray-500">${job.assigned_model_names || ''}</span>`
+                        ${Array.isArray(job.assigned_models) && job.assigned_models.length > 0
+                            ? `<div class="mt-1 text-xs text-gray-500">${job.assigned_models.map((model) => model.full_name).join(', ')}</div>`
                             : ''}
                     </td>
                     <td class="px-6 py-4 text-sm">
@@ -618,6 +705,7 @@
                         <div class="flex items-center gap-3">
                             <button onclick="openEditJob('${job.id}')" class="text-blue-600 hover:text-blue-900 transition" title="Edit Job"><i class="fas fa-edit"></i></button>
                             <button onclick="openAssignModal('${job.id}')" class="text-emerald-600 hover:text-emerald-800 transition" title="Assign Model"><i class="fas fa-user-plus"></i></button>
+                            <button onclick="openAssignedModelsModal('${job.id}')" class="text-amber-600 hover:text-amber-800 transition" title="Manage Assigned"><i class="fas fa-user-minus"></i></button>
                         </div>
                     </td>
                 </tr>`).join('');
