@@ -348,6 +348,55 @@
     </div>
 </div>
 
+
+<!-- Transaction Detail Modal -->
+<div id="transactionDetailModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-gray-800">Transaction Detail</h3>
+            <button type="button" onclick="closeTransactionDetailModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="transactionDetailContent" class="text-sm text-gray-700">Loading...</div>
+    </div>
+</div>
+
+<!-- Edit Transaction Modal -->
+<div id="transactionEditModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-gray-800">Edit Transaction</h3>
+            <button type="button" onclick="closeEditTransactionModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+        </div>
+        <form id="editTransactionForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="hidden" id="editTransactionId">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                <input id="editModelName" type="text" class="w-full border rounded-lg px-3 py-2 bg-gray-50" readonly>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
+                <input id="editClientName" type="text" class="w-full border rounded-lg px-3 py-2" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Date *</label>
+                <input id="editTransactionDate" type="date" class="w-full border rounded-lg px-3 py-2" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Count *</label>
+                <input id="editTransactionCount" type="number" min="1" class="w-full border rounded-lg px-3 py-2" required>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea id="editDescription" rows="3" class="w-full border rounded-lg px-3 py-2"></textarea>
+            </div>
+        </form>
+        <div class="flex justify-end gap-2 mt-6">
+            <button type="button" onclick="closeEditTransactionModal()" class="px-4 py-2 border rounded-lg">Cancel</button>
+            <button type="button" onclick="submitEditTransaction()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save</button>
+        </div>
+    </div>
+</div>
+
 <script>
     const allTransactions = <%- JSON.stringify(typeof transactions !== 'undefined' ? transactions : []) %>;
     let filteredTransactions = [...allTransactions];
