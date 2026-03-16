@@ -1,6 +1,19 @@
 const { Job, Booking, Model } = require('../models');
 const db = require('../config/database');
 
+const syncModelWorkingStatus = async (modelId) => {
+  const activeBookingResult = await db.query(
+    `SELECT COUNT(*)::int AS total
+     FROM bookings
+     WHERE model_id = $1
+       AND status IN ('pending', 'confirmed')`,
+    [modelId]
+  );
+
+  const hasActiveBooking = Number(activeBookingResult.rows[0]?.total || 0) > 0;
+  await Model.update(modelId, { status: hasActiveBooking ? 'working' : 'vacant' });
+};
+
 /**
  * Create a new job posting
  */
@@ -182,6 +195,8 @@ exports.assignModelToJob = async (req, res) => {
       await Job.update(id, { status: 'assigned' });
     }
 
+    await syncModelWorkingStatus(parsedModelId);
+
     return res.json({
       success: true,
       message: 'Model berhasil di-assign ke job',
@@ -244,9 +259,10 @@ exports.getJobs = async (req, res) => {
         j.*,
         COUNT(b.id)::int AS assigned_model_count,
         COALESCE(
-          STRING_AGG(DISTINCT m.full_name, ', ') FILTER (WHERE b.id IS NOT NULL),
-          ''
-        ) AS assigned_model_names,
+          JSON_AGG(DISTINCT JSONB_BUILD_OBJECT('id', m.id, 'full_name', m.full_name))
+            FILTER (WHERE b.id IS NOT NULL),
+          '[]'::json
+        ) AS assigned_models,
         (
           SELECT COUNT(*)::int
           FROM models mx
@@ -492,6 +508,8 @@ exports.unassignModelFromJob = async (req, res) => {
     if (Number(remaining.rows[0]?.total || 0) === 0) {
       await Job.update(id, { status: 'open' });
     }
+
+    await syncModelWorkingStatus(parsedModelId);
 
     return res.json({ success: true, message: 'Model berhasil di-unassign dari job' });
   } catch (error) {
