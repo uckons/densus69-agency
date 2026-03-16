@@ -78,6 +78,11 @@
                         <span>Agents</span>
                     </a>
                     
+                    <a href="/admin/clients" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
+                        <i class="fas fa-building w-5"></i>
+                        <span>Clients</span>
+                    </a>
+                    
                     <a href="/admin/jobs" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-briefcase w-5"></i>
                         <span>Jobs</span>
@@ -405,13 +410,26 @@
         // Revenue Chart
         const revenueCtx = document.getElementById('revenueChart');
         if (revenueCtx) {
+            const monthlyChartRows = <%- JSON.stringify(typeof monthlyChartData !== 'undefined' ? monthlyChartData : []) %>;
+            const revenueMap = new Map(monthlyChartRows.map((row) => [row.year_month, Number(row.revenue || 0)]));
+
+            const labels = [];
+            const values = [];
+            const now = new Date();
+            for (let i = 11; i >= 0; i -= 1) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const yearMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                labels.push(d.toLocaleString('en-US', { month: 'short' }));
+                values.push(Number(revenueMap.get(yearMonth) || 0));
+            }
+
             new Chart(revenueCtx.getContext('2d'), {
                 type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    labels,
                     datasets: [{
                         label: 'Revenue',
-                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        data: values,
                         borderColor: 'rgb(59, 130, 246)',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         tension: 0.4,
@@ -431,7 +449,7 @@
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
-                                    return 'Rp ' + value.toLocaleString('id-ID');
+                                    return 'Rp ' + Number(value || 0).toLocaleString('id-ID');
                                 }
                             }
                         }

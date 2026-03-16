@@ -63,13 +63,14 @@ exports.showDashboard = async (req, res) => {
 
     // Get monthly revenue data for chart (last 12 months)
     const monthlyChartResult = await db.query(`
-      SELECT 
-        TO_CHAR(transaction_date, 'Mon') as month,
-        COALESCE(SUM(gross_amount), 0) as revenue
+      SELECT
+        TO_CHAR(DATE_TRUNC('month', transaction_date), 'YYYY-MM') AS year_month,
+        TO_CHAR(DATE_TRUNC('month', transaction_date), 'Mon') AS month,
+        COALESCE(SUM(gross_amount), 0) AS revenue
       FROM transactions
-      WHERE transaction_date >= NOW() - INTERVAL '12 months'
-      GROUP BY TO_CHAR(transaction_date, 'Mon'), EXTRACT(MONTH FROM transaction_date)
-      ORDER BY EXTRACT(MONTH FROM transaction_date)
+      WHERE transaction_date >= (DATE_TRUNC('month', NOW()) - INTERVAL '11 months')
+      GROUP BY 1, 2
+      ORDER BY 1 ASC
     `);
 
     res.render('admin/dashboard', {

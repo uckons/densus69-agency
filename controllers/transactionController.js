@@ -253,9 +253,11 @@ exports.updateTransaction = async (req, res) => {
   try {
     const { id } = req.params;
     const {
+      client_name,
       transaction_count,
       transaction_date,
-      description
+      description,
+      notes
     } = req.body;
 
     const transaction = await Transaction.findById(id);
@@ -278,7 +280,7 @@ exports.updateTransaction = async (req, res) => {
     const updateData = {};
 
     // If transaction_count is updated, recalculate amounts
-    if (transaction_count) {
+    if (transaction_count !== undefined && transaction_count !== null && transaction_count !== '') {
       const { grossAmount, adminFee, netAmount } = calculateSalary(
         parseInt(transaction_count),
         parseFloat(model.rate)
@@ -290,12 +292,20 @@ exports.updateTransaction = async (req, res) => {
       updateData.net_amount = netAmount;
     }
 
+    if (client_name !== undefined) {
+      updateData.client_name = String(client_name || '').trim();
+    }
+
     if (transaction_date) {
       updateData.transaction_date = transaction_date;
     }
 
     if (description !== undefined) {
-      updateData.description = description;
+      updateData.notes = description;
+    }
+
+    if (notes !== undefined) {
+      updateData.notes = notes;
     }
 
     await Transaction.update(id, updateData);

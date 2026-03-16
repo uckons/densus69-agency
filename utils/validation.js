@@ -25,6 +25,15 @@ const validateTransaction = [
   body('transaction_count').isInt({ min: 1 }).withMessage('Transaction count must be at least 1'),
 ];
 
+
+// Validation rules for transaction update
+const validateTransactionUpdate = [
+  body('model_id').optional().isInt().withMessage('Model ID must be integer'),
+  body('client_name').optional().trim().notEmpty().withMessage('Client name is required'),
+  body('transaction_date').optional().isDate().withMessage('Valid transaction date is required'),
+  body('transaction_count').optional().isInt({ min: 1 }).withMessage('Transaction count must be at least 1'),
+];
+
 // Validation rules for complaint
 const validateComplaint = [
   body('customer_name').trim().notEmpty().withMessage('Name is required'),
@@ -45,6 +54,7 @@ module.exports = {
   validateRegistration,
   validateLogin,
   validateTransaction,
+  validateTransactionUpdate,
   validateComplaint,
   checkValidation
 };
