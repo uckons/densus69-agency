@@ -2,8 +2,22 @@ const db = require('../config/database');
 
 // Helper function to format currency
 const formatCurrency = (amount) => {
-  return `Rp ${amount.toLocaleString('id-ID')}`;
+  return `Rp ${Number(amount || 0).toLocaleString('id-ID')}`;
 };
+
+
+async function ensureAnalyticsSchema() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS model_grades (
+      id SERIAL PRIMARY KEY,
+      grade_name VARCHAR(50) UNIQUE NOT NULL,
+      rate_per_trx DECIMAL(10,2) NOT NULL DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await db.query('ALTER TABLE models ADD COLUMN IF NOT EXISTS grade_id INTEGER REFERENCES model_grades(id) ON DELETE SET NULL');
+}
 
 exports.showDashboard = async (req, res) => {
   try {
@@ -133,10 +147,17 @@ exports.showJobs = async (req, res) => {
 
 exports.showTransactions = async (req, res) => {
   try {
+    await ensureAnalyticsSchema();
+
     const transactionsResult = await db.query(`
-      SELECT t.*, m.full_name as model_name
+      SELECT
+        t.*,
+        m.full_name as model_name,
+        g.grade_name as model_grade_name,
+        GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0), 0) as agent_fee_total
       FROM transactions t
       LEFT JOIN models m ON t.model_id = m.id
+      LEFT JOIN model_grades g ON m.grade_id = g.id
       ORDER BY t.transaction_date DESC
     `);
     
@@ -153,8 +174,111 @@ exports.showTransactions = async (req, res) => {
 
 exports.showAnalytics = async (req, res) => {
   try {
+    await ensureAnalyticsSchema();
+
+    const { start_date, end_date } = req.query;
+
+    const transactionsResult = await db.query(`
+      SELECT
+        t.*,
+        m.full_name AS model_name,
+        g.grade_name AS model_grade_name,
+        GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0), 0) AS agent_fee_total
+      FROM transactions t
+      LEFT JOIN models m ON t.model_id = m.id
+      LEFT JOIN model_grades g ON m.grade_id = g.id
+      ORDER BY t.transaction_date ASC
+    `);
+
+    let transactions = transactionsResult.rows;
+    if (start_date) {
+      const startDate = new Date(`${start_date}T00:00:00`);
+      transactions = transactions.filter((tx) => new Date(tx.transaction_date) >= startDate);
+    }
+    if (end_date) {
+      const endDate = new Date(`${end_date}T23:59:59`);
+      transactions = transactions.filter((tx) => new Date(tx.transaction_date) <= endDate);
+    }
+    const totalRevenue = transactions.reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+    const totalTransactions = transactions.length;
+    const avgTransaction = totalTransactions ? totalRevenue / totalTransactions : 0;
+    const totalCommission = transactions.reduce((sum, tx) => sum + Number(tx.agent_fee_total || 0), 0);
+
+    const byModel = new Map();
+    const byMonth = new Map();
+    const byGrade = new Map();
+    const thisYearByMonth = Array(12).fill(0);
+    const lastYearByMonth = Array(12).fill(0);
+    const currentYear = new Date().getFullYear();
+
+    transactions.forEach((tx) => {
+      const modelId = tx.model_id || tx.model_name || 'unknown';
+      const modelRow = byModel.get(modelId) || {
+        name: tx.model_name || 'Unknown',
+        photo: '/images/default-avatar.png',
+        jobsCompleted: 0,
+        totalEarnings: 0,
+        commission: 0
+      };
+      modelRow.jobsCompleted += Number(tx.transaction_count || 0);
+      modelRow.totalEarnings += Number(tx.net_amount || 0);
+      modelRow.commission += Number(tx.agent_fee_total || 0);
+      byModel.set(modelId, modelRow);
+
+      const d = tx.transaction_date ? new Date(tx.transaction_date) : null;
+      if (d && !Number.isNaN(d.getTime())) {
+        const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        byMonth.set(monthKey, Number(byMonth.get(monthKey) || 0) + Number(tx.gross_amount || 0));
+        if (d.getFullYear() === currentYear) thisYearByMonth[d.getMonth()] += Number(tx.gross_amount || 0);
+        if (d.getFullYear() === currentYear - 1) lastYearByMonth[d.getMonth()] += Number(tx.gross_amount || 0);
+      }
+
+      const grade = tx.model_grade_name || 'No Grade';
+      byGrade.set(grade, Number(byGrade.get(grade) || 0) + Number(tx.gross_amount || 0));
+    });
+
+    const modelStats = Array.from(byModel.values())
+      .map((row) => ({
+        ...row,
+        avgPerJob: row.jobsCompleted ? row.totalEarnings / row.jobsCompleted : 0
+      }))
+      .sort((a, b) => b.totalEarnings - a.totalEarnings);
+
+    const topModel = modelStats[0] || null;
+    const revenueEntries = Array.from(byMonth.entries()).sort(([a], [b]) => a.localeCompare(b));
+    const gradeEntries = Array.from(byGrade.entries()).sort((a, b) => b[1] - a[1]);
+    const topModels = modelStats.slice(0, 10);
+
+    const analytics = {
+      totalRevenue,
+      revenueGrowth: 0,
+      avgTransaction,
+      totalTransactions,
+      totalCommission,
+      topModelEarnings: topModel?.totalEarnings || 0,
+      topModelName: topModel?.name || 'N/A'
+    };
+
+    const chartData = {
+      revenueLabels: revenueEntries.map(([label]) => label),
+      revenueData: revenueEntries.map(([, value]) => value),
+      jobTypeLabels: gradeEntries.map(([label]) => label),
+      jobTypeData: gradeEntries.map(([, value]) => value),
+      topModelsLabels: topModels.map((row) => row.name),
+      topModelsData: topModels.map((row) => row.totalEarnings),
+      monthlyLabels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      thisYearData: thisYearByMonth,
+      lastYearData: lastYearByMonth
+    };
+
     res.render('admin/revenue-analytics', {
-      user: req.user
+      user: req.user,
+      analytics,
+      chartData,
+      modelStats,
+      formatCurrency,
+      selectedStartDate: start_date || '',
+      selectedEndDate: end_date || ''
     });
   } catch (error) {
     console.error('Analytics error:', error);
