@@ -134,9 +134,14 @@ exports.showJobs = async (req, res) => {
 exports.showTransactions = async (req, res) => {
   try {
     const transactionsResult = await db.query(`
-      SELECT t.*, m.full_name as model_name
+      SELECT
+        t.*,
+        m.full_name as model_name,
+        g.grade_name as model_grade_name,
+        GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0), 0) as agent_fee_total
       FROM transactions t
       LEFT JOIN models m ON t.model_id = m.id
+      LEFT JOIN model_grades g ON m.grade_id = g.id
       ORDER BY t.transaction_date DESC
     `);
     

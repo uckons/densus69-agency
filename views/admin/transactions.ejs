@@ -336,6 +336,10 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Count *</label>
                 <input id="editTransactionCount" type="number" min="1" class="w-full border rounded-lg px-3 py-2" required>
             </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Admin Fee</label>
+                <input id="editAdminFee" type="number" min="0" class="w-full border rounded-lg px-3 py-2" value="0">
+            </div>
             <div class="md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea id="editDescription" rows="3" class="w-full border rounded-lg px-3 py-2"></textarea>
@@ -385,6 +389,10 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Count *</label>
                 <input id="editTransactionCount" type="number" min="1" class="w-full border rounded-lg px-3 py-2" required>
             </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Admin Fee</label>
+                <input id="editAdminFee" type="number" min="0" class="w-full border rounded-lg px-3 py-2" value="0">
+            </div>
             <div class="md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea id="editDescription" rows="3" class="w-full border rounded-lg px-3 py-2"></textarea>
@@ -403,6 +411,7 @@
     let currentPage = 1;
     const pageSize = 10;
     let transactionsTrendChart = null;
+    let lastTransactionDetail = null;
 
     function formatCurrencySafe(n) {
         return 'Rp ' + Number(n || 0).toLocaleString('id-ID');
@@ -436,7 +445,10 @@
             tbody.innerHTML = pageItems.map((transaction) => `
                 <tr class="hover:bg-gray-50 transition">
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDateSafe(transaction.transaction_date)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${transaction.model_name || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        ${transaction.model_name || '-'}
+                        <div class="text-xs text-gray-500">${transaction.model_grade_name || 'No grade'}</div>
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Trx x ${Number(transaction.transaction_count || 0)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${transaction.client_name || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">${formatCurrencySafe(transaction.gross_amount)}</td>
@@ -568,25 +580,122 @@
 
             const tx = data.data?.transaction || {};
             const model = data.data?.model || {};
-            const gross = Number(tx.gross_amount || 0).toLocaleString('id-ID');
-            const net = Number(tx.net_amount || 0).toLocaleString('id-ID');
-            const fee = Number(tx.admin_fee || 0).toLocaleString('id-ID');
+            lastTransactionDetail = { tx, model };
+            const grossAmount = Number(tx.gross_amount || 0);
+            const adminFeeAmount = Number(tx.admin_fee || 0);
+            const agentFeeAmount = Number(tx.agent_fee_total || Math.max(grossAmount - adminFeeAmount - Number(tx.net_amount || 0), 0));
+            const netAmount = Number(tx.net_amount || 0);
+            const rateAmount = Number(tx.model_rate || model.rate || tx.current_model_rate || 0);
+            const gross = grossAmount.toLocaleString('id-ID');
+            const adminFee = adminFeeAmount.toLocaleString('id-ID');
+            const agentFee = agentFeeAmount.toLocaleString('id-ID');
+            const net = netAmount.toLocaleString('id-ID');
+            const rate = rateAmount.toLocaleString('id-ID');
             content.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div><span class="font-semibold">Model:</span> ${model.full_name || tx.model_name || '-'}</div>
-                    <div><span class="font-semibold">Client:</span> ${tx.client_name || '-'}</div>
-                    <div><span class="font-semibold">Date:</span> ${formatDateSafe(tx.transaction_date)}</div>
-                    <div><span class="font-semibold">TRX Count:</span> ${tx.transaction_count || 0}</div>
-                    <div><span class="font-semibold">Gross:</span> Rp ${gross}</div>
-                    <div><span class="font-semibold">Admin Fee:</span> Rp ${fee}</div>
-                    <div><span class="font-semibold">Net:</span> Rp ${net}</div>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div><span class="font-semibold">Model:</span> ${model.full_name || tx.model_name || '-'}</div>
+                        <div><span class="font-semibold">Model Grade:</span> ${model.grade_name || tx.model_grade_name || '-'}</div>
+                        <div><span class="font-semibold">Client:</span> ${tx.client_name || '-'}</div>
+                        <div><span class="font-semibold">Date:</span> ${formatDateSafe(tx.transaction_date)}</div>
+                        <div><span class="font-semibold">TRX Count:</span> ${tx.transaction_count || 0}</div>
+                        <div><span class="font-semibold">Rate / Trx:</span> Rp ${rate}</div>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 font-semibold text-gray-800">Salary Breakdown</div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-4">
+                            <div><span class="font-semibold">Gross:</span> Rp ${gross}</div>
+                            <div><span class="font-semibold">Admin Fee:</span> Rp ${adminFee}</div>
+                            <div><span class="font-semibold">Agent Fee:</span> Rp ${agentFee}</div>
+                            <div><span class="font-semibold">Net Model:</span> Rp ${net}</div>
+                            <div class="md:col-span-2 text-xs text-gray-500">Formula: Gross - Admin Fee - Agent Fee = Net Model</div>
+                        </div>
+                    </div>
                     <div><span class="font-semibold">Created By:</span> ${tx.created_by_email || '-'}</div>
-                    <div class="md:col-span-2"><span class="font-semibold">Description:</span> ${tx.notes || '-'}</div>
+                    <div><span class="font-semibold">Description:</span> ${tx.notes || '-'}</div>
+                    <div class="flex justify-end">
+                        <button type="button" onclick="exportTransactionPdf()" class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"><i class="fas fa-file-pdf mr-2"></i>Export PDF Slip</button>
+                    </div>
                 </div>
             `;
         } catch (error) {
             content.innerHTML = `<p class="text-red-600">${error.message || 'Terjadi kesalahan'}</p>`;
         }
+    }
+
+
+    function exportTransactionPdf() {
+        if (!lastTransactionDetail) {
+            showToast('Detail transaksi belum dimuat', 'error');
+            return;
+        }
+        const { tx, model } = lastTransactionDetail;
+        const grossAmount = Number(tx.gross_amount || 0);
+        const adminFeeAmount = Number(tx.admin_fee || 0);
+        const agentFeeAmount = Number(tx.agent_fee_total || Math.max(grossAmount - adminFeeAmount - Number(tx.net_amount || 0), 0));
+        const netAmount = Number(tx.net_amount || 0);
+        const rateAmount = Number(tx.model_rate || model.rate || tx.current_model_rate || 0);
+        const slipNo = `SLIP-${String(tx.id || '').padStart(6, '0')}`;
+        const html = `<!doctype html>
+<html>
+<head>
+  <title>${slipNo}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f3f4f6; color: #111827; }
+    .page { max-width: 760px; margin: 32px auto; background: #fff; padding: 40px; border-radius: 18px; box-shadow: 0 16px 40px rgba(15, 23, 42, .12); }
+    .header { display: flex; justify-content: space-between; border-bottom: 3px solid #111827; padding-bottom: 18px; margin-bottom: 24px; }
+    .brand { font-size: 26px; font-weight: 800; letter-spacing: .04em; }
+    .muted { color: #6b7280; font-size: 12px; }
+    .title { font-size: 18px; font-weight: 700; margin-top: 4px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; margin-bottom: 24px; }
+    .label { color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+    .value { font-weight: 700; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { padding: 14px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+    th { background: #f9fafb; font-size: 12px; text-transform: uppercase; color: #6b7280; letter-spacing: .06em; }
+    .right { text-align: right; }
+    .total { font-size: 20px; font-weight: 800; color: #047857; }
+    .footer { margin-top: 32px; display: flex; justify-content: space-between; gap: 40px; }
+    .sign { flex: 1; text-align: center; padding-top: 56px; border-bottom: 1px solid #9ca3af; }
+    @media print { body { background: #fff; } .page { box-shadow: none; margin: 0; max-width: none; border-radius: 0; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div>
+        <div class="brand">DENSUS69 AGENCY</div>
+        <div class="muted">Enterprise Payroll Slip</div>
+      </div>
+      <div style="text-align:right">
+        <div class="title">${slipNo}</div>
+        <div class="muted">${formatDateSafe(tx.transaction_date)}</div>
+      </div>
+    </div>
+    <div class="grid">
+      <div><div class="label">Model</div><div class="value">${model.full_name || tx.model_name || '-'}</div></div>
+      <div><div class="label">Model Grade</div><div class="value">${model.grade_name || tx.model_grade_name || '-'}</div></div>
+      <div><div class="label">Client</div><div class="value">${tx.client_name || '-'}</div></div>
+      <div><div class="label">Created By</div><div class="value">${tx.created_by_email || '-'}</div></div>
+    </div>
+    <table>
+      <thead><tr><th>Description</th><th class="right">Amount</th></tr></thead>
+      <tbody>
+        <tr><td>Gross (${tx.transaction_count || 0} trx × ${formatCurrencySafe(rateAmount)})</td><td class="right">${formatCurrencySafe(grossAmount)}</td></tr>
+        <tr><td>Admin Fee</td><td class="right">-${formatCurrencySafe(adminFeeAmount)}</td></tr>
+        <tr><td>Agent Fee</td><td class="right">-${formatCurrencySafe(agentFeeAmount)}</td></tr>
+        <tr><td class="total">Net Model Payout</td><td class="right total">${formatCurrencySafe(netAmount)}</td></tr>
+      </tbody>
+    </table>
+    <p class="muted">Formula: Gross - Admin Fee - Agent Fee = Net Model Payout. Notes: ${tx.notes || '-'}</p>
+    <div class="footer"><div class="sign">Finance</div><div class="sign">Model</div></div>
+  </div>
+  <script>window.onload = () => { window.print(); }<\/script>
+</body>
+</html>`;
+        const win = window.open('', '_blank');
+        win.document.write(html);
+        win.document.close();
     }
 
     async function openEditTransaction(id) {
@@ -604,6 +713,7 @@
             document.getElementById('editClientName').value = tx.client_name || '';
             document.getElementById('editTransactionDate').value = tx.transaction_date ? new Date(tx.transaction_date).toISOString().slice(0, 10) : '';
             document.getElementById('editTransactionCount').value = tx.transaction_count || 1;
+            document.getElementById('editAdminFee').value = Number(tx.admin_fee || 0);
             document.getElementById('editDescription').value = tx.notes || '';
 
             document.getElementById('transactionEditModal').classList.remove('hidden');
@@ -618,6 +728,7 @@
             client_name: document.getElementById('editClientName').value.trim(),
             transaction_date: document.getElementById('editTransactionDate').value,
             transaction_count: Number(document.getElementById('editTransactionCount').value || 0),
+            admin_fee: Number(document.getElementById('editAdminFee').value || 0),
             description: document.getElementById('editDescription').value.trim()
         };
 

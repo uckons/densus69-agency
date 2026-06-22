@@ -43,7 +43,8 @@ exports.createTransaction = async (req, res) => {
       client_name,
       transaction_count,
       transaction_date,
-      description
+      description,
+      admin_fee
     } = req.body;
 
     // Validate required fields
@@ -88,10 +89,12 @@ exports.createTransaction = async (req, res) => {
     }
 
     // Calculate amounts
+    const parsedAdminFee = Number(admin_fee || 0);
+
     const { grossAmount, adminFee, netAmount } = calculateSalary(
       parseInt(transaction_count),
       parseFloat(model.rate),
-      0,
+      parsedAdminFee,
       parseFloat(model.agent_fee_flat || 0)
     );
 
@@ -235,7 +238,8 @@ exports.getTransactionById = async (req, res) => {
         model: model ? {
           model_id: model.id,
           full_name: model.full_name,
-          rate: model.rate
+          rate: model.rate,
+          grade_name: transaction.model_grade_name || model.grade_name || null
         } : null
       }
     });
@@ -260,7 +264,8 @@ exports.updateTransaction = async (req, res) => {
       transaction_count,
       transaction_date,
       description,
-      notes
+      notes,
+      admin_fee
     } = req.body;
 
     const transaction = await Transaction.findById(id);
@@ -282,16 +287,20 @@ exports.updateTransaction = async (req, res) => {
 
     const updateData = {};
 
-    // If transaction_count is updated, recalculate amounts
-    if (transaction_count !== undefined && transaction_count !== null && transaction_count !== '') {
+    // If transaction_count or admin fee is updated, recalculate amounts
+    if ((transaction_count !== undefined && transaction_count !== null && transaction_count !== '') || admin_fee !== undefined) {
+      const parsedTransactionCount = transaction_count !== undefined && transaction_count !== null && transaction_count !== ''
+        ? parseInt(transaction_count)
+        : parseInt(transaction.transaction_count || 0);
+      const parsedAdminFee = admin_fee !== undefined ? Number(admin_fee || 0) : Number(transaction.admin_fee || 0);
       const { grossAmount, adminFee, netAmount } = calculateSalary(
-        parseInt(transaction_count),
+        parsedTransactionCount,
         parseFloat(model.rate),
-        0,
+        parsedAdminFee,
         parseFloat(model.agent_fee_flat || 0)
       );
       
-      updateData.transaction_count = parseInt(transaction_count);
+      updateData.transaction_count = parsedTransactionCount;
       updateData.gross_amount = grossAmount;
       updateData.admin_fee = adminFee;
       updateData.agent_fee_flat = parseFloat(model.agent_fee_flat || 0);

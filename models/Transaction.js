@@ -34,9 +34,18 @@ const Transaction = {
   // Find transaction by ID
   findById: async (id) => {
     const query = `
-      SELECT t.*, m.full_name as model_name, u.email as created_by_email
+      SELECT
+        t.*,
+        m.full_name as model_name,
+        m.rate as current_model_rate,
+        COALESCE(m.agent_fee_flat, 0) as current_agent_fee_flat,
+        g.grade_name as model_grade_name,
+        g.rate_per_trx as model_grade_rate,
+        GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0), 0) as agent_fee_total,
+        u.email as created_by_email
       FROM transactions t
       LEFT JOIN models m ON t.model_id = m.id
+      LEFT JOIN model_grades g ON m.grade_id = g.id
       LEFT JOIN users u ON t.created_by = u.id
       WHERE t.id = $1
     `;
@@ -47,9 +56,14 @@ const Transaction = {
   // Find all transactions with filters
   findAll: async (filters = {}) => {
     let query = `
-      SELECT t.*, m.full_name as model_name
+      SELECT
+        t.*,
+        m.full_name as model_name,
+        g.grade_name as model_grade_name,
+        GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0), 0) as agent_fee_total
       FROM transactions t
       LEFT JOIN models m ON t.model_id = m.id
+      LEFT JOIN model_grades g ON m.grade_id = g.id
       WHERE 1=1
     `;
     const params = [];
