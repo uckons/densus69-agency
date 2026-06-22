@@ -1,0 +1,9 @@
+    </div>
+  </main>
+</div>
+<script>
+function showToast(message,type='info'){const c=document.getElementById('toast-container');if(!c)return alert(message);const t=document.createElement('div');const b={success:'bg-green-600',error:'bg-red-600',info:'bg-blue-600',warning:'bg-amber-500'}[type]||'bg-blue-600';t.className=`${b} text-white px-5 py-3 rounded-xl shadow-lg font-semibold`;t.textContent=message;c.appendChild(t);setTimeout(()=>t.remove(),3500)}
+function showLoading(){} function hideLoading(){}
+</script>
+</body>
+</html>
