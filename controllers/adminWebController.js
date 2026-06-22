@@ -176,6 +176,8 @@ exports.showAnalytics = async (req, res) => {
   try {
     await ensureAnalyticsSchema();
 
+    const { start_date, end_date } = req.query;
+
     const transactionsResult = await db.query(`
       SELECT
         t.*,
@@ -188,11 +190,19 @@ exports.showAnalytics = async (req, res) => {
       ORDER BY t.transaction_date ASC
     `);
 
-    const transactions = transactionsResult.rows;
+    let transactions = transactionsResult.rows;
+    if (start_date) {
+      const startDate = new Date(`${start_date}T00:00:00`);
+      transactions = transactions.filter((tx) => new Date(tx.transaction_date) >= startDate);
+    }
+    if (end_date) {
+      const endDate = new Date(`${end_date}T23:59:59`);
+      transactions = transactions.filter((tx) => new Date(tx.transaction_date) <= endDate);
+    }
     const totalRevenue = transactions.reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
     const totalTransactions = transactions.length;
     const avgTransaction = totalTransactions ? totalRevenue / totalTransactions : 0;
-    const totalCommission = transactions.reduce((sum, tx) => sum + Number(tx.admin_fee || 0), 0);
+    const totalCommission = transactions.reduce((sum, tx) => sum + Number(tx.agent_fee_total || 0), 0);
 
     const byModel = new Map();
     const byMonth = new Map();
@@ -212,7 +222,7 @@ exports.showAnalytics = async (req, res) => {
       };
       modelRow.jobsCompleted += Number(tx.transaction_count || 0);
       modelRow.totalEarnings += Number(tx.net_amount || 0);
-      modelRow.commission += Number(tx.admin_fee || 0);
+      modelRow.commission += Number(tx.agent_fee_total || 0);
       byModel.set(modelId, modelRow);
 
       const d = tx.transaction_date ? new Date(tx.transaction_date) : null;
@@ -266,7 +276,9 @@ exports.showAnalytics = async (req, res) => {
       analytics,
       chartData,
       modelStats,
-      formatCurrency
+      formatCurrency,
+      selectedStartDate: start_date || '',
+      selectedEndDate: end_date || ''
     });
   } catch (error) {
     console.error('Analytics error:', error);
