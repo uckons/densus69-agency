@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Model Portal' %> - SkyLin Agency</title>
+  <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Model Portal' %> - OMDoGaTot Agency</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script>
@@ -18,8 +18,14 @@
     <div class="p-6 border-b border-slate-100">
       <div class="flex items-center gap-3">
         <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-model-500 to-purple-700 text-white flex items-center justify-center shadow-lg"><i class="fas fa-star"></i></div>
-        <div><p class="font-extrabold text-lg">SkyLin Model</p><p class="text-sm text-slate-500">Model Portal</p></div>
+        <div><p class="font-extrabold text-lg">OMDoGaTot Agency</p><p class="text-sm text-slate-500">Model Portal</p></div>
       </div>
+    </div>
+    <div class="px-4 pt-4">
+      <a href="/model/dashboard" class="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-2xl border border-model-200 text-model-700 bg-model-50 hover:bg-model-100 font-bold transition">
+        <i class="fas fa-arrow-left"></i>
+        <span>Kembali ke Dashboard</span>
+      </a>
     </div>
     <nav class="p-4 space-y-2">
       <% const nav = [{k:'dashboard',u:'/model/dashboard',i:'fa-chart-line',t:'Dashboard'},{k:'profile',u:'/model/profile',i:'fa-user',t:'Profile'},{k:'gallery',u:'/model/gallery',i:'fa-images',t:'Gallery'},{k:'jobs',u:'/model/jobs',i:'fa-briefcase',t:'Available Jobs'},{k:'bookings',u:'/model/bookings',i:'fa-calendar-check',t:'My Bookings'}]; %>
