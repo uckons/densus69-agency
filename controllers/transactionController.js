@@ -12,6 +12,7 @@ exports.getAssignedModels = async (req, res) => {
         m.id,
         m.full_name,
         m.rate,
+        COALESCE(m.agent_fee_flat, 0) AS agent_fee_flat,
         m.status,
         m.is_active,
         j.id AS job_id,
@@ -90,7 +91,8 @@ exports.createTransaction = async (req, res) => {
     const { grossAmount, adminFee, netAmount } = calculateSalary(
       parseInt(transaction_count),
       parseFloat(model.rate),
-      0
+      0,
+      parseFloat(model.agent_fee_flat || 0)
     );
 
     // Create transaction
@@ -101,6 +103,7 @@ exports.createTransaction = async (req, res) => {
       transaction_date,
       model_rate: parseFloat(model.rate),
       admin_fee: adminFee,
+      agent_fee_flat: parseFloat(model.agent_fee_flat || 0),
       notes: description || null,
       created_by: req.user?.id || null
     });
@@ -283,12 +286,15 @@ exports.updateTransaction = async (req, res) => {
     if (transaction_count !== undefined && transaction_count !== null && transaction_count !== '') {
       const { grossAmount, adminFee, netAmount } = calculateSalary(
         parseInt(transaction_count),
-        parseFloat(model.rate)
+        parseFloat(model.rate),
+        0,
+        parseFloat(model.agent_fee_flat || 0)
       );
       
       updateData.transaction_count = parseInt(transaction_count);
       updateData.gross_amount = grossAmount;
       updateData.admin_fee = adminFee;
+      updateData.agent_fee_flat = parseFloat(model.agent_fee_flat || 0);
       updateData.net_amount = netAmount;
     }
 
