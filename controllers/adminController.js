@@ -380,9 +380,9 @@ exports.updateManualModel = async (req, res) => {
 
     await client.query(
       `UPDATE transactions
-       SET model_rate = $1,
-           gross_amount = transaction_count * $1,
-           net_amount = GREATEST((transaction_count * $1) - COALESCE(admin_fee, 0) - (transaction_count * LEAST($2::numeric, $1::numeric)), 0)
+       SET model_rate = $1::numeric,
+           gross_amount = transaction_count * $1::numeric,
+           net_amount = GREATEST((transaction_count * $1::numeric) - COALESCE(admin_fee, 0) - (transaction_count * LEAST($2::numeric, $1::numeric)), 0)
        WHERE model_id = $3`,
       [parsedRate, parsedAgentFeeFlat, id]
     );
