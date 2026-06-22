@@ -641,54 +641,50 @@
 <head>
   <title>${slipNo}</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #f3f4f6; color: #111827; }
-    .page { max-width: 760px; margin: 32px auto; background: #fff; padding: 40px; border-radius: 18px; box-shadow: 0 16px 40px rgba(15, 23, 42, .12); }
-    .header { display: flex; justify-content: space-between; border-bottom: 3px solid #111827; padding-bottom: 18px; margin-bottom: 24px; }
-    .brand { font-size: 26px; font-weight: 800; letter-spacing: .04em; }
-    .muted { color: #6b7280; font-size: 12px; }
-    .title { font-size: 18px; font-weight: 700; margin-top: 4px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; margin-bottom: 24px; }
-    .label { color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
-    .value { font-weight: 700; margin-top: 4px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    th, td { padding: 14px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; }
-    th { background: #f9fafb; font-size: 12px; text-transform: uppercase; color: #6b7280; letter-spacing: .06em; }
+    @page { size: A4; margin: 14mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Inter, Arial, sans-serif; margin: 0; background: #eef2f7; color: #0f172a; }
+    .page { max-width: 760px; margin: 28px auto; background: #fff; border-radius: 20px; overflow: hidden; border: 1px solid #dbe3ef; box-shadow: 0 20px 60px rgba(15,23,42,.16); }
+    .hero { padding: 28px 32px; color: #fff; background: linear-gradient(135deg, #0f172a, #1d4ed8 58%, #16a34a); }
+    .brand { font-size: 24px; font-weight: 900; letter-spacing: .06em; }
+    .subtitle { margin-top: 6px; color: #dbeafe; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+    .content { padding: 30px 32px; }
+    .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; margin-bottom: 24px; }
+    .label { color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: .10em; font-weight: 800; }
+    .value { font-weight: 900; margin-top: 5px; }
+    table { width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
+    th, td { padding: 14px 12px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+    th { background: #0f172a; color: white; text-transform: uppercase; font-size: 10px; letter-spacing: .08em; }
     .right { text-align: right; }
-    .total { font-size: 20px; font-weight: 800; color: #047857; }
-    .footer { margin-top: 32px; display: flex; justify-content: space-between; gap: 40px; }
-    .sign { flex: 1; text-align: center; padding-top: 56px; border-bottom: 1px solid #9ca3af; }
-    @media print { body { background: #fff; } .page { box-shadow: none; margin: 0; max-width: none; border-radius: 0; } }
+    .total { font-size: 19px; font-weight: 900; color: #047857; }
+    .note { margin-top: 14px; color: #64748b; font-size: 12px; }
+    .signs { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 34px; }
+    .sign { text-align: center; color: #475569; font-size: 12px; padding-top: 56px; border-bottom: 1px solid #94a3b8; }
+    @media print { body { background: #fff; } .page { box-shadow: none; margin: 0; max-width: none; border-radius: 0; border: none; } .hero { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
   </style>
 </head>
 <body>
   <div class="page">
-    <div class="header">
-      <div>
-        <div class="brand">DENSUS69 AGENCY</div>
-        <div class="muted">Enterprise Payroll Slip</div>
+    <div class="hero"><div class="brand">DENSUS69 AGENCY</div><div class="subtitle">Enterprise Payroll Slip • ${slipNo}</div></div>
+    <div class="content">
+      <div class="meta">
+        <div><div class="label">Model</div><div class="value">${model.full_name || tx.model_name || '-'}</div></div>
+        <div><div class="label">Model Grade</div><div class="value">${model.grade_name || tx.model_grade_name || '-'}</div></div>
+        <div><div class="label">Client</div><div class="value">${tx.client_name || '-'}</div></div>
+        <div><div class="label">Date</div><div class="value">${formatDateSafe(tx.transaction_date)}</div></div>
       </div>
-      <div style="text-align:right">
-        <div class="title">${slipNo}</div>
-        <div class="muted">${formatDateSafe(tx.transaction_date)}</div>
-      </div>
+      <table>
+        <thead><tr><th>Description</th><th class="right">Amount</th></tr></thead>
+        <tbody>
+          <tr><td>Gross (${tx.transaction_count || 0} trx × ${formatCurrencySafe(rateAmount)})</td><td class="right">${formatCurrencySafe(grossAmount)}</td></tr>
+          <tr><td>Admin Fee</td><td class="right">-${formatCurrencySafe(adminFeeAmount)}</td></tr>
+          <tr><td>Agent Fee</td><td class="right">-${formatCurrencySafe(agentFeeAmount)}</td></tr>
+          <tr><td class="total">Net Model Payout</td><td class="right total">${formatCurrencySafe(netAmount)}</td></tr>
+        </tbody>
+      </table>
+      <div class="note"><strong>Formula:</strong> Gross - Admin Fee - Agent Fee = Net Model Payout. Notes: ${tx.notes || '-'}</div>
+      <div class="signs"><div class="sign">Finance</div><div class="sign">Model</div></div>
     </div>
-    <div class="grid">
-      <div><div class="label">Model</div><div class="value">${model.full_name || tx.model_name || '-'}</div></div>
-      <div><div class="label">Model Grade</div><div class="value">${model.grade_name || tx.model_grade_name || '-'}</div></div>
-      <div><div class="label">Client</div><div class="value">${tx.client_name || '-'}</div></div>
-      <div><div class="label">Created By</div><div class="value">${tx.created_by_email || '-'}</div></div>
-    </div>
-    <table>
-      <thead><tr><th>Description</th><th class="right">Amount</th></tr></thead>
-      <tbody>
-        <tr><td>Gross (${tx.transaction_count || 0} trx × ${formatCurrencySafe(rateAmount)})</td><td class="right">${formatCurrencySafe(grossAmount)}</td></tr>
-        <tr><td>Admin Fee</td><td class="right">-${formatCurrencySafe(adminFeeAmount)}</td></tr>
-        <tr><td>Agent Fee</td><td class="right">-${formatCurrencySafe(agentFeeAmount)}</td></tr>
-        <tr><td class="total">Net Model Payout</td><td class="right total">${formatCurrencySafe(netAmount)}</td></tr>
-      </tbody>
-    </table>
-    <p class="muted">Formula: Gross - Admin Fee - Agent Fee = Net Model Payout. Notes: ${tx.notes || '-'}</p>
-    <div class="footer"><div class="sign">Finance</div><div class="sign">Model</div></div>
   </div>
   <script>window.onload = () => { window.print(); }<\/script>
 </body>
@@ -827,58 +823,58 @@
 <head>
   <title>${reportNo}</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #f3f4f6; color: #111827; }
-    .page { max-width: 1120px; margin: 24px auto; background: #fff; padding: 34px; border-radius: 18px; box-shadow: 0 16px 42px rgba(15, 23, 42, .12); }
-    .header { display: flex; justify-content: space-between; border-bottom: 3px solid #111827; padding-bottom: 16px; margin-bottom: 22px; }
-    .brand { font-size: 26px; font-weight: 800; letter-spacing: .04em; }
-    .muted { color: #6b7280; font-size: 12px; }
-    .title { font-size: 18px; font-weight: 700; margin-top: 4px; }
-    .summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 18px 0 24px; }
-    .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; background: #f9fafb; }
-    .label { color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
-    .value { font-weight: 800; margin-top: 5px; }
-    table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    th, td { padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: left; }
-    th { background: #111827; color: white; text-transform: uppercase; font-size: 10px; letter-spacing: .05em; }
-    .right { text-align: right; }
-    .strong { font-weight: 800; }
-    .footer { margin-top: 28px; display: flex; justify-content: space-between; gap: 36px; }
-    .sign { flex: 1; text-align: center; padding-top: 52px; border-bottom: 1px solid #9ca3af; }
-    @media print { body { background: #fff; } .page { box-shadow: none; margin: 0; max-width: none; border-radius: 0; } }
+    @page { size: A4 landscape; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Inter, Arial, sans-serif; margin: 0; background: #e5e7eb; color: #0f172a; }
+    .page { max-width: 1180px; margin: 24px auto; background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 24px 70px rgba(15, 23, 42, .18); border: 1px solid #dbe3ef; }
+    .hero { position: relative; padding: 30px 34px; color: #fff; background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 52%, #16a34a 100%); }
+    .hero:after { content: 'CONFIDENTIAL'; position: absolute; right: 34px; bottom: 10px; font-size: 42px; font-weight: 900; letter-spacing: .14em; opacity: .08; }
+    .topline { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+    .brand-wrap { display: flex; align-items: center; gap: 16px; }
+    .logo { width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28); font-size: 26px; font-weight: 900; }
+    .brand { font-size: 28px; font-weight: 900; letter-spacing: .06em; line-height: 1; }
+    .subtitle { color: #dbeafe; margin-top: 7px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+    .report-meta { text-align: right; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.20); border-radius: 16px; padding: 12px 16px; min-width: 250px; }
+    .report-no { font-size: 20px; font-weight: 900; }
+    .generated { color: #e0f2fe; font-size: 12px; margin-top: 6px; }
+    .content { padding: 28px 34px 34px; }
+    .section-title { display: flex; justify-content: space-between; align-items: end; margin-bottom: 16px; }
+    .section-title h1 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
+    .pill { display: inline-flex; align-items: center; padding: 7px 12px; border-radius: 999px; background: #ecfdf5; color: #047857; font-weight: 800; font-size: 12px; border: 1px solid #bbf7d0; }
+    .summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin: 18px 0 26px; }
+    .card { border: 1px solid #e2e8f0; border-radius: 18px; padding: 16px; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); box-shadow: 0 8px 22px rgba(15,23,42,.06); }
+    .card.accent { border-left: 5px solid #2563eb; } .card.green { border-left: 5px solid #16a34a; } .card.orange { border-left: 5px solid #f59e0b; } .card.purple { border-left: 5px solid #7c3aed; } .card.dark { border-left: 5px solid #0f172a; }
+    .label { color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: .10em; font-weight: 800; }
+    .value { font-weight: 900; margin-top: 8px; font-size: 16px; letter-spacing: -.02em; }
+    .table-wrap { border: 1px solid #e2e8f0; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 30px rgba(15,23,42,.07); }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    th, td { padding: 11px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
+    th { background: #0f172a; color: white; text-transform: uppercase; font-size: 9px; letter-spacing: .09em; white-space: nowrap; }
+    tbody tr:nth-child(even) { background: #f8fafc; }
+    .right { text-align: right; } .strong { font-weight: 900; color: #047857; }
+    .formula { margin: 16px 0 0; padding: 12px 14px; border-radius: 14px; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; font-size: 12px; }
+    .footer { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 44px; }
+    .sign-box { text-align: center; color: #475569; font-size: 12px; }
+    .sign-line { height: 58px; border-bottom: 1px solid #94a3b8; margin-bottom: 8px; }
+    .doc-footer { margin-top: 24px; padding-top: 14px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+    @media print { body { background: #fff; } .page { box-shadow: none; margin: 0; max-width: none; border-radius: 0; border: none; } .hero { print-color-adjust: exact; -webkit-print-color-adjust: exact; } .card, .table-wrap { box-shadow: none; } }
   </style>
 </head>
 <body>
   <div class="page">
-    <div class="header">
-      <div>
-        <div class="brand">DENSUS69 AGENCY</div>
-        <div class="muted">Enterprise Transaction Payroll Report</div>
-      </div>
-      <div style="text-align:right">
-        <div class="title">${reportNo}</div>
-        <div class="muted">Generated: ${generatedAt}</div>
-      </div>
+    <div class="hero"><div class="topline"><div class="brand-wrap"><div class="logo">D69</div><div><div class="brand">DENSUS69 AGENCY</div><div class="subtitle">Enterprise Transaction Payroll Report</div></div></div><div class="report-meta"><div class="report-no">${reportNo}</div><div class="generated">Generated: ${generatedAt}</div></div></div></div>
+    <div class="content">
+      <div class="section-title"><div><h1>Payroll Transaction Summary</h1><div class="label">Filtered export from agency transaction dashboard</div></div><div class="pill">Finance Ready</div></div>
+      <div class="summary"><div class="card accent"><div class="label">Records</div><div class="value">${rows.length}</div></div><div class="card green"><div class="label">Gross Revenue</div><div class="value">${formatCurrencySafe(totalGross)}</div></div><div class="card orange"><div class="label">Admin Fee</div><div class="value">${formatCurrencySafe(totalAdminFee)}</div></div><div class="card purple"><div class="label">Agent Fee</div><div class="value">${formatCurrencySafe(totalAgentFee)}</div></div><div class="card dark"><div class="label">Net Model Payout</div><div class="value">${formatCurrencySafe(totalNet)}</div></div></div>
+      <div class="table-wrap"><table><thead><tr><th>#</th><th>Date</th><th>Model</th><th>Grade</th><th>Client</th><th class="right">Trx</th><th class="right">Gross</th><th class="right">Admin</th><th class="right">Agent</th><th class="right">Net</th></tr></thead><tbody>${tableRows}</tbody></table></div>
+      <div class="formula"><strong>Formula:</strong> Gross - Admin Fee - Agent Fee = Net Model Payout. Export follows the currently filtered transaction list.</div>
+      <div class="footer"><div class="sign-box"><div class="sign-line"></div>Prepared By</div><div class="sign-box"><div class="sign-line"></div>Finance Approval</div><div class="sign-box"><div class="sign-line"></div>Management</div></div>
+      <div class="doc-footer"><span>Confidential Payroll Document</span><span>Densus69 Agency</span></div>
     </div>
-    <div class="summary">
-      <div class="card"><div class="label">Records</div><div class="value">${rows.length}</div></div>
-      <div class="card"><div class="label">Gross</div><div class="value">${formatCurrencySafe(totalGross)}</div></div>
-      <div class="card"><div class="label">Admin Fee</div><div class="value">${formatCurrencySafe(totalAdminFee)}</div></div>
-      <div class="card"><div class="label">Agent Fee</div><div class="value">${formatCurrencySafe(totalAgentFee)}</div></div>
-      <div class="card"><div class="label">Net Model</div><div class="value">${formatCurrencySafe(totalNet)}</div></div>
-    </div>
-    <table>
-      <thead>
-        <tr><th>#</th><th>Date</th><th>Model</th><th>Grade</th><th>Client</th><th class="right">Trx</th><th class="right">Gross</th><th class="right">Admin</th><th class="right">Agent</th><th class="right">Net</th></tr>
-      </thead>
-      <tbody>${tableRows}</tbody>
-    </table>
-    <p class="muted">Formula: Gross - Admin Fee - Agent Fee = Net Model. Export follows the currently filtered transaction list.</p>
-    <div class="footer"><div class="sign">Prepared By</div><div class="sign">Finance Approval</div><div class="sign">Management</div></div>
   </div>
   <script>window.onload = () => { window.print(); }<\/script>
 </body>
 </html>`;
-
         const win = window.open('', '_blank');
         if (!win) {
             showToast('Popup diblokir browser. Izinkan popup untuk export PDF.', 'error');
