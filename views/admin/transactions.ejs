@@ -173,12 +173,12 @@
     <div class="bg-white rounded-xl shadow-md p-6">
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                <input type="text" 
-                       id="search" 
-                       placeholder="Model name..." 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
-                       onkeyup="filterTransactions()">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Model</label>
+                <select id="modelFilter"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
+                        onchange="filterTransactions()">
+                    <option value="">All Models</option>
+                </select>
             </div>
             
             <div>
@@ -519,15 +519,33 @@
         });
     }
 
+    function populateModelFilter() {
+        const select = document.getElementById('modelFilter');
+        const selected = select.value;
+        const modelNames = Array.from(new Set(allTransactions.map((tx) => tx.model_name).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+        select.innerHTML = '';
+        const allOption = document.createElement('option');
+        allOption.value = '';
+        allOption.textContent = 'All Models';
+        select.appendChild(allOption);
+        modelNames.forEach((name) => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            select.appendChild(option);
+        });
+        select.value = selected;
+    }
+
     function applyFilters() {
-        const search = document.getElementById('search').value.toLowerCase();
+        const selectedModel = document.getElementById('modelFilter').value.toLowerCase();
         const status = document.getElementById('statusFilter').value.toLowerCase();
         const fromDate = document.getElementById('fromDate').value;
         const toDate = document.getElementById('toDate').value;
 
         filteredTransactions = allTransactions.filter((tx) => {
             const txDate = tx.transaction_date ? new Date(tx.transaction_date) : null;
-            const matchSearch = !search || String(tx.model_name || '').toLowerCase().includes(search) || String(tx.client_name || '').toLowerCase().includes(search);
+            const matchSearch = !selectedModel || String(tx.model_name || '').toLowerCase() === selectedModel;
             const matchStatus = !status || status === 'recorded';
             const matchFrom = !fromDate || (txDate && txDate >= new Date(fromDate + 'T00:00:00'));
             const matchTo = !toDate || (txDate && txDate <= new Date(toDate + 'T23:59:59'));
@@ -544,7 +562,7 @@
     }
 
     function clearFilters() {
-        document.getElementById('search').value = '';
+        document.getElementById('modelFilter').value = '';
         document.getElementById('statusFilter').value = '';
         document.getElementById('fromDate').value = '';
         document.getElementById('toDate').value = '';
@@ -898,6 +916,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        populateModelFilter();
         loadClientKpis();
         applyFilters();
     });
