@@ -21,7 +21,7 @@ exports.showDashboard = async (req, res) => {
       return res.status(404).send('Model profile not found');
     }
 
-    // Get simple stats without transactions for now
+    // Get booking stats and transaction earnings
     const statsResult = await db.query(`
       SELECT 
         COUNT(CASE WHEN b.status = 'completed' THEN 1 END) as completed_jobs,
@@ -34,6 +34,27 @@ exports.showDashboard = async (req, res) => {
       completed_jobs: 0,
       pending_bookings: 0
     };
+
+    const earningsResult = await db.query(`
+      SELECT
+        COALESCE(SUM(net_amount), 0) as total_earnings,
+        COALESCE(SUM(CASE
+          WHEN transaction_date >= date_trunc('month', CURRENT_DATE) THEN net_amount
+          ELSE 0
+        END), 0) as monthly_earnings
+      FROM transactions
+      WHERE model_id = $1
+    `, [model.id]);
+
+    const monthlyRowsResult = await db.query(`
+      SELECT EXTRACT(MONTH FROM transaction_date)::int as month, COALESCE(SUM(net_amount), 0) as amount
+      FROM transactions
+      WHERE model_id = $1 AND EXTRACT(YEAR FROM transaction_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+      GROUP BY EXTRACT(MONTH FROM transaction_date)
+    `, [model.id]);
+    const monthlyEarnings = Array(12).fill(0);
+    monthlyRowsResult.rows.forEach(row => { monthlyEarnings[row.month - 1] = Number(row.amount || 0); });
+    const earnings = earningsResult.rows[0] || { total_earnings: 0, monthly_earnings: 0 };
 
     // Get recent bookings
     const bookingsResult = await db.query(`
@@ -53,8 +74,9 @@ exports.showDashboard = async (req, res) => {
       },
       model: model,
       stats: {
-        totalEarnings: 0,
-        monthlyEarnings: 0,
+        totalEarnings: Number(earnings.total_earnings || 0),
+        monthlyEarnings: Number(earnings.monthly_earnings || 0),
+        monthlyEarningsData: monthlyEarnings,
         completedJobs: parseInt(stats.completed_jobs) || 0,
         pendingBookings: parseInt(stats.pending_bookings) || 0
       },
@@ -74,9 +96,24 @@ exports.showProfile = async (req, res) => {
       [req.user.userId]
     );
     
+    const model = modelResult.rows[0];
+    const statsResult = await db.query(`
+      SELECT
+        COUNT(CASE WHEN b.status = 'completed' THEN 1 END) as completed_jobs,
+        COALESCE((SELECT SUM(net_amount) FROM transactions WHERE model_id = $1), 0) as total_earnings
+      FROM bookings b WHERE b.model_id = $1
+    `, [model.id]);
+    const photosResult = await db.query('SELECT * FROM photos WHERE model_id = $1 ORDER BY is_cover DESC, created_at DESC LIMIT 8', [model.id]);
     res.render('model/profile', {
-      user: req.user,
-      model: modelResult.rows[0]
+      user: { ...req.user, name: model.full_name },
+      model,
+      gallery: photosResult.rows.map(photo => ({ ...photo, url: photo.file_path })),
+      stats: {
+        completedJobs: parseInt(statsResult.rows[0]?.completed_jobs) || 0,
+        totalEarnings: Number(statsResult.rows[0]?.total_earnings || 0),
+        profileViews: 0
+      },
+      formatCurrency
     });
   } catch (error) {
     console.error('Profile error:', error);
@@ -118,7 +155,8 @@ exports.showGallery = async (req, res) => {
     res.render('model/gallery', {
       user: req.user,
       model: model,
-      photos: photosResult.rows
+      photos: photosResult.rows,
+      gallery: photosResult.rows.map(photo => ({ ...photo, url: photo.file_path, _id: photo.id, isPrimary: photo.is_cover, createdAt: photo.created_at }))
     });
   } catch (error) {
     console.error('Gallery error:', error);
@@ -136,7 +174,8 @@ exports.showJobs = async (req, res) => {
     
     res.render('model/jobs', {
       user: req.user,
-      jobs: jobsResult.rows
+      jobs: jobsResult.rows.map(job => ({ ...job, _id: job.id, type: job.type || 'Modeling', date: job.job_date || job.created_at, rate: job.payment_offered || 0, location: job.location || 'TBD' })),
+      formatCurrency
     });
   } catch (error) {
     console.error('Jobs error:', error);
@@ -163,7 +202,8 @@ exports.showBookings = async (req, res) => {
     
     res.render('model/bookings', {
       user: req.user,
-      bookings: bookingsResult.rows
+      bookings: bookingsResult.rows.map(booking => ({ ...booking, _id: booking.id, jobType: booking.job_title || 'Modeling Job', date: booking.booking_date || booking.created_at, clientName: booking.client_name || 'Client', amount: booking.payment_amount || booking.rate || 0, location: booking.location || 'TBD', description: booking.notes })),
+      formatCurrency
     });
   } catch (error) {
     console.error('Bookings error:', error);
