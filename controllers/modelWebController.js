@@ -193,7 +193,7 @@ exports.showBookings = async (req, res) => {
     const model = modelResult.rows[0];
     
     const bookingsResult = await db.query(`
-      SELECT b.*, j.title as job_title, j.client_name, j.rate
+      SELECT b.*, j.title as job_title, j.client_name, j.job_date, j.payment_offered
       FROM bookings b
       LEFT JOIN jobs j ON b.job_id = j.id
       WHERE b.model_id = $1
@@ -202,7 +202,7 @@ exports.showBookings = async (req, res) => {
     
     res.render('model/bookings', {
       user: req.user,
-      bookings: bookingsResult.rows.map(booking => ({ ...booking, _id: booking.id, jobType: booking.job_title || 'Modeling Job', date: booking.booking_date || booking.created_at, clientName: booking.client_name || 'Client', amount: booking.payment_amount || booking.rate || 0, location: booking.location || 'TBD', description: booking.notes })),
+      bookings: bookingsResult.rows.map(booking => ({ ...booking, _id: booking.id, jobType: booking.job_title || 'Modeling Job', date: booking.booking_date || booking.created_at, clientName: booking.client_name || 'Client', amount: booking.payment_amount || booking.payment_offered || 0, location: booking.location || 'TBD', description: booking.notes })),
       formatCurrency
     });
   } catch (error) {
