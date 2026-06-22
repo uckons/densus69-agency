@@ -2,8 +2,22 @@ const db = require('../config/database');
 
 // Helper function to format currency
 const formatCurrency = (amount) => {
-  return `Rp ${amount.toLocaleString('id-ID')}`;
+  return `Rp ${Number(amount || 0).toLocaleString('id-ID')}`;
 };
+
+
+async function ensureAnalyticsSchema() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS model_grades (
+      id SERIAL PRIMARY KEY,
+      grade_name VARCHAR(50) UNIQUE NOT NULL,
+      rate_per_trx DECIMAL(10,2) NOT NULL DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await db.query('ALTER TABLE models ADD COLUMN IF NOT EXISTS grade_id INTEGER REFERENCES model_grades(id) ON DELETE SET NULL');
+}
 
 exports.showDashboard = async (req, res) => {
   try {
@@ -133,6 +147,8 @@ exports.showJobs = async (req, res) => {
 
 exports.showTransactions = async (req, res) => {
   try {
+    await ensureAnalyticsSchema();
+
     const transactionsResult = await db.query(`
       SELECT
         t.*,
@@ -158,11 +174,12 @@ exports.showTransactions = async (req, res) => {
 
 exports.showAnalytics = async (req, res) => {
   try {
+    await ensureAnalyticsSchema();
+
     const transactionsResult = await db.query(`
       SELECT
         t.*,
         m.full_name AS model_name,
-        m.photo AS model_photo,
         g.grade_name AS model_grade_name,
         GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0), 0) AS agent_fee_total
       FROM transactions t
@@ -188,7 +205,7 @@ exports.showAnalytics = async (req, res) => {
       const modelId = tx.model_id || tx.model_name || 'unknown';
       const modelRow = byModel.get(modelId) || {
         name: tx.model_name || 'Unknown',
-        photo: tx.model_photo || '/images/default-avatar.png',
+        photo: '/images/default-avatar.png',
         jobsCompleted: 0,
         totalEarnings: 0,
         commission: 0
