@@ -329,7 +329,7 @@
 
 <script>
     // Sample chart data - replace with actual data from backend
-    const chartData = <%= typeof chartData !== 'undefined' ? JSON.stringify(chartData) : '{}' %>;
+    const chartData = <%- typeof chartData !== 'undefined' ? JSON.stringify(chartData) : '{}' %>;
     
     // Revenue Trend Chart
     new Chart(document.getElementById('revenueTrendChart'), {
