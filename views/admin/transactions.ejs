@@ -785,9 +785,107 @@
     }
     
     function exportTransactions() {
-        showLoading();
-        window.location.href = '/admin/transactions/export';
-        setTimeout(hideLoading, 2000);
+        const rows = filteredTransactions.length ? filteredTransactions : allTransactions;
+        if (!rows.length) {
+            showToast('Tidak ada transaksi untuk diexport', 'error');
+            return;
+        }
+
+        const totalGross = rows.reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+        const totalAdminFee = rows.reduce((sum, tx) => sum + Number(tx.admin_fee || 0), 0);
+        const totalAgentFee = rows.reduce((sum, tx) => {
+            const gross = Number(tx.gross_amount || 0);
+            const adminFee = Number(tx.admin_fee || 0);
+            const net = Number(tx.net_amount || 0);
+            return sum + Number(tx.agent_fee_total || Math.max(gross - adminFee - net, 0));
+        }, 0);
+        const totalNet = rows.reduce((sum, tx) => sum + Number(tx.net_amount || 0), 0);
+        const reportNo = `TXR-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
+        const generatedAt = new Date().toLocaleString('id-ID');
+        const tableRows = rows.map((tx, index) => {
+            const gross = Number(tx.gross_amount || 0);
+            const adminFee = Number(tx.admin_fee || 0);
+            const net = Number(tx.net_amount || 0);
+            const agentFee = Number(tx.agent_fee_total || Math.max(gross - adminFee - net, 0));
+            return `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${formatDateSafe(tx.transaction_date)}</td>
+                    <td>${tx.model_name || '-'}</td>
+                    <td>${tx.model_grade_name || '-'}</td>
+                    <td>${tx.client_name || '-'}</td>
+                    <td class="right">${Number(tx.transaction_count || 0)}</td>
+                    <td class="right">${formatCurrencySafe(gross)}</td>
+                    <td class="right">${formatCurrencySafe(adminFee)}</td>
+                    <td class="right">${formatCurrencySafe(agentFee)}</td>
+                    <td class="right strong">${formatCurrencySafe(net)}</td>
+                </tr>`;
+        }).join('');
+
+        const html = `<!doctype html>
+<html>
+<head>
+  <title>${reportNo}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f3f4f6; color: #111827; }
+    .page { max-width: 1120px; margin: 24px auto; background: #fff; padding: 34px; border-radius: 18px; box-shadow: 0 16px 42px rgba(15, 23, 42, .12); }
+    .header { display: flex; justify-content: space-between; border-bottom: 3px solid #111827; padding-bottom: 16px; margin-bottom: 22px; }
+    .brand { font-size: 26px; font-weight: 800; letter-spacing: .04em; }
+    .muted { color: #6b7280; font-size: 12px; }
+    .title { font-size: 18px; font-weight: 700; margin-top: 4px; }
+    .summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 18px 0 24px; }
+    .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; background: #f9fafb; }
+    .label { color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+    .value { font-weight: 800; margin-top: 5px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+    th { background: #111827; color: white; text-transform: uppercase; font-size: 10px; letter-spacing: .05em; }
+    .right { text-align: right; }
+    .strong { font-weight: 800; }
+    .footer { margin-top: 28px; display: flex; justify-content: space-between; gap: 36px; }
+    .sign { flex: 1; text-align: center; padding-top: 52px; border-bottom: 1px solid #9ca3af; }
+    @media print { body { background: #fff; } .page { box-shadow: none; margin: 0; max-width: none; border-radius: 0; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div>
+        <div class="brand">DENSUS69 AGENCY</div>
+        <div class="muted">Enterprise Transaction Payroll Report</div>
+      </div>
+      <div style="text-align:right">
+        <div class="title">${reportNo}</div>
+        <div class="muted">Generated: ${generatedAt}</div>
+      </div>
+    </div>
+    <div class="summary">
+      <div class="card"><div class="label">Records</div><div class="value">${rows.length}</div></div>
+      <div class="card"><div class="label">Gross</div><div class="value">${formatCurrencySafe(totalGross)}</div></div>
+      <div class="card"><div class="label">Admin Fee</div><div class="value">${formatCurrencySafe(totalAdminFee)}</div></div>
+      <div class="card"><div class="label">Agent Fee</div><div class="value">${formatCurrencySafe(totalAgentFee)}</div></div>
+      <div class="card"><div class="label">Net Model</div><div class="value">${formatCurrencySafe(totalNet)}</div></div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Date</th><th>Model</th><th>Grade</th><th>Client</th><th class="right">Trx</th><th class="right">Gross</th><th class="right">Admin</th><th class="right">Agent</th><th class="right">Net</th></tr>
+      </thead>
+      <tbody>${tableRows}</tbody>
+    </table>
+    <p class="muted">Formula: Gross - Admin Fee - Agent Fee = Net Model. Export follows the currently filtered transaction list.</p>
+    <div class="footer"><div class="sign">Prepared By</div><div class="sign">Finance Approval</div><div class="sign">Management</div></div>
+  </div>
+  <script>window.onload = () => { window.print(); }<\/script>
+</body>
+</html>`;
+
+        const win = window.open('', '_blank');
+        if (!win) {
+            showToast('Popup diblokir browser. Izinkan popup untuk export PDF.', 'error');
+            return;
+        }
+        win.document.write(html);
+        win.document.close();
     }
 
     async function loadClientKpis() {
