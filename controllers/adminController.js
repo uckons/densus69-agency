@@ -20,8 +20,45 @@ async function ensureModelAgentColumns() {
   `);
 
   await db.query('ALTER TABLE models ADD COLUMN IF NOT EXISTS agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL');
-  await db.query('ALTER TABLE models ADD COLUMN IF NOT EXISTS agent_fee_percent DECIMAL(5,2) DEFAULT 0');
+  await db.query('ALTER TABLE models ADD COLUMN IF NOT EXISTS agent_fee_flat DECIMAL(12,2) DEFAULT 0');
   await db.query('ALTER TABLE models ADD COLUMN IF NOT EXISTS grade_id INTEGER REFERENCES model_grades(id) ON DELETE SET NULL');
+  await db.query(`
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name = 'models' AND column_name = 'agent_fee_percent'
+      ) THEN
+        UPDATE models m
+        SET agent_fee_flat = ROUND((COALESCE(g.rate_per_trx, m.rate, 0) * COALESCE(m.agent_fee_percent, 0) / 100)::numeric, 2)
+        FROM model_grades g
+        WHERE m.grade_id = g.id
+          AND COALESCE(m.agent_fee_flat, 0) = 0
+          AND COALESCE(m.agent_fee_percent, 0) > 0;
+
+        UPDATE models
+        SET agent_fee_flat = ROUND((COALESCE(rate, 0) * COALESCE(agent_fee_percent, 0) / 100)::numeric, 2)
+        WHERE grade_id IS NULL
+          AND COALESCE(agent_fee_flat, 0) = 0
+          AND COALESCE(agent_fee_percent, 0) > 0;
+      END IF;
+    END $$;
+  `);
+
+  await db.query(`
+    UPDATE transactions t
+    SET model_rate = COALESCE(m.rate, t.model_rate),
+        gross_amount = t.transaction_count * COALESCE(m.rate, t.model_rate),
+        net_amount = GREATEST(
+          (t.transaction_count * COALESCE(m.rate, t.model_rate))
+          - COALESCE(t.admin_fee, 0)
+          - (t.transaction_count * LEAST(COALESCE(m.agent_fee_flat, 0), COALESCE(m.rate, t.model_rate))),
+          0
+        )
+    FROM models m
+    WHERE t.model_id = m.id
+  `);
 
   const gradeCountResult = await db.query('SELECT COUNT(*)::int AS total FROM model_grades');
   if (gradeCountResult.rows[0].total === 0) {
@@ -120,9 +157,9 @@ exports.getModels = async (req, res) => {
         g.id AS grade_id,
         g.grade_name,
         COALESCE(g.rate_per_trx, m.rate, 0) AS grade_rate_per_trx,
-        COALESCE(m.agent_fee_percent, 0) AS agent_fee_percent,
-        GREATEST(COALESCE(g.rate_per_trx, m.rate, 0) - (COALESCE(g.rate_per_trx, m.rate, 0) * COALESCE(m.agent_fee_percent, 0) / 100), 0) AS estimated_model_fee,
-        (COALESCE(g.rate_per_trx, m.rate, 0) * COALESCE(m.agent_fee_percent, 0) / 100) AS estimated_agent_fee
+        COALESCE(m.agent_fee_flat, 0) AS agent_fee_flat,
+        GREATEST(COALESCE(g.rate_per_trx, m.rate, 0) - COALESCE(m.agent_fee_flat, 0), 0) AS estimated_model_fee,
+        LEAST(COALESCE(m.agent_fee_flat, 0), COALESCE(g.rate_per_trx, m.rate, 0)) AS estimated_agent_fee
       FROM models m
       LEFT JOIN users u ON m.user_id = u.id
       LEFT JOIN agents a ON m.agent_id = a.id
@@ -178,6 +215,7 @@ exports.createManualModel = async (req, res) => {
       address,
       grade_id,
       agent_id,
+      agent_fee_flat,
       agent_fee_percent
     } = req.body;
 
@@ -205,7 +243,7 @@ exports.createManualModel = async (req, res) => {
 
     const parsedGradeId = grade_id ? Number(grade_id) : null;
     const parsedAgentId = agent_id ? Number(agent_id) : null;
-    const parsedAgentFeePercent = Number(agent_fee_percent || 0);
+    const parsedAgentFeeFlat = Number(agent_fee_flat ?? agent_fee_percent ?? 0);
 
     if (!parsedGradeId) {
       await client.query('ROLLBACK');
@@ -223,9 +261,9 @@ exports.createManualModel = async (req, res) => {
     const modelResult = await client.query(
       `INSERT INTO models (
         user_id, full_name, phone, gender, address,
-        status, is_active, rate, grade_id, agent_id, agent_fee_percent, created_at
+        status, is_active, rate, grade_id, agent_id, agent_fee_flat, created_at
       ) VALUES ($1,$2,$3,$4,$5,'vacant',true,$6,$7,$8,$9,NOW()) RETURNING *`,
-      [userId, full_name, phone || null, gender || null, address || city || null, parsedRate, parsedGradeId, parsedAgentId, parsedAgentFeePercent]
+      [userId, full_name, phone || null, gender || null, address || city || null, parsedRate, parsedGradeId, parsedAgentId, parsedAgentFeeFlat]
     );
 
     await client.query('COMMIT');
@@ -263,6 +301,7 @@ exports.updateManualModel = async (req, res) => {
       address,
       grade_id,
       agent_id,
+      agent_fee_flat,
       agent_fee_percent,
       status
     } = req.body;
@@ -297,7 +336,7 @@ exports.updateManualModel = async (req, res) => {
 
     const parsedGradeId = grade_id ? Number(grade_id) : null;
     const parsedAgentId = agent_id ? Number(agent_id) : null;
-    const parsedAgentFeePercent = Number(agent_fee_percent || 0);
+    const parsedAgentFeeFlat = Number(agent_fee_flat ?? agent_fee_percent ?? 0);
 
     if (!parsedGradeId) {
       await client.query('ROLLBACK');
@@ -321,7 +360,7 @@ exports.updateManualModel = async (req, res) => {
            rate = $5,
            grade_id = $6,
            agent_id = $7,
-           agent_fee_percent = $8,
+           agent_fee_flat = $8,
            status = COALESCE($9, status)
        WHERE id = $10
        RETURNING *`,
@@ -333,10 +372,19 @@ exports.updateManualModel = async (req, res) => {
         parsedRate,
         parsedGradeId,
         parsedAgentId,
-        parsedAgentFeePercent,
+        parsedAgentFeeFlat,
         status || null,
         id
       ]
+    );
+
+    await client.query(
+      `UPDATE transactions
+       SET model_rate = $1::numeric,
+           gross_amount = transaction_count * $1::numeric,
+           net_amount = GREATEST((transaction_count * $1::numeric) - COALESCE(admin_fee, 0) - (transaction_count * LEAST($2::numeric, $1::numeric)), 0)
+       WHERE model_id = $3`,
+      [parsedRate, parsedAgentFeeFlat, id]
     );
 
     await client.query('COMMIT');

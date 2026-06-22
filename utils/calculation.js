@@ -1,14 +1,20 @@
 /**
  * Calculate salary for a transaction
- * Formula: (Transaction Count × Model Rate) - Admin Fee
+ * Formula: (Transaction Count × Model Rate) - Admin Fee - (Agent Flat Fee × Transaction Count)
  */
-const calculateSalary = (transactionCount, modelRate, adminFee = 50000) => {
-  const grossAmount = transactionCount * modelRate;
-  const netAmount = grossAmount - adminFee;
+const calculateSalary = (transactionCount, modelRate, adminFee = 50000, agentFeeFlat = 0) => {
+  const safeTransactionCount = Number(transactionCount || 0);
+  const safeModelRate = Number(modelRate || 0);
+  const safeAdminFee = Number(adminFee || 0);
+  const safeAgentFeeFlat = Number(agentFeeFlat || 0);
+  const grossAmount = safeTransactionCount * safeModelRate;
+  const totalAgentFee = safeTransactionCount * Math.min(safeAgentFeeFlat, safeModelRate);
+  const netAmount = Math.max(grossAmount - safeAdminFee - totalAgentFee, 0);
   
   return {
     grossAmount,
-    adminFee,
+    adminFee: safeAdminFee,
+    agentFee: totalAgentFee,
     netAmount
   };
 };
