@@ -5,12 +5,13 @@ const Transaction = {
   create: async (transactionData) => {
     const {
       model_id, client_name, transaction_date, transaction_count,
-      model_rate, admin_fee = 50000, notes, created_by
+      model_rate, admin_fee = 50000, agent_fee_flat = 0, notes, created_by
     } = transactionData;
 
     // Calculate amounts
     const gross_amount = transaction_count * model_rate;
-    const net_amount = gross_amount - admin_fee;
+    const total_agent_fee = transaction_count * Math.min(Number(agent_fee_flat || 0), Number(model_rate || 0));
+    const net_amount = Math.max(gross_amount - admin_fee - total_agent_fee, 0);
 
     const query = `
       INSERT INTO transactions (
@@ -153,7 +154,7 @@ const Transaction = {
   update: async (id, transactionData) => {
     const {
       model_id, client_name, transaction_date, transaction_count,
-      model_rate, admin_fee, notes
+      model_rate, admin_fee, agent_fee_flat, notes
     } = transactionData;
 
     const updates = [];
@@ -203,7 +204,7 @@ const Transaction = {
     }
 
     // Recalculate amounts if relevant fields changed
-    if (transaction_count !== undefined || model_rate !== undefined || admin_fee !== undefined) {
+    if (transaction_count !== undefined || model_rate !== undefined || admin_fee !== undefined || agent_fee_flat !== undefined) {
       // Get current values
       const current = await db.query('SELECT * FROM transactions WHERE id = $1', [id]);
       if (current.rows.length > 0) {
@@ -211,9 +212,11 @@ const Transaction = {
         const newCount = transaction_count !== undefined ? transaction_count : currentTx.transaction_count;
         const newRate = model_rate !== undefined ? model_rate : currentTx.model_rate;
         const newFee = admin_fee !== undefined ? admin_fee : currentTx.admin_fee;
+        const newAgentFeeFlat = agent_fee_flat !== undefined ? agent_fee_flat : 0;
 
         const gross_amount = newCount * newRate;
-        const net_amount = gross_amount - newFee;
+        const total_agent_fee = newCount * Math.min(Number(newAgentFeeFlat || 0), Number(newRate || 0));
+        const net_amount = Math.max(gross_amount - newFee - total_agent_fee, 0);
 
         updates.push(`gross_amount = $${paramCount}`);
         params.push(gross_amount);

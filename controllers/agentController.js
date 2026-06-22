@@ -4,7 +4,22 @@ const bcrypt = require('bcryptjs');
 
 async function ensureModelAgentColumns() {
   await db.query('ALTER TABLE models ADD COLUMN IF NOT EXISTS agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL');
-  await db.query('ALTER TABLE models ADD COLUMN IF NOT EXISTS agent_fee_percent DECIMAL(5,2) DEFAULT 0');
+  await db.query('ALTER TABLE models ADD COLUMN IF NOT EXISTS agent_fee_flat DECIMAL(12,2) DEFAULT 0');
+  await db.query(`
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name = 'models' AND column_name = 'agent_fee_percent'
+      ) THEN
+        UPDATE models
+        SET agent_fee_flat = ROUND((COALESCE(rate, 0) * COALESCE(agent_fee_percent, 0) / 100)::numeric, 2)
+        WHERE COALESCE(agent_fee_flat, 0) = 0
+          AND COALESCE(agent_fee_percent, 0) > 0;
+      END IF;
+    END $$;
+  `);
 }
 
 
@@ -18,8 +33,8 @@ exports.getAllAgents = async (req, res) => {
         a.*, u.email,
         COUNT(DISTINCT m.id) AS managed_models,
         COALESCE(SUM(t.gross_amount), 0) AS total_revenue,
-        COALESCE(SUM(t.gross_amount * COALESCE(m.agent_fee_percent, 0) / 100), 0) AS total_agent_fee,
-        COALESCE(SUM(t.gross_amount - t.admin_fee - (t.gross_amount * COALESCE(m.agent_fee_percent, 0) / 100)), 0) AS total_model_fee
+        COALESCE(SUM(LEAST(COALESCE(m.agent_fee_flat, 0), t.gross_amount)), 0) AS total_agent_fee,
+        COALESCE(SUM(GREATEST(t.gross_amount - t.admin_fee - LEAST(COALESCE(m.agent_fee_flat, 0), t.gross_amount), 0)), 0) AS total_model_fee
       FROM agents a
       JOIN users u ON a.user_id = u.id
       LEFT JOIN models m ON m.agent_id = a.id
@@ -225,11 +240,11 @@ exports.getAgentPerformance = async (req, res) => {
     }
 
     const models = await db.query(
-      `SELECT m.id, m.full_name, m.rate, COALESCE(m.agent_fee_percent, 0) AS agent_fee_percent,
+      `SELECT m.id, m.full_name, m.rate, COALESCE(m.agent_fee_flat, 0) AS agent_fee_flat,
               COUNT(t.id) AS transaction_count,
               COALESCE(SUM(t.gross_amount), 0) AS revenue,
-              COALESCE(SUM(t.gross_amount * COALESCE(m.agent_fee_percent, 0) / 100), 0) AS agent_fee,
-              COALESCE(SUM(t.gross_amount - t.admin_fee - (t.gross_amount * COALESCE(m.agent_fee_percent, 0) / 100)), 0) AS model_fee
+              COALESCE(SUM(LEAST(COALESCE(m.agent_fee_flat, 0), t.gross_amount)), 0) AS agent_fee,
+              COALESCE(SUM(GREATEST(t.gross_amount - t.admin_fee - LEAST(COALESCE(m.agent_fee_flat, 0), t.gross_amount), 0)), 0) AS model_fee
        FROM models m
        LEFT JOIN transactions t ON t.model_id = m.id
        WHERE m.agent_id = $1
