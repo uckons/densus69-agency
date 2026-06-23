@@ -141,25 +141,15 @@ app.get('/admin/agents', auth, isAdmin, (req, res) => {
 // Model routes
 app.get('/model/dashboard', auth, isModel, modelWebController.showDashboard);
 
-app.get('/model/profile', auth, isModel, (req, res) => {
-  res.render('model/profile', { user: req.user });
-});
+app.get('/model/profile', auth, isModel, modelWebController.showProfile);
 
-app.get('/model/profile/edit', auth, isModel, (req, res) => {
-  res.render('model/edit-profile', { user: req.user });
-});
+app.get('/model/profile/edit', auth, isModel, modelWebController.showEditProfile);
 
-app.get('/model/gallery', auth, isModel, (req, res) => {
-  res.render('model/gallery', { user: req.user });
-});
+app.get('/model/gallery', auth, isModel, modelWebController.showGallery);
 
-app.get('/model/jobs', auth, isModel, (req, res) => {
-  res.render('model/jobs', { user: req.user });
-});
+app.get('/model/jobs', auth, isModel, modelWebController.showJobs);
 
-app.get('/model/bookings', auth, isModel, (req, res) => {
-  res.render('model/bookings', { user: req.user });
-});
+app.get('/model/bookings', auth, isModel, modelWebController.showBookings);
 
 // Public routes
 app.get('/models', (req, res) => {
