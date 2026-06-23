@@ -1,3 +1,4 @@
+<%- include('../partials/model-page-start', { pageTitle: 'Photo Gallery', activePage: 'gallery', user: user }) %>
 <div class="space-y-6">
     <!-- Header -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
@@ -197,3 +198,5 @@
         if (e.key === 'Escape') closeViewer();
     });
 </script>
+
+<%- include('../partials/model-page-end') %>

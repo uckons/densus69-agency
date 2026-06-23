@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Model Portal' %> - OMDoGaTot Agency</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = { theme: { extend: { colors: { model: { 50:'#fdf4ff',100:'#fae8ff',200:'#f5d0fe',300:'#f0abfc',400:'#e879f9',500:'#d946ef',600:'#c026d3',700:'#a21caf',800:'#86198f',900:'#701a75' } } } } };
+  </script>
+  <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');body{font-family:Inter,system-ui,sans-serif}</style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+<div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+<div class="min-h-screen lg:flex">
+  <aside class="lg:fixed lg:inset-y-0 lg:left-0 lg:w-72 bg-white border-r border-slate-200 shadow-sm">
+    <div class="p-6 border-b border-slate-100">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-model-500 to-purple-700 text-white flex items-center justify-center shadow-lg"><i class="fas fa-star"></i></div>
+        <div><p class="font-extrabold text-lg">OMDoGaTot Agency</p><p class="text-sm text-slate-500">Model Portal</p></div>
+      </div>
+    </div>
+    <div class="px-4 pt-4">
+      <a href="/model/dashboard" class="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-2xl border border-model-200 text-model-700 bg-model-50 hover:bg-model-100 font-bold transition">
+        <i class="fas fa-arrow-left"></i>
+        <span>Kembali ke Dashboard</span>
+      </a>
+    </div>
+    <nav class="p-4 space-y-2">
+      <% const nav = [{k:'dashboard',u:'/model/dashboard',i:'fa-chart-line',t:'Dashboard'},{k:'profile',u:'/model/profile',i:'fa-user',t:'Profile'},{k:'gallery',u:'/model/gallery',i:'fa-images',t:'Gallery'},{k:'jobs',u:'/model/jobs',i:'fa-briefcase',t:'Available Jobs'},{k:'bookings',u:'/model/bookings',i:'fa-calendar-check',t:'My Bookings'}]; %>
+      <% nav.forEach(item => { %>
+        <a href="<%= item.u %>" class="flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold transition <%= activePage === item.k ? 'bg-model-600 text-white shadow-lg shadow-fuchsia-200' : 'text-slate-600 hover:bg-model-50 hover:text-model-700' %>">
+          <i class="fas <%= item.i %> w-5"></i><span><%= item.t %></span>
+        </a>
+      <% }) %>
+    </nav>
+    <div class="p-4 lg:absolute lg:bottom-0 lg:left-0 lg:right-0">
+      <div class="rounded-2xl bg-slate-50 p-4 flex items-center gap-3">
+        <div class="w-11 h-11 rounded-full bg-model-100 text-model-600 flex items-center justify-center"><i class="fas fa-user"></i></div>
+        <div class="min-w-0"><p class="font-bold truncate"><%= typeof user !== 'undefined' ? (user.name || user.email || 'Model') : 'Model' %></p><p class="text-xs text-slate-500">Model</p></div>
+      </div>
+    </div>
+  </aside>
+  <main class="flex-1 lg:ml-72">
+    <div class="px-5 py-6 md:px-8 lg:px-10 max-w-7xl mx-auto">
