@@ -41,7 +41,15 @@ exports.showDashboard = async (req, res) => {
         COALESCE(SUM(CASE
           WHEN transaction_date >= date_trunc('month', CURRENT_DATE) THEN net_amount
           ELSE 0
-        END), 0) as monthly_earnings
+        END), 0) as monthly_earnings,
+        COALESCE(SUM(CASE
+          WHEN transaction_date >= date_trunc('week', CURRENT_DATE) THEN net_amount
+          ELSE 0
+        END), 0) as weekly_earnings,
+        COALESCE(SUM(CASE
+          WHEN transaction_date >= (CURRENT_DATE - INTERVAL '1 day') THEN net_amount
+          ELSE 0
+        END), 0) as last_day_earnings
       FROM transactions
       WHERE model_id = $1
     `, [model.id]);
@@ -54,7 +62,17 @@ exports.showDashboard = async (req, res) => {
     `, [model.id]);
     const monthlyEarnings = Array(12).fill(0);
     monthlyRowsResult.rows.forEach(row => { monthlyEarnings[row.month - 1] = Number(row.amount || 0); });
-    const earnings = earningsResult.rows[0] || { total_earnings: 0, monthly_earnings: 0 };
+
+    const monthlyTransactionsResult = await db.query(`
+      SELECT EXTRACT(MONTH FROM transaction_date)::int as month, COALESCE(SUM(transaction_count), 0) as total_transactions
+      FROM transactions
+      WHERE model_id = $1 AND EXTRACT(YEAR FROM transaction_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+      GROUP BY EXTRACT(MONTH FROM transaction_date)
+    `, [model.id]);
+    const monthlyTransactions = Array(12).fill(0);
+    monthlyTransactionsResult.rows.forEach(row => { monthlyTransactions[row.month - 1] = Number(row.total_transactions || 0); });
+
+    const earnings = earningsResult.rows[0] || { total_earnings: 0, monthly_earnings: 0, weekly_earnings: 0, last_day_earnings: 0 };
 
     // Get recent bookings
     const bookingsResult = await db.query(`
@@ -76,7 +94,10 @@ exports.showDashboard = async (req, res) => {
       stats: {
         totalEarnings: Number(earnings.total_earnings || 0),
         monthlyEarnings: Number(earnings.monthly_earnings || 0),
+        weeklyEarnings: Number(earnings.weekly_earnings || 0),
+        lastDayEarnings: Number(earnings.last_day_earnings || 0),
         monthlyEarningsData: monthlyEarnings,
+        monthlyTransactionsData: monthlyTransactions,
         completedJobs: parseInt(stats.completed_jobs) || 0,
         pendingBookings: parseInt(stats.pending_bookings) || 0
       },
