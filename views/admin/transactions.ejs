@@ -162,7 +162,11 @@
                class="bg-admin-600 text-white px-4 py-2 rounded-lg hover:bg-admin-700 transition">
                 <i class="fas fa-plus mr-2"></i>Add Transaction
             </a>
-            <button onclick="exportTransactions()" 
+            <button onclick="exportClientInvoice()"
+                    class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                <i class="fas fa-file-invoice mr-2"></i>Invoice Client
+            </button>
+            <button onclick="exportTransactions()"
                     class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
                 <i class="fas fa-file-export mr-2"></i>Export
             </button>
@@ -220,30 +224,22 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
             <p class="text-gray-500 text-sm font-medium">Total Completed</p>
-            <p class="text-3xl font-bold text-gray-800 mt-2">
-                <%= typeof summary !== 'undefined' ? formatCurrency(summary.completed) : formatCurrency(0) %>
-            </p>
+            <p id="summary-completed" class="text-3xl font-bold text-gray-800 mt-2">Rp 0</p>
         </div>
         
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
-            <p class="text-gray-500 text-sm font-medium">Total Pending</p>
-            <p class="text-3xl font-bold text-gray-800 mt-2">
-                <%= typeof summary !== 'undefined' ? formatCurrency(summary.pending) : formatCurrency(0) %>
-            </p>
+            <p class="text-gray-500 text-sm font-medium">This Week</p>
+            <p id="summary-this-week" class="text-3xl font-bold text-gray-800 mt-2">Rp 0</p>
         </div>
         
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-admin-500">
             <p class="text-gray-500 text-sm font-medium">This Month</p>
-            <p class="text-3xl font-bold text-gray-800 mt-2">
-                <%= typeof summary !== 'undefined' ? formatCurrency(summary.thisMonth) : formatCurrency(0) %>
-            </p>
+            <p id="summary-this-month" class="text-3xl font-bold text-gray-800 mt-2">Rp 0</p>
         </div>
         
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
             <p class="text-gray-500 text-sm font-medium">Total Transactions</p>
-            <p class="text-3xl font-bold text-gray-800 mt-2">
-                <%= typeof transactions !== 'undefined' ? transactions.length : 0 %>
-            </p>
+            <p id="summary-total-transactions" class="text-3xl font-bold text-gray-800 mt-2">0</p>
         </div>
     </div>
 
@@ -468,6 +464,48 @@
         document.getElementById('tx-count-info').textContent = `${total} records`;
     }
 
+
+    function isDateInCurrentWeek(value) {
+        const date = value ? new Date(value) : null;
+        if (!date || Number.isNaN(date.getTime())) return false;
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay());
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
+        return date >= weekStart && date <= weekEnd;
+    }
+
+    function updateSummaryCards() {
+        const totalGross = filteredTransactions.reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+        const thisWeekGross = filteredTransactions
+            .filter((tx) => isDateInCurrentWeek(tx.transaction_date))
+            .reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+        const now = new Date();
+        const thisMonthGross = filteredTransactions
+            .filter((tx) => {
+                const d = tx.transaction_date ? new Date(tx.transaction_date) : null;
+                return d && !Number.isNaN(d.getTime()) && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+            })
+            .reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+        const clientMap = new Map();
+        filteredTransactions.forEach((tx) => {
+            const client = tx.client_name || 'N/A';
+            clientMap.set(client, Number(clientMap.get(client) || 0) + Number(tx.gross_amount || 0));
+        });
+        const topClient = Array.from(clientMap.entries()).sort((a, b) => b[1] - a[1])[0];
+
+        document.getElementById('summary-completed').textContent = formatCurrencySafe(totalGross);
+        document.getElementById('summary-this-week').textContent = formatCurrencySafe(thisWeekGross);
+        document.getElementById('summary-this-month').textContent = formatCurrencySafe(thisMonthGross);
+        document.getElementById('summary-total-transactions').textContent = Number(filteredTransactions.length).toLocaleString('id-ID');
+        document.getElementById('kpi-total-clients').textContent = Number(clientMap.size).toLocaleString('id-ID');
+        document.getElementById('kpi-top-client').textContent = topClient?.[0] || '-';
+        document.getElementById('kpi-top-client-revenue').textContent = formatCurrencySafe(topClient?.[1] || 0);
+    }
+
     function buildTrendChart() {
         const ctx = document.getElementById('transactionsTrendChart');
         if (!ctx) return;
@@ -554,6 +592,7 @@
 
         currentPage = 1;
         renderTransactionsTable();
+        updateSummaryCards();
         buildTrendChart();
     }
 
@@ -798,6 +837,44 @@
         }
     }
     
+
+    function exportClientInvoice() {
+        const rows = filteredTransactions.length ? filteredTransactions : allTransactions;
+        if (!rows.length) {
+            showToast('Tidak ada transaksi untuk dibuat invoice', 'error');
+            return;
+        }
+        const clientMap = new Map();
+        rows.forEach((tx) => {
+            const client = tx.client_name || 'N/A';
+            if (!clientMap.has(client)) clientMap.set(client, []);
+            clientMap.get(client).push(tx);
+        });
+        const invoiceNo = `INV-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
+        const generatedAt = new Date().toLocaleString('id-ID');
+        const sections = Array.from(clientMap.entries()).map(([client, txRows]) => {
+            const total = txRows.reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+            const lines = txRows.map((tx, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${formatDateSafe(tx.transaction_date)}</td>
+                    <td>${tx.model_name || '-'}</td>
+                    <td>${tx.model_grade_name || '-'}</td>
+                    <td class="right">${Number(tx.transaction_count || 0)}</td>
+                    <td class="right">${formatCurrencySafe(tx.model_rate || 0)}</td>
+                    <td class="right strong">${formatCurrencySafe(tx.gross_amount || 0)}</td>
+                </tr>`).join('');
+            return `<section class="client-section"><div class="client-head"><div><div class="label">Bill To</div><h2>${client}</h2></div><div class="client-total">${formatCurrencySafe(total)}</div></div><table><thead><tr><th>#</th><th>Date</th><th>Model</th><th>Grade</th><th class="right">Trx</th><th class="right">Rate</th><th class="right">Amount</th></tr></thead><tbody>${lines}</tbody></table></section>`;
+        }).join('');
+        const grandTotal = rows.reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+        const html = `<!doctype html><html><head><title>${invoiceNo}</title><style>
+            @page { size: A4; margin: 14mm; } *{box-sizing:border-box} body{font-family:Inter,Arial,sans-serif;background:#eef2f7;color:#0f172a;margin:0}.page{max-width:900px;margin:24px auto;background:white;border-radius:22px;overflow:hidden;border:1px solid #dbe3ef;box-shadow:0 24px 70px rgba(15,23,42,.18)}.hero{padding:30px 34px;color:white;background:linear-gradient(135deg,#0f172a,#1d4ed8 55%,#16a34a)}.topline{display:flex;justify-content:space-between;gap:20px}.brand{font-size:28px;font-weight:900;letter-spacing:.06em}.subtitle{color:#dbeafe;text-transform:uppercase;font-size:12px;letter-spacing:.08em;margin-top:6px}.meta{text-align:right;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:12px 16px}.content{padding:30px 34px}.summary{display:flex;justify-content:space-between;align-items:center;border:1px solid #e2e8f0;border-radius:18px;padding:16px;margin-bottom:24px;background:#f8fafc}.label{color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:800}h2{margin:4px 0 0}.client-section{margin-top:24px}.client-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px}.client-total{font-size:22px;font-weight:900;color:#047857}table{width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden}th,td{padding:11px 10px;border-bottom:1px solid #e5e7eb;text-align:left}th{background:#0f172a;color:white;text-transform:uppercase;font-size:10px;letter-spacing:.08em}.right{text-align:right}.strong{font-weight:900}.footer{display:grid;grid-template-columns:1fr 1fr;margin-top:38px;gap:48px}.sign{text-align:center;color:#475569;font-size:12px;padding-top:58px;border-bottom:1px solid #94a3b8}@media print{body{background:white}.page{box-shadow:none;margin:0;max-width:none;border-radius:0;border:none}.hero{print-color-adjust:exact;-webkit-print-color-adjust:exact}}</style></head><body><div class="page"><div class="hero"><div class="topline"><div><div class="brand">DENSUS69 AGENCY</div><div class="subtitle">Enterprise Client Invoice</div></div><div class="meta"><strong>${invoiceNo}</strong><br>${generatedAt}</div></div></div><div class="content"><div class="summary"><div><div class="label">Invoice Total</div><h2>${formatCurrencySafe(grandTotal)}</h2></div><div><div class="label">Clients</div><h2>${clientMap.size}</h2></div><div><div class="label">Transactions</div><h2>${rows.length}</h2></div></div>${sections}<div class="footer"><div class="sign">Finance</div><div class="sign">Client Approval</div></div></div></div><script>window.onload=()=>window.print();<\/script></body></html>`;
+        const win = window.open('', '_blank');
+        if (!win) return showToast('Popup diblokir browser. Izinkan popup untuk membuat invoice.', 'error');
+        win.document.write(html);
+        win.document.close();
+    }
+
     function exportTransactions() {
         const rows = filteredTransactions.length ? filteredTransactions : allTransactions;
         if (!rows.length) {
@@ -917,7 +994,6 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         populateModelFilter();
-        loadClientKpis();
         applyFilters();
     });
 </script>
