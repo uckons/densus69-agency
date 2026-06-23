@@ -163,13 +163,15 @@
                 <label class="text-sm font-medium text-gray-700">Date Range:</label>
                 <input type="date" 
                        id="startDate" 
+                       value="<%= typeof selectedStartDate !== 'undefined' ? selectedStartDate : '' %>"
                        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
-                       onchange="updateCharts()">
+                       onchange="applyDateFilter()">
                 <span class="text-gray-500">to</span>
                 <input type="date" 
                        id="endDate" 
+                       value="<%= typeof selectedEndDate !== 'undefined' ? selectedEndDate : '' %>"
                        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
-                       onchange="updateCharts()">
+                       onchange="applyDateFilter()">
             </div>
             
             <div class="flex space-x-2">
@@ -181,6 +183,9 @@
                 </button>
                 <button onclick="setDateRange('year')" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
                     This Year
+                </button>
+                <button onclick="exportAnalyticsPdf()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+                    <i class="fas fa-file-pdf mr-2"></i>Export PDF
                 </button>
             </div>
         </div>
@@ -328,8 +333,9 @@
 </div>
 
 <script>
-    // Sample chart data - replace with actual data from backend
-    const chartData = <%= typeof chartData !== 'undefined' ? JSON.stringify(chartData) : '{}' %>;
+    const chartData = <%- typeof chartData !== 'undefined' ? JSON.stringify(chartData) : '{}' %>;
+    const analyticsSummary = <%- typeof analytics !== 'undefined' ? JSON.stringify(analytics) : '{}' %>;
+    const modelStatsData = <%- typeof modelStats !== 'undefined' ? JSON.stringify(modelStats) : '[]' %>;
     
     // Revenue Trend Chart
     new Chart(document.getElementById('revenueTrendChart'), {
@@ -406,15 +412,99 @@
         }
     });
     
-    function setDateRange(period) {
-        // Implement date range setting
-        showToast(`Date range set to ${period}`, 'info');
-        updateCharts();
+    function toDateInputValue(date) {
+        return date.toISOString().slice(0, 10);
     }
-    
-    function updateCharts() {
-        // Implement chart update logic
-        showToast('Charts updated', 'success');
+
+    function applyDateFilter() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const params = new URLSearchParams();
+        if (startDate) params.set('start_date', startDate);
+        if (endDate) params.set('end_date', endDate);
+        window.location.href = `/admin/analytics${params.toString() ? `?${params.toString()}` : ''}`;
+    }
+
+    function setDateRange(period) {
+        const now = new Date();
+        const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const start = new Date(end);
+        if (period === 'week') {
+            start.setDate(end.getDate() - 6);
+        } else if (period === 'month') {
+            start.setDate(1);
+        } else if (period === 'year') {
+            start.setMonth(0, 1);
+        }
+        document.getElementById('startDate').value = toDateInputValue(start);
+        document.getElementById('endDate').value = toDateInputValue(end);
+        applyDateFilter();
+    }
+
+    function exportAnalyticsPdf() {
+        const generatedAt = new Date().toLocaleString('id-ID');
+        const reportNo = `ANL-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
+        const rows = modelStatsData.map((row, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${row.name || '-'}</td>
+                <td class="right">${Number(row.jobsCompleted || 0).toLocaleString('id-ID')}</td>
+                <td class="right">${formatCurrencySafe(row.totalEarnings || 0)}</td>
+                <td class="right">${formatCurrencySafe(row.avgPerJob || 0)}</td>
+                <td class="right strong">${formatCurrencySafe(row.commission || 0)}</td>
+            </tr>`).join('');
+        const html = `<!doctype html>
+<html>
+<head>
+  <title>${reportNo}</title>
+  <style>
+    @page { size: A4 landscape; margin: 12mm; } * { box-sizing: border-box; }
+    body { font-family: Inter, Arial, sans-serif; margin: 0; background: #e5e7eb; color: #0f172a; }
+    .page { max-width: 1180px; margin: 24px auto; background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 24px 70px rgba(15,23,42,.18); border: 1px solid #dbe3ef; }
+    .hero { padding: 30px 34px; color: #fff; background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 52%, #16a34a 100%); }
+    .topline { display:flex; justify-content:space-between; align-items:flex-start; gap:24px; }
+    .brand { font-size: 28px; font-weight: 900; letter-spacing: .06em; }
+    .subtitle { color:#dbeafe; margin-top:7px; font-size:13px; text-transform:uppercase; letter-spacing:.04em; }
+    .meta { text-align:right; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.20); border-radius:16px; padding:12px 16px; }
+    .content { padding: 28px 34px 34px; }
+    .summary { display:grid; grid-template-columns: repeat(5, 1fr); gap:14px; margin-bottom:26px; }
+    .card { border:1px solid #e2e8f0; border-radius:18px; padding:16px; background:linear-gradient(180deg,#fff,#f8fafc); border-left:5px solid #2563eb; }
+    .label { color:#64748b; font-size:10px; text-transform:uppercase; letter-spacing:.10em; font-weight:800; }
+    .value { font-weight:900; margin-top:8px; font-size:16px; }
+    .table-wrap { border:1px solid #e2e8f0; border-radius:18px; overflow:hidden; }
+    table { width:100%; border-collapse:collapse; font-size:12px; } th, td { padding:11px 10px; border-bottom:1px solid #e5e7eb; text-align:left; }
+    th { background:#0f172a; color:#fff; text-transform:uppercase; font-size:10px; letter-spacing:.08em; } tbody tr:nth-child(even) { background:#f8fafc; }
+    .right { text-align:right; } .strong { font-weight:900; color:#047857; }
+    .footer { margin-top:30px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:44px; }
+    .sign { text-align:center; color:#475569; font-size:12px; padding-top:58px; border-bottom:1px solid #94a3b8; }
+    @media print { body { background:#fff; } .page { box-shadow:none; margin:0; max-width:none; border-radius:0; border:none; } .hero { print-color-adjust:exact; -webkit-print-color-adjust:exact; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero"><div class="topline"><div><div class="brand">DENSUS69 AGENCY</div><div class="subtitle">Enterprise Revenue Analytics Report</div></div><div class="meta"><strong>${reportNo}</strong><br>Generated: ${generatedAt}</div></div></div>
+    <div class="content">
+      <div class="summary">
+        <div class="card"><div class="label">Total Revenue</div><div class="value">${formatCurrencySafe(analyticsSummary.totalRevenue || 0)}</div></div>
+        <div class="card"><div class="label">Avg Transaction</div><div class="value">${formatCurrencySafe(analyticsSummary.avgTransaction || 0)}</div></div>
+        <div class="card"><div class="label">Commission Earned</div><div class="value">${formatCurrencySafe(analyticsSummary.totalCommission || 0)}</div></div>
+        <div class="card"><div class="label">Top Model</div><div class="value">${analyticsSummary.topModelName || 'N/A'}</div></div>
+        <div class="card"><div class="label">Transactions</div><div class="value">${Number(analyticsSummary.totalTransactions || 0).toLocaleString('id-ID')}</div></div>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>#</th><th>Model</th><th class="right">Jobs</th><th class="right">Total Earnings</th><th class="right">Avg/Job</th><th class="right">Commission</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="footer"><div class="sign">Prepared By</div><div class="sign">Finance Approval</div><div class="sign">Management</div></div>
+    </div>
+  </div><script>window.onload = () => { window.print(); }<\/script>
+</body>
+</html>`;
+        const win = window.open('', '_blank');
+        if (!win) return showToast('Popup diblokir browser. Izinkan popup untuk export PDF.', 'error');
+        win.document.write(html);
+        win.document.close();
+    }
+
+    function formatCurrencySafe(value) {
+        return 'Rp ' + Number(value || 0).toLocaleString('id-ID');
     }
 </script>
             </main>

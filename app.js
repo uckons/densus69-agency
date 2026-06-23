@@ -123,9 +123,7 @@ app.get('/admin/transactions/new', auth, isAdmin, (req, res) => {
   res.render('admin/transaction-form', { user: req.user });
 });
 
-app.get('/admin/analytics', auth, isAdmin, (req, res) => {
-  res.render('admin/revenue-analytics', { user: req.user });
-});
+app.get('/admin/analytics', auth, isAdmin, adminWebController.showAnalytics);
 
 app.get('/admin/complaints', auth, isAdmin, (req, res) => {
   res.render('admin/complaints', { user: req.user });
