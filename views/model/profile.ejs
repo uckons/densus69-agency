@@ -1,3 +1,4 @@
+<%- include('../partials/model-page-start', { pageTitle: 'Profile', activePage: 'profile', user: user }) %>
 <div class="max-w-4xl mx-auto space-y-6">
     <!-- Profile Card -->
     <div class="bg-white rounded-xl shadow-md overflow-hidden">
@@ -8,7 +9,7 @@
         <div class="relative px-8 pb-8">
             <!-- Profile Photo -->
             <div class="absolute -top-16 left-8">
-                <img src="<%= typeof model !== 'undefined' ? (model.photo || '/images/default-avatar.png') : '/images/default-avatar.png' %>" 
+                <img src="<%= typeof model !== 'undefined' ? ((typeof gallery !== 'undefined' && gallery[0] ? gallery[0].url : '/images/default-avatar.png')) : '/images/default-avatar.png' %>" 
                      alt="Profile" 
                      class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg">
             </div>
@@ -24,7 +25,7 @@
             <!-- Name & Status -->
             <div class="mt-12">
                 <div class="flex items-center space-x-4">
-                    <h2 class="text-3xl font-bold text-gray-800"><%= typeof model !== 'undefined' ? model.name : 'Model Name' %></h2>
+                    <h2 class="text-3xl font-bold text-gray-800"><%= typeof model !== 'undefined' ? model.full_name : 'Model Name' %></h2>
                     <span class="px-4 py-1 text-sm font-semibold rounded-full 
                         <%= typeof model !== 'undefined' && model.status === 'active' ? 'bg-green-100 text-green-800' : 
                             typeof model !== 'undefined' && model.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
@@ -34,9 +35,9 @@
                 </div>
                 
                 <div class="flex items-center space-x-6 mt-4 text-gray-600">
-                    <span><i class="fas fa-envelope mr-2"></i><%= typeof model !== 'undefined' ? model.email : '' %></span>
+                    <span><i class="fas fa-envelope mr-2"></i><%= typeof model !== 'undefined' ? (typeof user !== 'undefined' ? user.email : '') : '' %></span>
                     <span><i class="fas fa-phone mr-2"></i><%= typeof model !== 'undefined' ? model.phone : '' %></span>
-                    <span><i class="fas fa-map-marker-alt mr-2"></i><%= typeof model !== 'undefined' ? model.city : '' %></span>
+                    <span><i class="fas fa-map-marker-alt mr-2"></i><%= typeof model !== 'undefined' ? model.address : '' %></span>
                 </div>
             </div>
         </div>
@@ -63,13 +64,13 @@
                 <div class="flex justify-between">
                     <span class="text-gray-600">Date of Birth:</span>
                     <span class="font-medium text-gray-900">
-                        <%= typeof model !== 'undefined' && model.dob ? new Date(model.dob).toLocaleDateString('id-ID') : 'N/A' %>
+                        <%= typeof model !== 'undefined' && model.date_of_birth ? new Date(model.date_of_birth).toLocaleDateString('id-ID') : 'N/A' %>
                     </span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-600">Member Since:</span>
                     <span class="font-medium text-gray-900">
-                        <%= typeof model !== 'undefined' ? new Date(model.createdAt).toLocaleDateString('id-ID') : '' %>
+                        <%= typeof model !== 'undefined' ? new Date(model.created_at).toLocaleDateString('id-ID') : '' %>
                     </span>
                 </div>
             </div>
@@ -194,3 +195,5 @@
         </div>
     </div>
 </div>
+
+<%- include('../partials/model-page-end') %>
