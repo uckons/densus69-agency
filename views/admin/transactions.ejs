@@ -32,7 +32,7 @@
 </head>
 <body class="bg-gray-50">
     <%- include('../partials/header') %>
-    
+
     <div class="flex h-screen bg-gray-100">
         <!-- Sidebar -->
         <aside id="sidebar" class="sidebar fixed md:relative inset-y-0 left-0 z-30 w-64 bg-admin-800 text-white transform -translate-x-full md:translate-x-0 transition-transform duration-300">
@@ -47,14 +47,14 @@
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
-                
+
                 <!-- Navigation -->
                 <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
                     <a href="/admin/dashboard" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-tachometer-alt w-5"></i>
                         <span>Dashboard</span>
                     </a>
-                    
+
                     <a href="/admin/models" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-users w-5"></i>
                         <span>Models</span>
@@ -63,63 +63,63 @@
                         <i class="fas fa-layer-group w-5"></i>
                         <span>Model Grades</span>
                     </a>
-                    
-                    
+
+
                     <a href="/admin/agents" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-user-tie w-5"></i>
                         <span>Agents</span>
                     </a>
-                    
+
                     <a href="/admin/clients" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-building w-5"></i>
                         <span>Clients</span>
                     </a>
-                    
+
                     <a href="/admin/jobs" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-briefcase w-5"></i>
                         <span>Jobs</span>
                     </a>
-                    
+
                     <a href="/admin/transactions" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition bg-admin-700">
                         <i class="fas fa-exchange-alt w-5"></i>
                         <span>Transactions</span>
                     </a>
-                    
+
                     <a href="/admin/analytics" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-chart-line w-5"></i>
                         <span>Analytics</span>
                     </a>
-                    
+
                     <a href="/admin/complaints" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-exclamation-triangle w-5"></i>
                         <span>Complaints</span>
                     </a>
-                    
+
                     <hr class="my-4 border-admin-700">
-                    
+
                     <a href="/admin/users" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-user-cog w-5"></i>
                         <span>Users</span>
                     </a>
-                    
+
                     <hr class="my-4 border-admin-700">
-                    
+
                     <a href="/" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-home w-5"></i>
                         <span>Public Site</span>
                     </a>
-                    
+
                     <a href="/auth/logout" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-600 transition text-red-300">
                         <i class="fas fa-sign-out-alt w-5"></i>
                         <span>Logout</span>
                     </a>
                 </nav>
-                
+
                 <!-- User Info -->
                 <div class="px-6 py-4 bg-admin-900 border-t border-admin-700">
                     <div class="flex items-center space-x-3">
-                        <img src="/images/default-avatar.png" 
-                             alt="Admin" 
+                        <img src="/images/default-avatar.png"
+                             alt="Admin"
                              class="w-10 h-10 rounded-full object-cover border-2 border-admin-600">
                         <div>
                             <p class="font-medium"><%= typeof user !== 'undefined' ? user.email : 'Admin' %></p>
@@ -129,7 +129,7 @@
                 </div>
             </div>
         </aside>
-        
+
         <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Top Bar -->
@@ -137,16 +137,16 @@
                 <button id="open-sidebar" class="md:hidden text-gray-600 hover:text-gray-900">
                     <i class="fas fa-bars text-2xl"></i>
                 </button>
-                
+
                 <h1 class="text-xl font-semibold text-gray-800">Transactions</h1>
-                
+
                 <div class="flex items-center space-x-4">
                     <a href="/auth/logout" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
                         <i class="fas fa-sign-out-alt mr-2"></i>Logout
                     </a>
                 </div>
             </header>
-            
+
             <!-- Page Content -->
             <main class="flex-1 overflow-y-auto p-6">
 <div class="space-y-6">
@@ -156,106 +156,151 @@
             <h2 class="text-2xl font-bold text-gray-800">Transaction History</h2>
             <p class="text-gray-600 text-sm mt-1">View and manage all transactions</p>
         </div>
-        
+
         <div class="flex space-x-3">
-            <a href="/admin/transactions/new" 
+            <a href="/admin/transactions/new"
                class="bg-admin-600 text-white px-4 py-2 rounded-lg hover:bg-admin-700 transition">
                 <i class="fas fa-plus mr-2"></i>Add Transaction
             </a>
-            <button onclick="exportTransactions()" 
+            <button onclick="exportClientInvoice()"
+                    class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                <i class="fas fa-file-invoice mr-2"></i>Invoice Client
+            </button>
+            <button onclick="exportTransactions()"
                     class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
                 <i class="fas fa-file-export mr-2"></i>Export
             </button>
         </div>
     </div>
-    
+
     <!-- Filters -->
     <div class="bg-white rounded-xl shadow-md p-6">
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                <input type="text" 
-                       id="search" 
-                       placeholder="Model name..." 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
-                       onkeyup="filterTransactions()">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Model</label>
+                <select id="modelFilter"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
+                        onchange="filterTransactions()">
+                    <option value="">All Models</option>
+                </select>
             </div>
-            
+
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select id="statusFilter" 
+                <select id="statusFilter"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
                         onchange="filterTransactions()">
                     <option value="">All Status</option>
                     <option value="recorded">Recorded</option>
                 </select>
             </div>
-            
+
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">From Date</label>
-                <input type="date" 
-                       id="fromDate" 
+                <input type="date"
+                       id="fromDate"
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
                        onchange="filterTransactions()">
             </div>
-            
+
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">To Date</label>
-                <input type="date" 
-                       id="toDate" 
+                <input type="date"
+                       id="toDate"
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
                        onchange="filterTransactions()">
             </div>
-            
+
             <div class="flex items-end">
-                <button onclick="clearFilters()" 
+                <button onclick="clearFilters()"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm">
                     <i class="fas fa-times mr-2"></i>Clear
                 </button>
             </div>
         </div>
     </div>
-    
+
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
-            <p class="text-gray-500 text-sm font-medium">Total Completed</p>
-            <p class="text-3xl font-bold text-gray-800 mt-2">
-                <%= typeof summary !== 'undefined' ? formatCurrency(summary.completed) : formatCurrency(0) %>
-            </p>
+            <p class="text-gray-500 text-sm font-medium">Total Revenue</p>
+            <p id="summary-completed" class="text-3xl font-bold text-gray-800 mt-2">Rp 0</p>
         </div>
-        
+
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-500">
+            <p class="text-gray-500 text-sm font-medium">Total Agent Fee</p>
+            <p id="summary-agent-fee" class="text-3xl font-bold text-gray-800 mt-2">Rp 0</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-slate-500">
+            <p class="text-gray-500 text-sm font-medium">Last Day</p>
+            <p id="summary-last-day" class="text-3xl font-bold text-gray-800 mt-2">Rp 0</p>
+        </div>
+
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
-            <p class="text-gray-500 text-sm font-medium">Total Pending</p>
-            <p class="text-3xl font-bold text-gray-800 mt-2">
-                <%= typeof summary !== 'undefined' ? formatCurrency(summary.pending) : formatCurrency(0) %>
-            </p>
+            <p class="text-gray-500 text-sm font-medium">This Week</p>
+            <p id="summary-this-week" class="text-3xl font-bold text-gray-800 mt-2">Rp 0</p>
         </div>
-        
+
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-admin-500">
             <p class="text-gray-500 text-sm font-medium">This Month</p>
-            <p class="text-3xl font-bold text-gray-800 mt-2">
-                <%= typeof summary !== 'undefined' ? formatCurrency(summary.thisMonth) : formatCurrency(0) %>
-            </p>
+            <p id="summary-this-month" class="text-3xl font-bold text-gray-800 mt-2">Rp 0</p>
         </div>
-        
+
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-cyan-500">
+            <p class="text-gray-500 text-sm font-medium">This Year</p>
+            <p id="summary-this-year" class="text-3xl font-bold text-gray-800 mt-2">Rp 0</p>
+        </div>
+
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
             <p class="text-gray-500 text-sm font-medium">Total Transactions</p>
-            <p class="text-3xl font-bold text-gray-800 mt-2">
-                <%= typeof transactions !== 'undefined' ? transactions.length : 0 %>
-            </p>
+            <p id="summary-total-transactions" class="text-3xl font-bold text-gray-800 mt-2">0</p>
         </div>
-    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-indigo-500">
             <p class="text-gray-500 text-sm font-medium">Total Clients</p>
             <p id="kpi-total-clients" class="text-3xl font-bold text-gray-800 mt-2">0</p>
         </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-pink-500">
             <p class="text-gray-500 text-sm font-medium">Top Client (Revenue)</p>
             <p id="kpi-top-client" class="text-lg font-bold text-gray-800 mt-2">-</p>
             <p id="kpi-top-client-revenue" class="text-sm text-gray-500 mt-1">Rp 0</p>
+        </div>
+        <div class="xl:col-span-2 bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800">Agent Fee Performance</h3>
+                    <p class="text-sm text-gray-500">Breakdown per agent from current filters</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="viewAgentFeeBreakdown()" class="px-3 py-2 rounded-lg border border-admin-200 text-admin-700 hover:bg-admin-50 text-sm font-semibold">
+                        <i class="fas fa-eye mr-1"></i>View Breakdown
+                    </button>
+                    <button type="button" onclick="exportAgentFeeBreakdownPdf()" class="px-3 py-2 rounded-lg bg-gray-900 text-white hover:bg-gray-800 text-sm font-semibold">
+                        <i class="fas fa-file-pdf mr-1"></i>Export PDF
+                    </button>
+                    <i class="fas fa-user-tie text-admin-500 text-xl ml-1"></i>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+                        <tr>
+                            <th class="px-6 py-3 text-left">Agent</th>
+                            <th class="px-6 py-3 text-right">Total Agent Fee</th>
+                            <th class="px-6 py-3 text-right">Last Day</th>
+                            <th class="px-6 py-3 text-right">Week</th>
+                            <th class="px-6 py-3 text-right">Month</th>
+                            <th class="px-6 py-3 text-right">Year</th>
+                            <th class="px-6 py-3 text-right">TRX</th>
+                        </tr>
+                    </thead>
+                    <tbody id="agent-performance-body" class="divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -300,6 +345,25 @@
 </div>
 
 
+
+<!-- Agent Fee Breakdown Modal -->
+<div id="agentFeeBreakdownModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div>
+                <h3 class="text-xl font-bold text-gray-800">Agent Fee Breakdown</h3>
+                <p class="text-sm text-gray-500">Detailed agent fee transactions from current filters</p>
+            </div>
+            <button type="button" onclick="closeAgentFeeBreakdownModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="agentFeeBreakdownContent" class="overflow-auto p-6 text-sm text-gray-700">Loading...</div>
+        <div class="flex justify-end gap-2 px-6 py-4 border-t border-gray-100 bg-gray-50">
+            <button type="button" onclick="closeAgentFeeBreakdownModal()" class="px-4 py-2 border rounded-lg bg-white">Close</button>
+            <button type="button" onclick="exportAgentFeeBreakdownPdf()" class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"><i class="fas fa-file-pdf mr-2"></i>Export PDF</button>
+        </div>
+    </div>
+</div>
+
 <!-- Transaction Detail Modal -->
 <div id="transactionDetailModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6">
@@ -336,54 +400,9 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Count *</label>
                 <input id="editTransactionCount" type="number" min="1" class="w-full border rounded-lg px-3 py-2" required>
             </div>
-            <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea id="editDescription" rows="3" class="w-full border rounded-lg px-3 py-2"></textarea>
-            </div>
-        </form>
-        <div class="flex justify-end gap-2 mt-6">
-            <button type="button" onclick="closeEditTransactionModal()" class="px-4 py-2 border rounded-lg">Cancel</button>
-            <button type="button" onclick="submitEditTransaction()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save</button>
-        </div>
-    </div>
-</div>
-
-
-<!-- Transaction Detail Modal -->
-<div id="transactionDetailModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-xl font-bold text-gray-800">Transaction Detail</h3>
-            <button type="button" onclick="closeTransactionDetailModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
-        </div>
-        <div id="transactionDetailContent" class="text-sm text-gray-700">Loading...</div>
-    </div>
-</div>
-
-<!-- Edit Transaction Modal -->
-<div id="transactionEditModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-xl font-bold text-gray-800">Edit Transaction</h3>
-            <button type="button" onclick="closeEditTransactionModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
-        </div>
-        <form id="editTransactionForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="hidden" id="editTransactionId">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
-                <input id="editModelName" type="text" class="w-full border rounded-lg px-3 py-2 bg-gray-50" readonly>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
-                <input id="editClientName" type="text" class="w-full border rounded-lg px-3 py-2" required>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Date *</label>
-                <input id="editTransactionDate" type="date" class="w-full border rounded-lg px-3 py-2" required>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Count *</label>
-                <input id="editTransactionCount" type="number" min="1" class="w-full border rounded-lg px-3 py-2" required>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Admin Fee</label>
+                <input id="editAdminFee" type="number" min="0" class="w-full border rounded-lg px-3 py-2" value="0">
             </div>
             <div class="md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -403,6 +422,7 @@
     let currentPage = 1;
     const pageSize = 10;
     let transactionsTrendChart = null;
+    let lastTransactionDetail = null;
 
     function formatCurrencySafe(n) {
         return 'Rp ' + Number(n || 0).toLocaleString('id-ID');
@@ -436,7 +456,10 @@
             tbody.innerHTML = pageItems.map((transaction) => `
                 <tr class="hover:bg-gray-50 transition">
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDateSafe(transaction.transaction_date)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${transaction.model_name || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        ${transaction.model_name || '-'}
+                        <div class="text-xs text-gray-500">${transaction.model_grade_name || 'No grade'}</div>
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Trx x ${Number(transaction.transaction_count || 0)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${transaction.client_name || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">${formatCurrencySafe(transaction.gross_amount)}</td>
@@ -454,6 +477,330 @@
         document.getElementById('prev-page-btn').disabled = currentPage <= 1;
         document.getElementById('next-page-btn').disabled = currentPage >= totalPages;
         document.getElementById('tx-count-info').textContent = `${total} records`;
+    }
+
+
+    function getTransactionDate(value) {
+        const date = value ? new Date(value) : null;
+        return date && !Number.isNaN(date.getTime()) ? date : null;
+    }
+
+    function getAgentFeeAmount(tx) {
+        const storedAgentFee = Number(tx.agent_fee_total || 0);
+        if (storedAgentFee > 0) return storedAgentFee;
+        const gross = Number(tx.gross_amount || 0);
+        const adminFee = Number(tx.admin_fee || 0);
+        const net = Number(tx.net_amount || 0);
+        return Math.max(gross - adminFee - net, 0);
+    }
+
+    function isSameDay(value, referenceDate) {
+        const date = getTransactionDate(value);
+        return Boolean(date)
+            && date.getFullYear() === referenceDate.getFullYear()
+            && date.getMonth() === referenceDate.getMonth()
+            && date.getDate() === referenceDate.getDate();
+    }
+
+    function isDateInCurrentWeek(value) {
+        const date = getTransactionDate(value);
+        if (!date) return false;
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay());
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
+        return date >= weekStart && date <= weekEnd;
+    }
+
+    function isDateInCurrentMonth(value) {
+        const date = getTransactionDate(value);
+        const now = new Date();
+        return Boolean(date) && date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+    }
+
+    function isDateInCurrentYear(value) {
+        const date = getTransactionDate(value);
+        return Boolean(date) && date.getFullYear() === new Date().getFullYear();
+    }
+
+    function renderAgentPerformance(agentMap) {
+        const tbody = document.getElementById('agent-performance-body');
+        if (!tbody) return;
+        const rows = Array.from(agentMap.values()).sort((a, b) => b.totalAgentFee - a.totalAgentFee);
+        if (!rows.length) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="px-6 py-6 text-center text-gray-500">No agent fee data</td>
+                </tr>`;
+            return;
+        }
+
+        tbody.innerHTML = rows.map((agent) => `
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 font-semibold text-gray-800">${agent.name}</td>
+                <td class="px-6 py-4 text-right font-semibold text-gray-900">${formatCurrencySafe(agent.totalAgentFee)}</td>
+                <td class="px-6 py-4 text-right text-gray-700">${formatCurrencySafe(agent.lastDay)}</td>
+                <td class="px-6 py-4 text-right text-gray-700">${formatCurrencySafe(agent.week)}</td>
+                <td class="px-6 py-4 text-right text-gray-700">${formatCurrencySafe(agent.month)}</td>
+                <td class="px-6 py-4 text-right text-gray-700">${formatCurrencySafe(agent.year)}</td>
+                <td class="px-6 py-4 text-right text-gray-700">${Number(agent.transactions).toLocaleString('id-ID')}</td>
+            </tr>`).join('');
+    }
+
+    function getAgentBreakdownRows() {
+        const agentMap = new Map();
+        filteredTransactions.forEach((tx) => {
+            const agentName = tx.agent_name || 'No Agent';
+            const gross = Number(tx.gross_amount || 0);
+            const adminFee = Number(tx.admin_fee || 0);
+            const net = Number(tx.net_amount || 0);
+            const agentFee = getAgentFeeAmount(tx);
+            const row = agentMap.get(agentName) || {
+                name: agentName,
+                totalGross: 0,
+                totalAdminFee: 0,
+                totalAgentFee: 0,
+                totalNet: 0,
+                transactionRows: []
+            };
+
+            row.totalGross += gross;
+            row.totalAdminFee += adminFee;
+            row.totalAgentFee += agentFee;
+            row.totalNet += net;
+            row.transactionRows.push({
+                date: tx.transaction_date,
+                model: tx.model_name || '-',
+                grade: tx.model_grade_name || '-',
+                client: tx.client_name || '-',
+                trx: Number(tx.transaction_count || 0),
+                gross,
+                adminFee,
+                agentFee,
+                net
+            });
+            agentMap.set(agentName, row);
+        });
+
+        return Array.from(agentMap.values()).sort((a, b) => b.totalAgentFee - a.totalAgentFee);
+    }
+
+    function closeAgentFeeBreakdownModal() {
+        document.getElementById('agentFeeBreakdownModal').classList.add('hidden');
+    }
+
+    function viewAgentFeeBreakdown() {
+        const content = document.getElementById('agentFeeBreakdownContent');
+        const rows = getAgentBreakdownRows();
+        if (!rows.length) {
+            content.innerHTML = '<div class="py-10 text-center text-gray-500">Tidak ada data agent fee untuk filter ini.</div>';
+            document.getElementById('agentFeeBreakdownModal').classList.remove('hidden');
+            return;
+        }
+
+        const totalAgentFee = rows.reduce((sum, row) => sum + row.totalAgentFee, 0);
+        const totalGross = rows.reduce((sum, row) => sum + row.totalGross, 0);
+        const totalNet = rows.reduce((sum, row) => sum + row.totalNet, 0);
+        const sections = rows.map((agent) => {
+            const details = agent.transactionRows.map((tx, index) => `
+                <tr>
+                    <td class="px-4 py-3 text-gray-500">${index + 1}</td>
+                    <td class="px-4 py-3">${formatDateSafe(tx.date)}</td>
+                    <td class="px-4 py-3 font-semibold text-gray-800">${tx.model}<div class="text-xs text-gray-500">${tx.grade}</div></td>
+                    <td class="px-4 py-3">${tx.client}</td>
+                    <td class="px-4 py-3 text-right">${tx.trx.toLocaleString('id-ID')}</td>
+                    <td class="px-4 py-3 text-right">${formatCurrencySafe(tx.gross)}</td>
+                    <td class="px-4 py-3 text-right">${formatCurrencySafe(tx.adminFee)}</td>
+                    <td class="px-4 py-3 text-right font-bold text-red-600">${formatCurrencySafe(tx.agentFee)}</td>
+                    <td class="px-4 py-3 text-right font-bold text-emerald-700">${formatCurrencySafe(tx.net)}</td>
+                </tr>`).join('');
+            return `
+                <section class="border border-gray-200 rounded-2xl overflow-hidden mb-5">
+                    <div class="bg-gray-900 text-white px-5 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <div><div class="text-xs uppercase tracking-widest text-gray-300">Agent</div><div class="text-xl font-black">${agent.name}</div></div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-right text-sm">
+                            <div><div class="text-gray-300">Gross</div><div class="font-bold">${formatCurrencySafe(agent.totalGross)}</div></div>
+                            <div><div class="text-gray-300">Agent Fee</div><div class="font-bold">${formatCurrencySafe(agent.totalAgentFee)}</div></div>
+                            <div><div class="text-gray-300">Net</div><div class="font-bold">${formatCurrencySafe(agent.totalNet)}</div></div>
+                            <div><div class="text-gray-300">Rows</div><div class="font-bold">${agent.transactionRows.length}</div></div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+                                <tr><th class="px-4 py-3 text-left">#</th><th class="px-4 py-3 text-left">Date</th><th class="px-4 py-3 text-left">Model</th><th class="px-4 py-3 text-left">Client</th><th class="px-4 py-3 text-right">TRX</th><th class="px-4 py-3 text-right">Gross</th><th class="px-4 py-3 text-right">Admin</th><th class="px-4 py-3 text-right">Agent Fee</th><th class="px-4 py-3 text-right">Net</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">${details}</tbody>
+                        </table>
+                    </div>
+                </section>`;
+        }).join('');
+
+        content.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                <div class="rounded-2xl border border-gray-200 p-4"><div class="text-xs uppercase tracking-wider text-gray-500 font-bold">Gross Revenue</div><div class="text-2xl font-black mt-1">${formatCurrencySafe(totalGross)}</div></div>
+                <div class="rounded-2xl border border-gray-200 p-4"><div class="text-xs uppercase tracking-wider text-gray-500 font-bold">Total Agent Fee</div><div class="text-2xl font-black mt-1 text-red-600">${formatCurrencySafe(totalAgentFee)}</div></div>
+                <div class="rounded-2xl border border-gray-200 p-4"><div class="text-xs uppercase tracking-wider text-gray-500 font-bold">Net Model Payout</div><div class="text-2xl font-black mt-1 text-emerald-700">${formatCurrencySafe(totalNet)}</div></div>
+            </div>
+            ${sections}`;
+        document.getElementById('agentFeeBreakdownModal').classList.remove('hidden');
+    }
+
+    function exportAgentFeeBreakdownPdf() {
+        const rows = getAgentBreakdownRows();
+        if (!rows.length) {
+            showToast('Tidak ada data agent fee untuk export PDF', 'error');
+            return;
+        }
+
+        const totalGross = rows.reduce((sum, row) => sum + row.totalGross, 0);
+        const totalAdminFee = rows.reduce((sum, row) => sum + row.totalAdminFee, 0);
+        const totalAgentFee = rows.reduce((sum, row) => sum + row.totalAgentFee, 0);
+        const totalNet = rows.reduce((sum, row) => sum + row.totalNet, 0);
+        const reportNo = `AFR-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
+        const generatedAt = new Date().toLocaleString('id-ID');
+        const sections = rows.map((agent) => {
+            const tableRows = agent.transactionRows.map((tx, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${formatDateSafe(tx.date)}</td>
+                    <td>${tx.model}<br><span>${tx.grade}</span></td>
+                    <td>${tx.client}</td>
+                    <td class="right">${tx.trx.toLocaleString('id-ID')}</td>
+                    <td class="right">${formatCurrencySafe(tx.gross)}</td>
+                    <td class="right">${formatCurrencySafe(tx.adminFee)}</td>
+                    <td class="right strong">${formatCurrencySafe(tx.agentFee)}</td>
+                    <td class="right">${formatCurrencySafe(tx.net)}</td>
+                </tr>`).join('');
+            return `
+                <section class="agent-section">
+                    <div class="agent-head"><div><div class="label">Agent</div><h2>${agent.name}</h2></div><div class="agent-total">${formatCurrencySafe(agent.totalAgentFee)}</div></div>
+                    <div class="mini-summary"><div><span>Gross</span><b>${formatCurrencySafe(agent.totalGross)}</b></div><div><span>Admin</span><b>${formatCurrencySafe(agent.totalAdminFee)}</b></div><div><span>Net</span><b>${formatCurrencySafe(agent.totalNet)}</b></div><div><span>Records</span><b>${agent.transactionRows.length}</b></div></div>
+                    <table><thead><tr><th>#</th><th>Date</th><th>Model / Grade</th><th>Client</th><th class="right">TRX</th><th class="right">Gross</th><th class="right">Admin</th><th class="right">Agent Fee</th><th class="right">Net</th></tr></thead><tbody>${tableRows}</tbody></table>
+                </section>`;
+        }).join('');
+
+        const html = `<!doctype html>
+<html>
+<head>
+  <title>${reportNo}</title>
+  <style>
+    @page { size: A4 landscape; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Inter, Arial, sans-serif; margin: 0; background: #e5e7eb; color: #0f172a; }
+    .page { max-width: 1180px; margin: 24px auto; background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 24px 70px rgba(15, 23, 42, .18); border: 1px solid #dbe3ef; }
+    .hero { padding: 30px 34px; color: #fff; background: linear-gradient(135deg, #0f172a 0%, #7c3aed 52%, #2563eb 100%); }
+    .topline { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+    .brand-wrap { display: flex; align-items: center; gap: 16px; }
+    .logo { width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28); font-size: 26px; font-weight: 900; }
+    .brand { font-size: 28px; font-weight: 900; letter-spacing: .06em; line-height: 1; }
+    .subtitle { color: #ede9fe; margin-top: 7px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+    .report-meta { text-align: right; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.20); border-radius: 16px; padding: 12px 16px; min-width: 250px; }
+    .content { padding: 28px 34px 34px; }
+    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 26px; }
+    .card { border: 1px solid #e2e8f0; border-left: 5px solid #7c3aed; border-radius: 18px; padding: 16px; background: #f8fafc; }
+    .label { color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: .10em; font-weight: 800; }
+    .value { font-weight: 900; margin-top: 8px; font-size: 16px; }
+    .agent-section { page-break-inside: avoid; margin-top: 22px; border: 1px solid #e2e8f0; border-radius: 18px; overflow: hidden; }
+    .agent-head { display: flex; justify-content: space-between; align-items: flex-end; padding: 16px 18px; background: #0f172a; color: #fff; }
+    .agent-head .label { color: #cbd5e1; } h2 { margin: 4px 0 0; } .agent-total { font-size: 22px; font-weight: 900; }
+    .mini-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #e2e8f0; }
+    .mini-summary div { background: #f8fafc; padding: 10px 12px; } .mini-summary span { color: #64748b; font-size: 10px; text-transform: uppercase; display: block; } .mini-summary b { display: block; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 10px; }
+    th, td { padding: 9px 8px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
+    th { background: #f1f5f9; color: #475569; text-transform: uppercase; font-size: 9px; letter-spacing: .08em; }
+    td span { color: #64748b; font-size: 9px; } .right { text-align: right; } .strong { font-weight: 900; color: #dc2626; }
+    .footer { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 44px; }
+    .sign-box { text-align: center; color: #475569; font-size: 12px; } .sign-line { height: 58px; border-bottom: 1px solid #94a3b8; margin-bottom: 8px; }
+    .doc-footer { margin-top: 24px; padding-top: 14px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+    @media print { body { background: #fff; } .page { box-shadow: none; margin: 0; max-width: none; border-radius: 0; border: none; } .hero { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero"><div class="topline"><div class="brand-wrap"><div class="logo">OM</div><div><div class="brand">OMDoGaTot Agency</div><div class="subtitle">Enterprise Agent Fee Breakdown Report</div></div></div><div class="report-meta"><strong>${reportNo}</strong><br>Generated: ${generatedAt}</div></div></div>
+    <div class="content">
+      <div class="summary"><div class="card"><div class="label">Gross Revenue</div><div class="value">${formatCurrencySafe(totalGross)}</div></div><div class="card"><div class="label">Admin Fee</div><div class="value">${formatCurrencySafe(totalAdminFee)}</div></div><div class="card"><div class="label">Agent Fee</div><div class="value">${formatCurrencySafe(totalAgentFee)}</div></div><div class="card"><div class="label">Net Model Payout</div><div class="value">${formatCurrencySafe(totalNet)}</div></div></div>
+      ${sections}
+      <div class="footer"><div class="sign-box"><div class="sign-line"></div>Prepared By</div><div class="sign-box"><div class="sign-line"></div>Finance Approval</div><div class="sign-box"><div class="sign-line"></div>Management</div></div>
+      <div class="doc-footer"><span>Confidential Agent Fee Document</span><span>OMDoGaTot Agency</span></div>
+    </div>
+  </div>
+  <script>window.onload = () => { window.print(); }<\/script>
+</body>
+</html>`;
+        const win = window.open('', '_blank');
+        if (!win) {
+            showToast('Popup diblokir browser. Izinkan popup untuk export PDF.', 'error');
+            return;
+        }
+        win.document.write(html);
+        win.document.close();
+    }
+
+    function updateSummaryCards() {
+        const totalGross = filteredTransactions.reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+        const totalAgentFee = filteredTransactions.reduce((sum, tx) => sum + getAgentFeeAmount(tx), 0);
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const lastDay = new Date(today);
+        lastDay.setDate(today.getDate() - 1);
+
+        const lastDayGross = filteredTransactions
+            .filter((tx) => isSameDay(tx.transaction_date, lastDay))
+            .reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+        const thisWeekGross = filteredTransactions
+            .filter((tx) => isDateInCurrentWeek(tx.transaction_date))
+            .reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+        const thisMonthGross = filteredTransactions
+            .filter((tx) => isDateInCurrentMonth(tx.transaction_date))
+            .reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+        const thisYearGross = filteredTransactions
+            .filter((tx) => isDateInCurrentYear(tx.transaction_date))
+            .reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+        const clientMap = new Map();
+        const agentMap = new Map();
+
+        filteredTransactions.forEach((tx) => {
+            const client = tx.client_name || 'N/A';
+            const gross = Number(tx.gross_amount || 0);
+            const agentFee = getAgentFeeAmount(tx);
+            clientMap.set(client, Number(clientMap.get(client) || 0) + gross);
+
+            const agentName = tx.agent_name || 'No Agent';
+            const row = agentMap.get(agentName) || {
+                name: agentName,
+                totalAgentFee: 0,
+                lastDay: 0,
+                week: 0,
+                month: 0,
+                year: 0,
+                transactions: 0
+            };
+            row.totalAgentFee += agentFee;
+            row.transactions += 1;
+            if (isSameDay(tx.transaction_date, lastDay)) row.lastDay += agentFee;
+            if (isDateInCurrentWeek(tx.transaction_date)) row.week += agentFee;
+            if (isDateInCurrentMonth(tx.transaction_date)) row.month += agentFee;
+            if (isDateInCurrentYear(tx.transaction_date)) row.year += agentFee;
+            agentMap.set(agentName, row);
+        });
+        const topClient = Array.from(clientMap.entries()).sort((a, b) => b[1] - a[1])[0];
+
+        document.getElementById('summary-completed').textContent = formatCurrencySafe(totalGross);
+        document.getElementById('summary-agent-fee').textContent = formatCurrencySafe(totalAgentFee);
+        document.getElementById('summary-last-day').textContent = formatCurrencySafe(lastDayGross);
+        document.getElementById('summary-this-week').textContent = formatCurrencySafe(thisWeekGross);
+        document.getElementById('summary-this-month').textContent = formatCurrencySafe(thisMonthGross);
+        document.getElementById('summary-this-year').textContent = formatCurrencySafe(thisYearGross);
+        document.getElementById('summary-total-transactions').textContent = Number(filteredTransactions.length).toLocaleString('id-ID');
+        document.getElementById('kpi-total-clients').textContent = Number(clientMap.size).toLocaleString('id-ID');
+        document.getElementById('kpi-top-client').textContent = topClient?.[0] || '-';
+        document.getElementById('kpi-top-client-revenue').textContent = formatCurrencySafe(topClient?.[1] || 0);
+        renderAgentPerformance(agentMap);
     }
 
     function buildTrendChart() {
@@ -507,15 +854,33 @@
         });
     }
 
+    function populateModelFilter() {
+        const select = document.getElementById('modelFilter');
+        const selected = select.value;
+        const modelNames = Array.from(new Set(allTransactions.map((tx) => tx.model_name).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+        select.innerHTML = '';
+        const allOption = document.createElement('option');
+        allOption.value = '';
+        allOption.textContent = 'All Models';
+        select.appendChild(allOption);
+        modelNames.forEach((name) => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            select.appendChild(option);
+        });
+        select.value = selected;
+    }
+
     function applyFilters() {
-        const search = document.getElementById('search').value.toLowerCase();
+        const selectedModel = document.getElementById('modelFilter').value.toLowerCase();
         const status = document.getElementById('statusFilter').value.toLowerCase();
         const fromDate = document.getElementById('fromDate').value;
         const toDate = document.getElementById('toDate').value;
 
         filteredTransactions = allTransactions.filter((tx) => {
             const txDate = tx.transaction_date ? new Date(tx.transaction_date) : null;
-            const matchSearch = !search || String(tx.model_name || '').toLowerCase().includes(search) || String(tx.client_name || '').toLowerCase().includes(search);
+            const matchSearch = !selectedModel || String(tx.model_name || '').toLowerCase() === selectedModel;
             const matchStatus = !status || status === 'recorded';
             const matchFrom = !fromDate || (txDate && txDate >= new Date(fromDate + 'T00:00:00'));
             const matchTo = !toDate || (txDate && txDate <= new Date(toDate + 'T23:59:59'));
@@ -524,6 +889,7 @@
 
         currentPage = 1;
         renderTransactionsTable();
+        updateSummaryCards();
         buildTrendChart();
     }
 
@@ -532,7 +898,7 @@
     }
 
     function clearFilters() {
-        document.getElementById('search').value = '';
+        document.getElementById('modelFilter').value = '';
         document.getElementById('statusFilter').value = '';
         document.getElementById('fromDate').value = '';
         document.getElementById('toDate').value = '';
@@ -544,7 +910,7 @@
         currentPage = Math.min(Math.max(currentPage + delta, 1), totalPages);
         renderTransactionsTable();
     }
-    
+
     function closeTransactionDetailModal() {
         document.getElementById('transactionDetailModal').classList.add('hidden');
     }
@@ -568,25 +934,118 @@
 
             const tx = data.data?.transaction || {};
             const model = data.data?.model || {};
-            const gross = Number(tx.gross_amount || 0).toLocaleString('id-ID');
-            const net = Number(tx.net_amount || 0).toLocaleString('id-ID');
-            const fee = Number(tx.admin_fee || 0).toLocaleString('id-ID');
+            lastTransactionDetail = { tx, model };
+            const grossAmount = Number(tx.gross_amount || 0);
+            const adminFeeAmount = Number(tx.admin_fee || 0);
+            const agentFeeAmount = Number(tx.agent_fee_total || Math.max(grossAmount - adminFeeAmount - Number(tx.net_amount || 0), 0));
+            const netAmount = Number(tx.net_amount || 0);
+            const rateAmount = Number(tx.model_rate || model.rate || tx.current_model_rate || 0);
+            const gross = grossAmount.toLocaleString('id-ID');
+            const adminFee = adminFeeAmount.toLocaleString('id-ID');
+            const agentFee = agentFeeAmount.toLocaleString('id-ID');
+            const net = netAmount.toLocaleString('id-ID');
+            const rate = rateAmount.toLocaleString('id-ID');
             content.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div><span class="font-semibold">Model:</span> ${model.full_name || tx.model_name || '-'}</div>
-                    <div><span class="font-semibold">Client:</span> ${tx.client_name || '-'}</div>
-                    <div><span class="font-semibold">Date:</span> ${formatDateSafe(tx.transaction_date)}</div>
-                    <div><span class="font-semibold">TRX Count:</span> ${tx.transaction_count || 0}</div>
-                    <div><span class="font-semibold">Gross:</span> Rp ${gross}</div>
-                    <div><span class="font-semibold">Admin Fee:</span> Rp ${fee}</div>
-                    <div><span class="font-semibold">Net:</span> Rp ${net}</div>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div><span class="font-semibold">Model:</span> ${model.full_name || tx.model_name || '-'}</div>
+                        <div><span class="font-semibold">Model Grade:</span> ${model.grade_name || tx.model_grade_name || '-'}</div>
+                        <div><span class="font-semibold">Client:</span> ${tx.client_name || '-'}</div>
+                        <div><span class="font-semibold">Date:</span> ${formatDateSafe(tx.transaction_date)}</div>
+                        <div><span class="font-semibold">TRX Count:</span> ${tx.transaction_count || 0}</div>
+                        <div><span class="font-semibold">Rate / Trx:</span> Rp ${rate}</div>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 font-semibold text-gray-800">Salary Breakdown</div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-4">
+                            <div><span class="font-semibold">Gross:</span> Rp ${gross}</div>
+                            <div><span class="font-semibold">Admin Fee:</span> Rp ${adminFee}</div>
+                            <div><span class="font-semibold">Agent Fee:</span> Rp ${agentFee}</div>
+                            <div><span class="font-semibold">Net Model:</span> Rp ${net}</div>
+                            <div class="md:col-span-2 text-xs text-gray-500">Formula: Gross - Admin Fee - Agent Fee = Net Model</div>
+                        </div>
+                    </div>
                     <div><span class="font-semibold">Created By:</span> ${tx.created_by_email || '-'}</div>
-                    <div class="md:col-span-2"><span class="font-semibold">Description:</span> ${tx.notes || '-'}</div>
+                    <div><span class="font-semibold">Description:</span> ${tx.notes || '-'}</div>
+                    <div class="flex justify-end">
+                        <button type="button" onclick="exportTransactionPdf()" class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"><i class="fas fa-file-pdf mr-2"></i>Export PDF Slip</button>
+                    </div>
                 </div>
             `;
         } catch (error) {
             content.innerHTML = `<p class="text-red-600">${error.message || 'Terjadi kesalahan'}</p>`;
         }
+    }
+
+
+    function exportTransactionPdf() {
+        if (!lastTransactionDetail) {
+            showToast('Detail transaksi belum dimuat', 'error');
+            return;
+        }
+        const { tx, model } = lastTransactionDetail;
+        const grossAmount = Number(tx.gross_amount || 0);
+        const adminFeeAmount = Number(tx.admin_fee || 0);
+        const agentFeeAmount = Number(tx.agent_fee_total || Math.max(grossAmount - adminFeeAmount - Number(tx.net_amount || 0), 0));
+        const netAmount = Number(tx.net_amount || 0);
+        const rateAmount = Number(tx.model_rate || model.rate || tx.current_model_rate || 0);
+        const slipNo = `SLIP-${String(tx.id || '').padStart(6, '0')}`;
+        const html = `<!doctype html>
+<html>
+<head>
+  <title>${slipNo}</title>
+  <style>
+    @page { size: A4; margin: 14mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Inter, Arial, sans-serif; margin: 0; background: #eef2f7; color: #0f172a; }
+    .page { max-width: 760px; margin: 28px auto; background: #fff; border-radius: 20px; overflow: hidden; border: 1px solid #dbe3ef; box-shadow: 0 20px 60px rgba(15,23,42,.16); }
+    .hero { padding: 28px 32px; color: #fff; background: linear-gradient(135deg, #0f172a, #1d4ed8 58%, #16a34a); }
+    .brand { font-size: 24px; font-weight: 900; letter-spacing: .06em; }
+    .subtitle { margin-top: 6px; color: #dbeafe; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+    .content { padding: 30px 32px; }
+    .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; margin-bottom: 24px; }
+    .label { color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: .10em; font-weight: 800; }
+    .value { font-weight: 900; margin-top: 5px; }
+    table { width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
+    th, td { padding: 14px 12px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+    th { background: #0f172a; color: white; text-transform: uppercase; font-size: 10px; letter-spacing: .08em; }
+    .right { text-align: right; }
+    .total { font-size: 19px; font-weight: 900; color: #047857; }
+    .note { margin-top: 14px; color: #64748b; font-size: 12px; }
+    .signs { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 34px; }
+    .sign { text-align: center; color: #475569; font-size: 12px; padding-top: 56px; border-bottom: 1px solid #94a3b8; }
+    @media print { body { background: #fff; } .page { box-shadow: none; margin: 0; max-width: none; border-radius: 0; border: none; } .hero { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero"><div class="brand">OMDoGaTot Agency</div><div class="subtitle">Enterprise Payroll Slip • ${slipNo}</div></div>
+    <div class="content">
+      <div class="meta">
+        <div><div class="label">Model</div><div class="value">${model.full_name || tx.model_name || '-'}</div></div>
+        <div><div class="label">Model Grade</div><div class="value">${model.grade_name || tx.model_grade_name || '-'}</div></div>
+        <div><div class="label">Client</div><div class="value">${tx.client_name || '-'}</div></div>
+        <div><div class="label">Date</div><div class="value">${formatDateSafe(tx.transaction_date)}</div></div>
+      </div>
+      <table>
+        <thead><tr><th>Description</th><th class="right">Amount</th></tr></thead>
+        <tbody>
+          <tr><td>Gross (${tx.transaction_count || 0} trx × ${formatCurrencySafe(rateAmount)})</td><td class="right">${formatCurrencySafe(grossAmount)}</td></tr>
+          <tr><td>Admin Fee</td><td class="right">-${formatCurrencySafe(adminFeeAmount)}</td></tr>
+          <tr><td>Agent Fee</td><td class="right">-${formatCurrencySafe(agentFeeAmount)}</td></tr>
+          <tr><td class="total">Net Model Payout</td><td class="right total">${formatCurrencySafe(netAmount)}</td></tr>
+        </tbody>
+      </table>
+      <div class="note"><strong>Formula:</strong> Gross - Admin Fee - Agent Fee = Net Model Payout. Notes: ${tx.notes || '-'}</div>
+      <div class="signs"><div class="sign">Finance</div><div class="sign">Model</div></div>
+    </div>
+  </div>
+  <script>window.onload = () => { window.print(); }<\/script>
+</body>
+</html>`;
+        const win = window.open('', '_blank');
+        win.document.write(html);
+        win.document.close();
     }
 
     async function openEditTransaction(id) {
@@ -604,6 +1063,7 @@
             document.getElementById('editClientName').value = tx.client_name || '';
             document.getElementById('editTransactionDate').value = tx.transaction_date ? new Date(tx.transaction_date).toISOString().slice(0, 10) : '';
             document.getElementById('editTransactionCount').value = tx.transaction_count || 1;
+            document.getElementById('editAdminFee').value = Number(tx.admin_fee || 0);
             document.getElementById('editDescription').value = tx.notes || '';
 
             document.getElementById('transactionEditModal').classList.remove('hidden');
@@ -618,6 +1078,7 @@
             client_name: document.getElementById('editClientName').value.trim(),
             transaction_date: document.getElementById('editTransactionDate').value,
             transaction_count: Number(document.getElementById('editTransactionCount').value || 0),
+            admin_fee: Number(document.getElementById('editAdminFee').value || 0),
             description: document.getElementById('editDescription').value.trim()
         };
 
@@ -647,20 +1108,20 @@
             showToast(error.message || 'Terjadi kesalahan', 'error');
         }
     }
-    
+
     async function deleteTransaction(id) {
         if (!confirm('Are you sure you want to delete this transaction?')) return;
-        
+
         try {
             showLoading();
             const response = await fetch(`/api/transactions/${id}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });
-            
+
             const data = await response.json();
             hideLoading();
-            
+
             if (data.success) {
                 showToast('Transaction deleted', 'success');
                 setTimeout(() => window.location.reload(), 1000);
@@ -672,11 +1133,147 @@
             showToast('An error occurred', 'error');
         }
     }
-    
+
+
+    function exportClientInvoice() {
+        const rows = filteredTransactions.length ? filteredTransactions : allTransactions;
+        if (!rows.length) {
+            showToast('Tidak ada transaksi untuk dibuat invoice', 'error');
+            return;
+        }
+        const clientMap = new Map();
+        rows.forEach((tx) => {
+            const client = tx.client_name || 'N/A';
+            if (!clientMap.has(client)) clientMap.set(client, []);
+            clientMap.get(client).push(tx);
+        });
+        const invoiceNo = `INV-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
+        const generatedAt = new Date().toLocaleString('id-ID');
+        const sections = Array.from(clientMap.entries()).map(([client, txRows]) => {
+            const total = txRows.reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+            const lines = txRows.map((tx, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${formatDateSafe(tx.transaction_date)}</td>
+                    <td>${tx.model_name || '-'}</td>
+                    <td>${tx.model_grade_name || '-'}</td>
+                    <td class="right">${Number(tx.transaction_count || 0)}</td>
+                    <td class="right">${formatCurrencySafe(tx.model_rate || 0)}</td>
+                    <td class="right strong">${formatCurrencySafe(tx.gross_amount || 0)}</td>
+                </tr>`).join('');
+            return `<section class="client-section"><div class="client-head"><div><div class="label">Bill To</div><h2>${client}</h2></div><div class="client-total">${formatCurrencySafe(total)}</div></div><table><thead><tr><th>#</th><th>Date</th><th>Model</th><th>Grade</th><th class="right">Trx</th><th class="right">Rate</th><th class="right">Amount</th></tr></thead><tbody>${lines}</tbody></table></section>`;
+        }).join('');
+        const grandTotal = rows.reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+        const html = `<!doctype html><html><head><title>${invoiceNo}</title><style>
+            @page { size: A4; margin: 14mm; } *{box-sizing:border-box} body{font-family:Inter,Arial,sans-serif;background:#eef2f7;color:#0f172a;margin:0}.page{max-width:900px;margin:24px auto;background:white;border-radius:22px;overflow:hidden;border:1px solid #dbe3ef;box-shadow:0 24px 70px rgba(15,23,42,.18)}.hero{padding:30px 34px;color:white;background:linear-gradient(135deg,#0f172a,#1d4ed8 55%,#16a34a)}.topline{display:flex;justify-content:space-between;gap:20px}.brand{font-size:28px;font-weight:900;letter-spacing:.06em}.subtitle{color:#dbeafe;text-transform:uppercase;font-size:12px;letter-spacing:.08em;margin-top:6px}.meta{text-align:right;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:12px 16px}.content{padding:30px 34px}.summary{display:flex;justify-content:space-between;align-items:center;border:1px solid #e2e8f0;border-radius:18px;padding:16px;margin-bottom:24px;background:#f8fafc}.label{color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:800}h2{margin:4px 0 0}.client-section{margin-top:24px}.client-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px}.client-total{font-size:22px;font-weight:900;color:#047857}table{width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden}th,td{padding:11px 10px;border-bottom:1px solid #e5e7eb;text-align:left}th{background:#0f172a;color:white;text-transform:uppercase;font-size:10px;letter-spacing:.08em}.right{text-align:right}.strong{font-weight:900}.footer{display:grid;grid-template-columns:1fr 1fr;margin-top:38px;gap:48px}.sign{text-align:center;color:#475569;font-size:12px;padding-top:58px;border-bottom:1px solid #94a3b8}@media print{body{background:white}.page{box-shadow:none;margin:0;max-width:none;border-radius:0;border:none}.hero{print-color-adjust:exact;-webkit-print-color-adjust:exact}}</style></head><body><div class="page"><div class="hero"><div class="topline"><div><div class="brand">OMDoGaTot Agency</div><div class="subtitle">Enterprise Client Invoice</div></div><div class="meta"><strong>${invoiceNo}</strong><br>${generatedAt}</div></div></div><div class="content"><div class="summary"><div><div class="label">Invoice Total</div><h2>${formatCurrencySafe(grandTotal)}</h2></div><div><div class="label">Clients</div><h2>${clientMap.size}</h2></div><div><div class="label">Transactions</div><h2>${rows.length}</h2></div></div>${sections}<div class="footer"><div class="sign">Finance</div><div class="sign">Client Approval</div></div></div></div><script>window.onload=()=>window.print();<\/script></body></html>`;
+        const win = window.open('', '_blank');
+        if (!win) return showToast('Popup diblokir browser. Izinkan popup untuk membuat invoice.', 'error');
+        win.document.write(html);
+        win.document.close();
+    }
+
     function exportTransactions() {
-        showLoading();
-        window.location.href = '/admin/transactions/export';
-        setTimeout(hideLoading, 2000);
+        const rows = filteredTransactions.length ? filteredTransactions : allTransactions;
+        if (!rows.length) {
+            showToast('Tidak ada transaksi untuk diexport', 'error');
+            return;
+        }
+
+        const totalGross = rows.reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+        const totalAdminFee = rows.reduce((sum, tx) => sum + Number(tx.admin_fee || 0), 0);
+        const totalAgentFee = rows.reduce((sum, tx) => {
+            const gross = Number(tx.gross_amount || 0);
+            const adminFee = Number(tx.admin_fee || 0);
+            const net = Number(tx.net_amount || 0);
+            return sum + Number(tx.agent_fee_total || Math.max(gross - adminFee - net, 0));
+        }, 0);
+        const totalNet = rows.reduce((sum, tx) => sum + Number(tx.net_amount || 0), 0);
+        const reportNo = `TXR-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
+        const generatedAt = new Date().toLocaleString('id-ID');
+        const tableRows = rows.map((tx, index) => {
+            const gross = Number(tx.gross_amount || 0);
+            const adminFee = Number(tx.admin_fee || 0);
+            const net = Number(tx.net_amount || 0);
+            const agentFee = Number(tx.agent_fee_total || Math.max(gross - adminFee - net, 0));
+            return `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${formatDateSafe(tx.transaction_date)}</td>
+                    <td>${tx.model_name || '-'}</td>
+                    <td>${tx.model_grade_name || '-'}</td>
+                    <td>${tx.client_name || '-'}</td>
+                    <td class="right">${Number(tx.transaction_count || 0)}</td>
+                    <td class="right">${formatCurrencySafe(gross)}</td>
+                    <td class="right">${formatCurrencySafe(adminFee)}</td>
+                    <td class="right">${formatCurrencySafe(agentFee)}</td>
+                    <td class="right strong">${formatCurrencySafe(net)}</td>
+                </tr>`;
+        }).join('');
+
+        const html = `<!doctype html>
+<html>
+<head>
+  <title>${reportNo}</title>
+  <style>
+    @page { size: A4 landscape; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Inter, Arial, sans-serif; margin: 0; background: #e5e7eb; color: #0f172a; }
+    .page { max-width: 1180px; margin: 24px auto; background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 24px 70px rgba(15, 23, 42, .18); border: 1px solid #dbe3ef; }
+    .hero { position: relative; padding: 30px 34px; color: #fff; background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 52%, #16a34a 100%); }
+    .hero:after { content: 'CONFIDENTIAL'; position: absolute; right: 34px; bottom: 10px; font-size: 42px; font-weight: 900; letter-spacing: .14em; opacity: .08; }
+    .topline { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+    .brand-wrap { display: flex; align-items: center; gap: 16px; }
+    .logo { width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28); font-size: 26px; font-weight: 900; }
+    .brand { font-size: 28px; font-weight: 900; letter-spacing: .06em; line-height: 1; }
+    .subtitle { color: #dbeafe; margin-top: 7px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+    .report-meta { text-align: right; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.20); border-radius: 16px; padding: 12px 16px; min-width: 250px; }
+    .report-no { font-size: 20px; font-weight: 900; }
+    .generated { color: #e0f2fe; font-size: 12px; margin-top: 6px; }
+    .content { padding: 28px 34px 34px; }
+    .section-title { display: flex; justify-content: space-between; align-items: end; margin-bottom: 16px; }
+    .section-title h1 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
+    .pill { display: inline-flex; align-items: center; padding: 7px 12px; border-radius: 999px; background: #ecfdf5; color: #047857; font-weight: 800; font-size: 12px; border: 1px solid #bbf7d0; }
+    .summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin: 18px 0 26px; }
+    .card { border: 1px solid #e2e8f0; border-radius: 18px; padding: 16px; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); box-shadow: 0 8px 22px rgba(15,23,42,.06); }
+    .card.accent { border-left: 5px solid #2563eb; } .card.green { border-left: 5px solid #16a34a; } .card.orange { border-left: 5px solid #f59e0b; } .card.purple { border-left: 5px solid #7c3aed; } .card.dark { border-left: 5px solid #0f172a; }
+    .label { color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: .10em; font-weight: 800; }
+    .value { font-weight: 900; margin-top: 8px; font-size: 16px; letter-spacing: -.02em; }
+    .table-wrap { border: 1px solid #e2e8f0; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 30px rgba(15,23,42,.07); }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    th, td { padding: 11px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
+    th { background: #0f172a; color: white; text-transform: uppercase; font-size: 9px; letter-spacing: .09em; white-space: nowrap; }
+    tbody tr:nth-child(even) { background: #f8fafc; }
+    .right { text-align: right; } .strong { font-weight: 900; color: #047857; }
+    .formula { margin: 16px 0 0; padding: 12px 14px; border-radius: 14px; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; font-size: 12px; }
+    .footer { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 44px; }
+    .sign-box { text-align: center; color: #475569; font-size: 12px; }
+    .sign-line { height: 58px; border-bottom: 1px solid #94a3b8; margin-bottom: 8px; }
+    .doc-footer { margin-top: 24px; padding-top: 14px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+    @media print { body { background: #fff; } .page { box-shadow: none; margin: 0; max-width: none; border-radius: 0; border: none; } .hero { print-color-adjust: exact; -webkit-print-color-adjust: exact; } .card, .table-wrap { box-shadow: none; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero"><div class="topline"><div class="brand-wrap"><div class="logo">OM</div><div><div class="brand">OMDoGaTot Agency</div><div class="subtitle">Enterprise Transaction Payroll Report</div></div></div><div class="report-meta"><div class="report-no">${reportNo}</div><div class="generated">Generated: ${generatedAt}</div></div></div></div>
+    <div class="content">
+      <div class="section-title"><div><h1>Payroll Transaction Summary</h1><div class="label">Filtered export from agency transaction dashboard</div></div><div class="pill">Finance Ready</div></div>
+      <div class="summary"><div class="card accent"><div class="label">Records</div><div class="value">${rows.length}</div></div><div class="card green"><div class="label">Gross Revenue</div><div class="value">${formatCurrencySafe(totalGross)}</div></div><div class="card orange"><div class="label">Admin Fee</div><div class="value">${formatCurrencySafe(totalAdminFee)}</div></div><div class="card purple"><div class="label">Agent Fee</div><div class="value">${formatCurrencySafe(totalAgentFee)}</div></div><div class="card dark"><div class="label">Net Model Payout</div><div class="value">${formatCurrencySafe(totalNet)}</div></div></div>
+      <div class="table-wrap"><table><thead><tr><th>#</th><th>Date</th><th>Model</th><th>Grade</th><th>Client</th><th class="right">Trx</th><th class="right">Gross</th><th class="right">Admin</th><th class="right">Agent</th><th class="right">Net</th></tr></thead><tbody>${tableRows}</tbody></table></div>
+      <div class="formula"><strong>Formula:</strong> Gross - Admin Fee - Agent Fee = Net Model Payout. Export follows the currently filtered transaction list.</div>
+      <div class="footer"><div class="sign-box"><div class="sign-line"></div>Prepared By</div><div class="sign-box"><div class="sign-line"></div>Finance Approval</div><div class="sign-box"><div class="sign-line"></div>Management</div></div>
+      <div class="doc-footer"><span>Confidential Payroll Document</span><span>OMDoGaTot Agency</span></div>
+    </div>
+  </div>
+  <script>window.onload = () => { window.print(); }<\/script>
+</body>
+</html>`;
+        const win = window.open('', '_blank');
+        if (!win) {
+            showToast('Popup diblokir browser. Izinkan popup untuk export PDF.', 'error');
+            return;
+        }
+        win.document.write(html);
+        win.document.close();
     }
 
     async function loadClientKpis() {
@@ -693,39 +1290,39 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        loadClientKpis();
+        populateModelFilter();
         applyFilters();
     });
 </script>
             </main>
         </div>
     </div>
-    
+
     <!-- Sidebar Toggle Script -->
     <script>
         const sidebar = document.getElementById('sidebar');
         const openBtn = document.getElementById('open-sidebar');
         const closeBtn = document.getElementById('close-sidebar');
-        
+
         openBtn?.addEventListener('click', () => {
             sidebar.classList.remove('-translate-x-full');
         });
-        
+
         closeBtn?.addEventListener('click', () => {
             sidebar.classList.add('-translate-x-full');
         });
-        
+
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', (e) => {
-            if (window.innerWidth < 768 && 
-                !sidebar.contains(e.target) && 
+            if (window.innerWidth < 768 &&
+                !sidebar.contains(e.target) &&
                 !openBtn.contains(e.target) &&
                 !sidebar.classList.contains('-translate-x-full')) {
                 sidebar.classList.add('-translate-x-full');
             }
         });
     </script>
-    
+
     <%- include('../partials/footer') %>
 </body>
 </html>

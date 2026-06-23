@@ -191,7 +191,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             <i class="fas fa-calendar mr-2"></i>Transaction Date *
@@ -206,6 +206,15 @@
                             <i class="fas fa-layer-group mr-2"></i>Qty Trx (per hari) *
                         </label>
                         <input type="number" id="transaction_count" name="transaction_count" required min="1" value="1"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
+                               oninput="calculateRevenue()">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-receipt mr-2"></i>Admin Fee
+                        </label>
+                        <input type="number" id="admin_fee" name="admin_fee" min="0" value="0"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
                                oninput="calculateRevenue()">
                     </div>
@@ -336,6 +345,7 @@
             client_name: form.client_name.value,
             transaction_count: form.transaction_count.value,
             transaction_date: form.transaction_date.value,
+            admin_fee: form.admin_fee.value || 0,
             description: form.description.value
         };
 
