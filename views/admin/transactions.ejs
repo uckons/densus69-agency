@@ -270,12 +270,20 @@
             <p id="kpi-top-client-revenue" class="text-sm text-gray-500 mt-1">Rp 0</p>
         </div>
         <div class="xl:col-span-2 bg-white rounded-xl shadow-md overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
                 <div>
                     <h3 class="text-lg font-bold text-gray-800">Agent Fee Performance</h3>
                     <p class="text-sm text-gray-500">Breakdown per agent from current filters</p>
                 </div>
-                <i class="fas fa-user-tie text-admin-500 text-xl"></i>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="viewAgentFeeBreakdown()" class="px-3 py-2 rounded-lg border border-admin-200 text-admin-700 hover:bg-admin-50 text-sm font-semibold">
+                        <i class="fas fa-eye mr-1"></i>View Breakdown
+                    </button>
+                    <button type="button" onclick="exportAgentFeeBreakdownPdf()" class="px-3 py-2 rounded-lg bg-gray-900 text-white hover:bg-gray-800 text-sm font-semibold">
+                        <i class="fas fa-file-pdf mr-1"></i>Export PDF
+                    </button>
+                    <i class="fas fa-user-tie text-admin-500 text-xl ml-1"></i>
+                </div>
             </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 text-sm">
@@ -337,6 +345,25 @@
 </div>
 
 
+
+<!-- Agent Fee Breakdown Modal -->
+<div id="agentFeeBreakdownModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div>
+                <h3 class="text-xl font-bold text-gray-800">Agent Fee Breakdown</h3>
+                <p class="text-sm text-gray-500">Detailed agent fee transactions from current filters</p>
+            </div>
+            <button type="button" onclick="closeAgentFeeBreakdownModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="agentFeeBreakdownContent" class="overflow-auto p-6 text-sm text-gray-700">Loading...</div>
+        <div class="flex justify-end gap-2 px-6 py-4 border-t border-gray-100 bg-gray-50">
+            <button type="button" onclick="closeAgentFeeBreakdownModal()" class="px-4 py-2 border rounded-lg bg-white">Close</button>
+            <button type="button" onclick="exportAgentFeeBreakdownPdf()" class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"><i class="fas fa-file-pdf mr-2"></i>Export PDF</button>
+        </div>
+    </div>
+</div>
+
 <!-- Transaction Detail Modal -->
 <div id="transactionDetailModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6">
@@ -362,16 +389,8 @@
                 <input id="editModelName" type="text" class="w-full border rounded-lg px-3 py-2 bg-gray-50" readonly>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
-                <input id="editClientName" type="text" class="w-full border rounded-lg px-3 py-2" required>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Date *</label>
-                <input id="editTransactionDate" type="date" class="w-full border rounded-lg px-3 py-2" required>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Count *</label>
-                <input id="editTransactionCount" type="number" min="1" class="w-full border rounded-lg px-3 py-2" required>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Admin Fee</label>
+                <input id="editAdminFee" type="number" min="0" class="w-full border rounded-lg px-3 py-2" value="0">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Admin Fee</label>
@@ -525,6 +544,197 @@
                 <td class="px-6 py-4 text-right text-gray-700">${formatCurrencySafe(agent.year)}</td>
                 <td class="px-6 py-4 text-right text-gray-700">${Number(agent.transactions).toLocaleString('id-ID')}</td>
             </tr>`).join('');
+    }
+
+    function getAgentBreakdownRows() {
+        const agentMap = new Map();
+        filteredTransactions.forEach((tx) => {
+            const agentName = tx.agent_name || 'No Agent';
+            const gross = Number(tx.gross_amount || 0);
+            const adminFee = Number(tx.admin_fee || 0);
+            const net = Number(tx.net_amount || 0);
+            const agentFee = getAgentFeeAmount(tx);
+            const row = agentMap.get(agentName) || {
+                name: agentName,
+                totalGross: 0,
+                totalAdminFee: 0,
+                totalAgentFee: 0,
+                totalNet: 0,
+                transactionRows: []
+            };
+
+            row.totalGross += gross;
+            row.totalAdminFee += adminFee;
+            row.totalAgentFee += agentFee;
+            row.totalNet += net;
+            row.transactionRows.push({
+                date: tx.transaction_date,
+                model: tx.model_name || '-',
+                grade: tx.model_grade_name || '-',
+                client: tx.client_name || '-',
+                trx: Number(tx.transaction_count || 0),
+                gross,
+                adminFee,
+                agentFee,
+                net
+            });
+            agentMap.set(agentName, row);
+        });
+
+        return Array.from(agentMap.values()).sort((a, b) => b.totalAgentFee - a.totalAgentFee);
+    }
+
+    function closeAgentFeeBreakdownModal() {
+        document.getElementById('agentFeeBreakdownModal').classList.add('hidden');
+    }
+
+    function viewAgentFeeBreakdown() {
+        const content = document.getElementById('agentFeeBreakdownContent');
+        const rows = getAgentBreakdownRows();
+        if (!rows.length) {
+            content.innerHTML = '<div class="py-10 text-center text-gray-500">Tidak ada data agent fee untuk filter ini.</div>';
+            document.getElementById('agentFeeBreakdownModal').classList.remove('hidden');
+            return;
+        }
+
+        const totalAgentFee = rows.reduce((sum, row) => sum + row.totalAgentFee, 0);
+        const totalGross = rows.reduce((sum, row) => sum + row.totalGross, 0);
+        const totalNet = rows.reduce((sum, row) => sum + row.totalNet, 0);
+        const sections = rows.map((agent) => {
+            const details = agent.transactionRows.map((tx, index) => `
+                <tr>
+                    <td class="px-4 py-3 text-gray-500">${index + 1}</td>
+                    <td class="px-4 py-3">${formatDateSafe(tx.date)}</td>
+                    <td class="px-4 py-3 font-semibold text-gray-800">${tx.model}<div class="text-xs text-gray-500">${tx.grade}</div></td>
+                    <td class="px-4 py-3">${tx.client}</td>
+                    <td class="px-4 py-3 text-right">${tx.trx.toLocaleString('id-ID')}</td>
+                    <td class="px-4 py-3 text-right">${formatCurrencySafe(tx.gross)}</td>
+                    <td class="px-4 py-3 text-right">${formatCurrencySafe(tx.adminFee)}</td>
+                    <td class="px-4 py-3 text-right font-bold text-red-600">${formatCurrencySafe(tx.agentFee)}</td>
+                    <td class="px-4 py-3 text-right font-bold text-emerald-700">${formatCurrencySafe(tx.net)}</td>
+                </tr>`).join('');
+            return `
+                <section class="border border-gray-200 rounded-2xl overflow-hidden mb-5">
+                    <div class="bg-gray-900 text-white px-5 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <div><div class="text-xs uppercase tracking-widest text-gray-300">Agent</div><div class="text-xl font-black">${agent.name}</div></div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-right text-sm">
+                            <div><div class="text-gray-300">Gross</div><div class="font-bold">${formatCurrencySafe(agent.totalGross)}</div></div>
+                            <div><div class="text-gray-300">Agent Fee</div><div class="font-bold">${formatCurrencySafe(agent.totalAgentFee)}</div></div>
+                            <div><div class="text-gray-300">Net</div><div class="font-bold">${formatCurrencySafe(agent.totalNet)}</div></div>
+                            <div><div class="text-gray-300">Rows</div><div class="font-bold">${agent.transactionRows.length}</div></div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+                                <tr><th class="px-4 py-3 text-left">#</th><th class="px-4 py-3 text-left">Date</th><th class="px-4 py-3 text-left">Model</th><th class="px-4 py-3 text-left">Client</th><th class="px-4 py-3 text-right">TRX</th><th class="px-4 py-3 text-right">Gross</th><th class="px-4 py-3 text-right">Admin</th><th class="px-4 py-3 text-right">Agent Fee</th><th class="px-4 py-3 text-right">Net</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">${details}</tbody>
+                        </table>
+                    </div>
+                </section>`;
+        }).join('');
+
+        content.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                <div class="rounded-2xl border border-gray-200 p-4"><div class="text-xs uppercase tracking-wider text-gray-500 font-bold">Gross Revenue</div><div class="text-2xl font-black mt-1">${formatCurrencySafe(totalGross)}</div></div>
+                <div class="rounded-2xl border border-gray-200 p-4"><div class="text-xs uppercase tracking-wider text-gray-500 font-bold">Total Agent Fee</div><div class="text-2xl font-black mt-1 text-red-600">${formatCurrencySafe(totalAgentFee)}</div></div>
+                <div class="rounded-2xl border border-gray-200 p-4"><div class="text-xs uppercase tracking-wider text-gray-500 font-bold">Net Model Payout</div><div class="text-2xl font-black mt-1 text-emerald-700">${formatCurrencySafe(totalNet)}</div></div>
+            </div>
+            ${sections}`;
+        document.getElementById('agentFeeBreakdownModal').classList.remove('hidden');
+    }
+
+    function exportAgentFeeBreakdownPdf() {
+        const rows = getAgentBreakdownRows();
+        if (!rows.length) {
+            showToast('Tidak ada data agent fee untuk export PDF', 'error');
+            return;
+        }
+
+        const totalGross = rows.reduce((sum, row) => sum + row.totalGross, 0);
+        const totalAdminFee = rows.reduce((sum, row) => sum + row.totalAdminFee, 0);
+        const totalAgentFee = rows.reduce((sum, row) => sum + row.totalAgentFee, 0);
+        const totalNet = rows.reduce((sum, row) => sum + row.totalNet, 0);
+        const reportNo = `AFR-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
+        const generatedAt = new Date().toLocaleString('id-ID');
+        const sections = rows.map((agent) => {
+            const tableRows = agent.transactionRows.map((tx, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${formatDateSafe(tx.date)}</td>
+                    <td>${tx.model}<br><span>${tx.grade}</span></td>
+                    <td>${tx.client}</td>
+                    <td class="right">${tx.trx.toLocaleString('id-ID')}</td>
+                    <td class="right">${formatCurrencySafe(tx.gross)}</td>
+                    <td class="right">${formatCurrencySafe(tx.adminFee)}</td>
+                    <td class="right strong">${formatCurrencySafe(tx.agentFee)}</td>
+                    <td class="right">${formatCurrencySafe(tx.net)}</td>
+                </tr>`).join('');
+            return `
+                <section class="agent-section">
+                    <div class="agent-head"><div><div class="label">Agent</div><h2>${agent.name}</h2></div><div class="agent-total">${formatCurrencySafe(agent.totalAgentFee)}</div></div>
+                    <div class="mini-summary"><div><span>Gross</span><b>${formatCurrencySafe(agent.totalGross)}</b></div><div><span>Admin</span><b>${formatCurrencySafe(agent.totalAdminFee)}</b></div><div><span>Net</span><b>${formatCurrencySafe(agent.totalNet)}</b></div><div><span>Records</span><b>${agent.transactionRows.length}</b></div></div>
+                    <table><thead><tr><th>#</th><th>Date</th><th>Model / Grade</th><th>Client</th><th class="right">TRX</th><th class="right">Gross</th><th class="right">Admin</th><th class="right">Agent Fee</th><th class="right">Net</th></tr></thead><tbody>${tableRows}</tbody></table>
+                </section>`;
+        }).join('');
+
+        const html = `<!doctype html>
+<html>
+<head>
+  <title>${reportNo}</title>
+  <style>
+    @page { size: A4 landscape; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Inter, Arial, sans-serif; margin: 0; background: #e5e7eb; color: #0f172a; }
+    .page { max-width: 1180px; margin: 24px auto; background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 24px 70px rgba(15, 23, 42, .18); border: 1px solid #dbe3ef; }
+    .hero { padding: 30px 34px; color: #fff; background: linear-gradient(135deg, #0f172a 0%, #7c3aed 52%, #2563eb 100%); }
+    .topline { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+    .brand-wrap { display: flex; align-items: center; gap: 16px; }
+    .logo { width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28); font-size: 26px; font-weight: 900; }
+    .brand { font-size: 28px; font-weight: 900; letter-spacing: .06em; line-height: 1; }
+    .subtitle { color: #ede9fe; margin-top: 7px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+    .report-meta { text-align: right; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.20); border-radius: 16px; padding: 12px 16px; min-width: 250px; }
+    .content { padding: 28px 34px 34px; }
+    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 26px; }
+    .card { border: 1px solid #e2e8f0; border-left: 5px solid #7c3aed; border-radius: 18px; padding: 16px; background: #f8fafc; }
+    .label { color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: .10em; font-weight: 800; }
+    .value { font-weight: 900; margin-top: 8px; font-size: 16px; }
+    .agent-section { page-break-inside: avoid; margin-top: 22px; border: 1px solid #e2e8f0; border-radius: 18px; overflow: hidden; }
+    .agent-head { display: flex; justify-content: space-between; align-items: flex-end; padding: 16px 18px; background: #0f172a; color: #fff; }
+    .agent-head .label { color: #cbd5e1; } h2 { margin: 4px 0 0; } .agent-total { font-size: 22px; font-weight: 900; }
+    .mini-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #e2e8f0; }
+    .mini-summary div { background: #f8fafc; padding: 10px 12px; } .mini-summary span { color: #64748b; font-size: 10px; text-transform: uppercase; display: block; } .mini-summary b { display: block; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 10px; }
+    th, td { padding: 9px 8px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
+    th { background: #f1f5f9; color: #475569; text-transform: uppercase; font-size: 9px; letter-spacing: .08em; }
+    td span { color: #64748b; font-size: 9px; } .right { text-align: right; } .strong { font-weight: 900; color: #dc2626; }
+    .footer { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 44px; }
+    .sign-box { text-align: center; color: #475569; font-size: 12px; } .sign-line { height: 58px; border-bottom: 1px solid #94a3b8; margin-bottom: 8px; }
+    .doc-footer { margin-top: 24px; padding-top: 14px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+    @media print { body { background: #fff; } .page { box-shadow: none; margin: 0; max-width: none; border-radius: 0; border: none; } .hero { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero"><div class="topline"><div class="brand-wrap"><div class="logo">OM</div><div><div class="brand">OMDoGaTot Agency</div><div class="subtitle">Enterprise Agent Fee Breakdown Report</div></div></div><div class="report-meta"><strong>${reportNo}</strong><br>Generated: ${generatedAt}</div></div></div>
+    <div class="content">
+      <div class="summary"><div class="card"><div class="label">Gross Revenue</div><div class="value">${formatCurrencySafe(totalGross)}</div></div><div class="card"><div class="label">Admin Fee</div><div class="value">${formatCurrencySafe(totalAdminFee)}</div></div><div class="card"><div class="label">Agent Fee</div><div class="value">${formatCurrencySafe(totalAgentFee)}</div></div><div class="card"><div class="label">Net Model Payout</div><div class="value">${formatCurrencySafe(totalNet)}</div></div></div>
+      ${sections}
+      <div class="footer"><div class="sign-box"><div class="sign-line"></div>Prepared By</div><div class="sign-box"><div class="sign-line"></div>Finance Approval</div><div class="sign-box"><div class="sign-line"></div>Management</div></div>
+      <div class="doc-footer"><span>Confidential Agent Fee Document</span><span>OMDoGaTot Agency</span></div>
+    </div>
+  </div>
+  <script>window.onload = () => { window.print(); }<\/script>
+</body>
+</html>`;
+        const win = window.open('', '_blank');
+        if (!win) {
+            showToast('Popup diblokir browser. Izinkan popup untuk export PDF.', 'error');
+            return;
+        }
+        win.document.write(html);
+        win.document.close();
     }
 
     function updateSummaryCards() {
