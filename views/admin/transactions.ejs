@@ -32,7 +32,7 @@
 </head>
 <body class="bg-gray-50">
     <%- include('../partials/header') %>
-    
+
     <div class="flex h-screen bg-gray-100">
         <!-- Sidebar -->
         <aside id="sidebar" class="sidebar fixed md:relative inset-y-0 left-0 z-30 w-64 bg-admin-800 text-white transform -translate-x-full md:translate-x-0 transition-transform duration-300">
@@ -47,14 +47,14 @@
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
-                
+
                 <!-- Navigation -->
                 <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
                     <a href="/admin/dashboard" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-tachometer-alt w-5"></i>
                         <span>Dashboard</span>
                     </a>
-                    
+
                     <a href="/admin/models" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-users w-5"></i>
                         <span>Models</span>
@@ -63,63 +63,63 @@
                         <i class="fas fa-layer-group w-5"></i>
                         <span>Model Grades</span>
                     </a>
-                    
-                    
+
+
                     <a href="/admin/agents" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-user-tie w-5"></i>
                         <span>Agents</span>
                     </a>
-                    
+
                     <a href="/admin/clients" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-building w-5"></i>
                         <span>Clients</span>
                     </a>
-                    
+
                     <a href="/admin/jobs" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-briefcase w-5"></i>
                         <span>Jobs</span>
                     </a>
-                    
+
                     <a href="/admin/transactions" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition bg-admin-700">
                         <i class="fas fa-exchange-alt w-5"></i>
                         <span>Transactions</span>
                     </a>
-                    
+
                     <a href="/admin/analytics" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-chart-line w-5"></i>
                         <span>Analytics</span>
                     </a>
-                    
+
                     <a href="/admin/complaints" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-exclamation-triangle w-5"></i>
                         <span>Complaints</span>
                     </a>
-                    
+
                     <hr class="my-4 border-admin-700">
-                    
+
                     <a href="/admin/users" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-user-cog w-5"></i>
                         <span>Users</span>
                     </a>
-                    
+
                     <hr class="my-4 border-admin-700">
-                    
+
                     <a href="/" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-admin-700 transition">
                         <i class="fas fa-home w-5"></i>
                         <span>Public Site</span>
                     </a>
-                    
+
                     <a href="/auth/logout" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-600 transition text-red-300">
                         <i class="fas fa-sign-out-alt w-5"></i>
                         <span>Logout</span>
                     </a>
                 </nav>
-                
+
                 <!-- User Info -->
                 <div class="px-6 py-4 bg-admin-900 border-t border-admin-700">
                     <div class="flex items-center space-x-3">
-                        <img src="/images/default-avatar.png" 
-                             alt="Admin" 
+                        <img src="/images/default-avatar.png"
+                             alt="Admin"
                              class="w-10 h-10 rounded-full object-cover border-2 border-admin-600">
                         <div>
                             <p class="font-medium"><%= typeof user !== 'undefined' ? user.email : 'Admin' %></p>
@@ -129,7 +129,7 @@
                 </div>
             </div>
         </aside>
-        
+
         <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Top Bar -->
@@ -137,16 +137,16 @@
                 <button id="open-sidebar" class="md:hidden text-gray-600 hover:text-gray-900">
                     <i class="fas fa-bars text-2xl"></i>
                 </button>
-                
+
                 <h1 class="text-xl font-semibold text-gray-800">Transactions</h1>
-                
+
                 <div class="flex items-center space-x-4">
                     <a href="/auth/logout" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
                         <i class="fas fa-sign-out-alt mr-2"></i>Logout
                     </a>
                 </div>
             </header>
-            
+
             <!-- Page Content -->
             <main class="flex-1 overflow-y-auto p-6">
 <div class="space-y-6">
@@ -156,9 +156,9 @@
             <h2 class="text-2xl font-bold text-gray-800">Transaction History</h2>
             <p class="text-gray-600 text-sm mt-1">View and manage all transactions</p>
         </div>
-        
+
         <div class="flex space-x-3">
-            <a href="/admin/transactions/new" 
+            <a href="/admin/transactions/new"
                class="bg-admin-600 text-white px-4 py-2 rounded-lg hover:bg-admin-700 transition">
                 <i class="fas fa-plus mr-2"></i>Add Transaction
             </a>
@@ -172,7 +172,7 @@
             </button>
         </div>
     </div>
-    
+
     <!-- Filters -->
     <div class="bg-white rounded-xl shadow-md p-6">
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -184,74 +184,115 @@
                     <option value="">All Models</option>
                 </select>
             </div>
-            
+
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select id="statusFilter" 
+                <select id="statusFilter"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
                         onchange="filterTransactions()">
                     <option value="">All Status</option>
                     <option value="recorded">Recorded</option>
                 </select>
             </div>
-            
+
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">From Date</label>
-                <input type="date" 
-                       id="fromDate" 
+                <input type="date"
+                       id="fromDate"
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
                        onchange="filterTransactions()">
             </div>
-            
+
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">To Date</label>
-                <input type="date" 
-                       id="toDate" 
+                <input type="date"
+                       id="toDate"
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
                        onchange="filterTransactions()">
             </div>
-            
+
             <div class="flex items-end">
-                <button onclick="clearFilters()" 
+                <button onclick="clearFilters()"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm">
                     <i class="fas fa-times mr-2"></i>Clear
                 </button>
             </div>
         </div>
     </div>
-    
+
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
-            <p class="text-gray-500 text-sm font-medium">Total Completed</p>
+            <p class="text-gray-500 text-sm font-medium">Total Revenue</p>
             <p id="summary-completed" class="text-3xl font-bold text-gray-800 mt-2">Rp 0</p>
         </div>
-        
+
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-500">
+            <p class="text-gray-500 text-sm font-medium">Total Agent Fee</p>
+            <p id="summary-agent-fee" class="text-3xl font-bold text-gray-800 mt-2">Rp 0</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-slate-500">
+            <p class="text-gray-500 text-sm font-medium">Last Day</p>
+            <p id="summary-last-day" class="text-3xl font-bold text-gray-800 mt-2">Rp 0</p>
+        </div>
+
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
             <p class="text-gray-500 text-sm font-medium">This Week</p>
             <p id="summary-this-week" class="text-3xl font-bold text-gray-800 mt-2">Rp 0</p>
         </div>
-        
+
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-admin-500">
             <p class="text-gray-500 text-sm font-medium">This Month</p>
             <p id="summary-this-month" class="text-3xl font-bold text-gray-800 mt-2">Rp 0</p>
         </div>
-        
+
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-cyan-500">
+            <p class="text-gray-500 text-sm font-medium">This Year</p>
+            <p id="summary-this-year" class="text-3xl font-bold text-gray-800 mt-2">Rp 0</p>
+        </div>
+
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
             <p class="text-gray-500 text-sm font-medium">Total Transactions</p>
             <p id="summary-total-transactions" class="text-3xl font-bold text-gray-800 mt-2">0</p>
         </div>
-    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-indigo-500">
             <p class="text-gray-500 text-sm font-medium">Total Clients</p>
             <p id="kpi-total-clients" class="text-3xl font-bold text-gray-800 mt-2">0</p>
         </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-pink-500">
             <p class="text-gray-500 text-sm font-medium">Top Client (Revenue)</p>
             <p id="kpi-top-client" class="text-lg font-bold text-gray-800 mt-2">-</p>
             <p id="kpi-top-client-revenue" class="text-sm text-gray-500 mt-1">Rp 0</p>
+        </div>
+        <div class="xl:col-span-2 bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800">Agent Fee Performance</h3>
+                    <p class="text-sm text-gray-500">Breakdown per agent from current filters</p>
+                </div>
+                <i class="fas fa-user-tie text-admin-500 text-xl"></i>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+                        <tr>
+                            <th class="px-6 py-3 text-left">Agent</th>
+                            <th class="px-6 py-3 text-right">Total Agent Fee</th>
+                            <th class="px-6 py-3 text-right">Last Day</th>
+                            <th class="px-6 py-3 text-right">Week</th>
+                            <th class="px-6 py-3 text-right">Month</th>
+                            <th class="px-6 py-3 text-right">Year</th>
+                            <th class="px-6 py-3 text-right">TRX</th>
+                        </tr>
+                    </thead>
+                    <tbody id="agent-performance-body" class="divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -336,55 +377,6 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Admin Fee</label>
                 <input id="editAdminFee" type="number" min="0" class="w-full border rounded-lg px-3 py-2" value="0">
             </div>
-            <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea id="editDescription" rows="3" class="w-full border rounded-lg px-3 py-2"></textarea>
-            </div>
-        </form>
-        <div class="flex justify-end gap-2 mt-6">
-            <button type="button" onclick="closeEditTransactionModal()" class="px-4 py-2 border rounded-lg">Cancel</button>
-            <button type="button" onclick="submitEditTransaction()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save</button>
-        </div>
-    </div>
-</div>
-
-
-<!-- Transaction Detail Modal -->
-<div id="transactionDetailModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-xl font-bold text-gray-800">Transaction Detail</h3>
-            <button type="button" onclick="closeTransactionDetailModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
-        </div>
-        <div id="transactionDetailContent" class="text-sm text-gray-700">Loading...</div>
-    </div>
-</div>
-
-<!-- Edit Transaction Modal -->
-<div id="transactionEditModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-xl font-bold text-gray-800">Edit Transaction</h3>
-            <button type="button" onclick="closeEditTransactionModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
-        </div>
-        <form id="editTransactionForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="hidden" id="editTransactionId">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
-                <input id="editModelName" type="text" class="w-full border rounded-lg px-3 py-2 bg-gray-50" readonly>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
-                <input id="editClientName" type="text" class="w-full border rounded-lg px-3 py-2" required>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Date *</label>
-                <input id="editTransactionDate" type="date" class="w-full border rounded-lg px-3 py-2" required>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Count *</label>
-                <input id="editTransactionCount" type="number" min="1" class="w-full border rounded-lg px-3 py-2" required>
-            </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Admin Fee</label>
                 <input id="editAdminFee" type="number" min="0" class="w-full border rounded-lg px-3 py-2" value="0">
@@ -465,9 +457,31 @@
     }
 
 
-    function isDateInCurrentWeek(value) {
+    function getTransactionDate(value) {
         const date = value ? new Date(value) : null;
-        if (!date || Number.isNaN(date.getTime())) return false;
+        return date && !Number.isNaN(date.getTime()) ? date : null;
+    }
+
+    function getAgentFeeAmount(tx) {
+        const storedAgentFee = Number(tx.agent_fee_total || 0);
+        if (storedAgentFee > 0) return storedAgentFee;
+        const gross = Number(tx.gross_amount || 0);
+        const adminFee = Number(tx.admin_fee || 0);
+        const net = Number(tx.net_amount || 0);
+        return Math.max(gross - adminFee - net, 0);
+    }
+
+    function isSameDay(value, referenceDate) {
+        const date = getTransactionDate(value);
+        return Boolean(date)
+            && date.getFullYear() === referenceDate.getFullYear()
+            && date.getMonth() === referenceDate.getMonth()
+            && date.getDate() === referenceDate.getDate();
+    }
+
+    function isDateInCurrentWeek(value) {
+        const date = getTransactionDate(value);
+        if (!date) return false;
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const weekStart = new Date(today);
@@ -478,32 +492,101 @@
         return date >= weekStart && date <= weekEnd;
     }
 
+    function isDateInCurrentMonth(value) {
+        const date = getTransactionDate(value);
+        const now = new Date();
+        return Boolean(date) && date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+    }
+
+    function isDateInCurrentYear(value) {
+        const date = getTransactionDate(value);
+        return Boolean(date) && date.getFullYear() === new Date().getFullYear();
+    }
+
+    function renderAgentPerformance(agentMap) {
+        const tbody = document.getElementById('agent-performance-body');
+        if (!tbody) return;
+        const rows = Array.from(agentMap.values()).sort((a, b) => b.totalAgentFee - a.totalAgentFee);
+        if (!rows.length) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="px-6 py-6 text-center text-gray-500">No agent fee data</td>
+                </tr>`;
+            return;
+        }
+
+        tbody.innerHTML = rows.map((agent) => `
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 font-semibold text-gray-800">${agent.name}</td>
+                <td class="px-6 py-4 text-right font-semibold text-gray-900">${formatCurrencySafe(agent.totalAgentFee)}</td>
+                <td class="px-6 py-4 text-right text-gray-700">${formatCurrencySafe(agent.lastDay)}</td>
+                <td class="px-6 py-4 text-right text-gray-700">${formatCurrencySafe(agent.week)}</td>
+                <td class="px-6 py-4 text-right text-gray-700">${formatCurrencySafe(agent.month)}</td>
+                <td class="px-6 py-4 text-right text-gray-700">${formatCurrencySafe(agent.year)}</td>
+                <td class="px-6 py-4 text-right text-gray-700">${Number(agent.transactions).toLocaleString('id-ID')}</td>
+            </tr>`).join('');
+    }
+
     function updateSummaryCards() {
         const totalGross = filteredTransactions.reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+        const totalAgentFee = filteredTransactions.reduce((sum, tx) => sum + getAgentFeeAmount(tx), 0);
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const lastDay = new Date(today);
+        lastDay.setDate(today.getDate() - 1);
+
+        const lastDayGross = filteredTransactions
+            .filter((tx) => isSameDay(tx.transaction_date, lastDay))
+            .reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
         const thisWeekGross = filteredTransactions
             .filter((tx) => isDateInCurrentWeek(tx.transaction_date))
             .reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
-        const now = new Date();
         const thisMonthGross = filteredTransactions
-            .filter((tx) => {
-                const d = tx.transaction_date ? new Date(tx.transaction_date) : null;
-                return d && !Number.isNaN(d.getTime()) && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
-            })
+            .filter((tx) => isDateInCurrentMonth(tx.transaction_date))
+            .reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+        const thisYearGross = filteredTransactions
+            .filter((tx) => isDateInCurrentYear(tx.transaction_date))
             .reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
         const clientMap = new Map();
+        const agentMap = new Map();
+
         filteredTransactions.forEach((tx) => {
             const client = tx.client_name || 'N/A';
-            clientMap.set(client, Number(clientMap.get(client) || 0) + Number(tx.gross_amount || 0));
+            const gross = Number(tx.gross_amount || 0);
+            const agentFee = getAgentFeeAmount(tx);
+            clientMap.set(client, Number(clientMap.get(client) || 0) + gross);
+
+            const agentName = tx.agent_name || 'No Agent';
+            const row = agentMap.get(agentName) || {
+                name: agentName,
+                totalAgentFee: 0,
+                lastDay: 0,
+                week: 0,
+                month: 0,
+                year: 0,
+                transactions: 0
+            };
+            row.totalAgentFee += agentFee;
+            row.transactions += 1;
+            if (isSameDay(tx.transaction_date, lastDay)) row.lastDay += agentFee;
+            if (isDateInCurrentWeek(tx.transaction_date)) row.week += agentFee;
+            if (isDateInCurrentMonth(tx.transaction_date)) row.month += agentFee;
+            if (isDateInCurrentYear(tx.transaction_date)) row.year += agentFee;
+            agentMap.set(agentName, row);
         });
         const topClient = Array.from(clientMap.entries()).sort((a, b) => b[1] - a[1])[0];
 
         document.getElementById('summary-completed').textContent = formatCurrencySafe(totalGross);
+        document.getElementById('summary-agent-fee').textContent = formatCurrencySafe(totalAgentFee);
+        document.getElementById('summary-last-day').textContent = formatCurrencySafe(lastDayGross);
         document.getElementById('summary-this-week').textContent = formatCurrencySafe(thisWeekGross);
         document.getElementById('summary-this-month').textContent = formatCurrencySafe(thisMonthGross);
+        document.getElementById('summary-this-year').textContent = formatCurrencySafe(thisYearGross);
         document.getElementById('summary-total-transactions').textContent = Number(filteredTransactions.length).toLocaleString('id-ID');
         document.getElementById('kpi-total-clients').textContent = Number(clientMap.size).toLocaleString('id-ID');
         document.getElementById('kpi-top-client').textContent = topClient?.[0] || '-';
         document.getElementById('kpi-top-client-revenue').textContent = formatCurrencySafe(topClient?.[1] || 0);
+        renderAgentPerformance(agentMap);
     }
 
     function buildTrendChart() {
@@ -613,7 +696,7 @@
         currentPage = Math.min(Math.max(currentPage + delta, 1), totalPages);
         renderTransactionsTable();
     }
-    
+
     function closeTransactionDetailModal() {
         document.getElementById('transactionDetailModal').classList.add('hidden');
     }
@@ -811,20 +894,20 @@
             showToast(error.message || 'Terjadi kesalahan', 'error');
         }
     }
-    
+
     async function deleteTransaction(id) {
         if (!confirm('Are you sure you want to delete this transaction?')) return;
-        
+
         try {
             showLoading();
             const response = await fetch(`/api/transactions/${id}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });
-            
+
             const data = await response.json();
             hideLoading();
-            
+
             if (data.success) {
                 showToast('Transaction deleted', 'success');
                 setTimeout(() => window.location.reload(), 1000);
@@ -836,7 +919,7 @@
             showToast('An error occurred', 'error');
         }
     }
-    
+
 
     function exportClientInvoice() {
         const rows = filteredTransactions.length ? filteredTransactions : allTransactions;
@@ -1000,32 +1083,32 @@
             </main>
         </div>
     </div>
-    
+
     <!-- Sidebar Toggle Script -->
     <script>
         const sidebar = document.getElementById('sidebar');
         const openBtn = document.getElementById('open-sidebar');
         const closeBtn = document.getElementById('close-sidebar');
-        
+
         openBtn?.addEventListener('click', () => {
             sidebar.classList.remove('-translate-x-full');
         });
-        
+
         closeBtn?.addEventListener('click', () => {
             sidebar.classList.add('-translate-x-full');
         });
-        
+
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', (e) => {
-            if (window.innerWidth < 768 && 
-                !sidebar.contains(e.target) && 
+            if (window.innerWidth < 768 &&
+                !sidebar.contains(e.target) &&
                 !openBtn.contains(e.target) &&
                 !sidebar.classList.contains('-translate-x-full')) {
                 sidebar.classList.add('-translate-x-full');
             }
         });
     </script>
-    
+
     <%- include('../partials/footer') %>
 </body>
 </html>
