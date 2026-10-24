@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+body { font-family: 'Inter', sans-serif; }
+#sidebar { flex-shrink: 0; height: 100dvh; }
+#sidebar .admin-account { display: flex; align-items: center; gap: 12px; padding: 16px; flex-shrink: 0; min-width: 0; }
+.admin-account-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.admin-account-details { flex: 1; min-width: 0; }
+.admin-account-email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 500; }
+#sidebar-backdrop { position: fixed; inset: 0; z-index: 20; background: rgb(0 0 0 / 45%); }
+#sidebar-backdrop[hidden] { display: none; }
+@media (max-width: 767px) {
+    #sidebar { width: min(256px, 85vw); }
+    body.admin-menu-open { overflow: hidden; }
+}
+@media (min-width: 768px) {
+    #sidebar-backdrop { display: none; }
+}
