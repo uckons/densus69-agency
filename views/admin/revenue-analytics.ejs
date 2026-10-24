@@ -29,9 +29,13 @@
             }
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/admin-navigation.css">
     <script src="/js/admin-navigation.js" defer></script>
+    <script src="/vendor/jspdf/jspdf.umd.min.js" defer></script>
+    <script src="/vendor/jspdf-autotable/jspdf.plugin.autotable.min.js" defer></script>
+    <script src="/js/pdf-reports.js" defer></script>
 </head>
 <body class="bg-gray-50">
 
@@ -352,65 +356,21 @@
     }
 
     function exportAnalyticsPdf() {
-        const generatedAt = new Date().toLocaleString('id-ID');
-        const reportNo = `ANL-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
-        const rows = modelStatsData.map((row, index) => `
-            <tr>
-                <td>${index + 1}</td>
-                <td>${row.name || '-'}</td>
-                <td class="right">${Number(row.jobsCompleted || 0).toLocaleString('id-ID')}</td>
-                <td class="right">${formatCurrencySafe(row.totalEarnings || 0)}</td>
-                <td class="right">${formatCurrencySafe(row.avgPerJob || 0)}</td>
-                <td class="right strong">${formatCurrencySafe(row.commission || 0)}</td>
-            </tr>`).join('');
-        const html = `<!doctype html>
-<html>
-<head>
-  <title>${reportNo}</title>
-  <style>
-    @page { size: A4 landscape; margin: 12mm; } * { box-sizing: border-box; }
-    body { font-family: Inter, Arial, sans-serif; margin: 0; background: #e5e7eb; color: #0f172a; }
-    .page { max-width: 1180px; margin: 24px auto; background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 24px 70px rgba(15,23,42,.18); border: 1px solid #dbe3ef; }
-    .hero { padding: 30px 34px; color: #fff; background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 52%, #16a34a 100%); }
-    .topline { display:flex; justify-content:space-between; align-items:flex-start; gap:24px; }
-    .brand { font-size: 28px; font-weight: 900; letter-spacing: .06em; }
-    .subtitle { color:#dbeafe; margin-top:7px; font-size:13px; text-transform:uppercase; letter-spacing:.04em; }
-    .meta { text-align:right; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.20); border-radius:16px; padding:12px 16px; }
-    .content { padding: 28px 34px 34px; }
-    .summary { display:grid; grid-template-columns: repeat(5, 1fr); gap:14px; margin-bottom:26px; }
-    .card { border:1px solid #e2e8f0; border-radius:18px; padding:16px; background:linear-gradient(180deg,#fff,#f8fafc); border-left:5px solid #2563eb; }
-    .label { color:#64748b; font-size:10px; text-transform:uppercase; letter-spacing:.10em; font-weight:800; }
-    .value { font-weight:900; margin-top:8px; font-size:16px; }
-    .table-wrap { border:1px solid #e2e8f0; border-radius:18px; overflow:hidden; }
-    table { width:100%; border-collapse:collapse; font-size:12px; } th, td { padding:11px 10px; border-bottom:1px solid #e5e7eb; text-align:left; }
-    th { background:#0f172a; color:#fff; text-transform:uppercase; font-size:10px; letter-spacing:.08em; } tbody tr:nth-child(even) { background:#f8fafc; }
-    .right { text-align:right; } .strong { font-weight:900; color:#047857; }
-    .footer { margin-top:30px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:44px; }
-    .sign { text-align:center; color:#475569; font-size:12px; padding-top:58px; border-bottom:1px solid #94a3b8; }
-    @media print { body { background:#fff; } .page { box-shadow:none; margin:0; max-width:none; border-radius:0; border:none; } .hero { print-color-adjust:exact; -webkit-print-color-adjust:exact; } }
-  </style>
-</head>
-<body>
-  <div class="page">
-    <div class="hero"><div class="topline"><div><div class="brand">OMDoGaTot Agency</div><div class="subtitle">Enterprise Revenue Analytics Report</div></div><div class="meta"><strong>${reportNo}</strong><br>Generated: ${generatedAt}</div></div></div>
-    <div class="content">
-      <div class="summary">
-        <div class="card"><div class="label">Total Revenue</div><div class="value">${formatCurrencySafe(analyticsSummary.totalRevenue || 0)}</div></div>
-        <div class="card"><div class="label">Avg Transaction</div><div class="value">${formatCurrencySafe(analyticsSummary.avgTransaction || 0)}</div></div>
-        <div class="card"><div class="label">Commission Earned</div><div class="value">${formatCurrencySafe(analyticsSummary.totalCommission || 0)}</div></div>
-        <div class="card"><div class="label">Top Model</div><div class="value">${analyticsSummary.topModelName || 'N/A'}</div></div>
-        <div class="card"><div class="label">Transactions</div><div class="value">${Number(analyticsSummary.totalTransactions || 0).toLocaleString('id-ID')}</div></div>
-      </div>
-      <div class="table-wrap"><table><thead><tr><th>#</th><th>Model</th><th class="right">Jobs</th><th class="right">Total Earnings</th><th class="right">Avg/Job</th><th class="right">Commission</th></tr></thead><tbody>${rows}</tbody></table></div>
-      <div class="footer"><div class="sign">Prepared By</div><div class="sign">Finance Approval</div><div class="sign">Management</div></div>
-    </div>
-  </div><script>window.onload = () => { window.print(); }<\/script>
-</body>
-</html>`;
-        const win = window.open('', '_blank');
-        if (!win) return showToast('Popup diblokir browser. Izinkan popup untuk export PDF.', 'error');
-        win.document.write(html);
-        win.document.close();
+        const pdf = SkyPdf;
+        const from = document.getElementById('startDate').value;
+        const to = document.getElementById('endDate').value;
+        pdf.download({
+            prefix: 'ANL', title: 'Revenue Analytics Report', landscape: true,
+            context: `Period: ${from ? pdf.date(from) : 'All dates'} - ${to ? pdf.date(to) : 'All dates'}`,
+            metrics: [['Total Revenue', pdf.money(analyticsSummary.totalRevenue)], ['Avg Transaction', pdf.money(analyticsSummary.avgTransaction)], ['Commission Earned', pdf.money(analyticsSummary.totalCommission)], ['Top Model', analyticsSummary.topModelName || 'N/A'], ['Transactions', analyticsSummary.totalTransactions || 0]],
+            sections: [{
+                title: 'Model Performance',
+                columns: ['#', 'Model', 'Jobs', 'Total Earnings', 'Avg / Job', 'Commission'], numeric: [2, 3, 4, 5],
+                rows: modelStatsData.map((row, index) => [index + 1, row.name || '-', row.jobsCompleted || 0, pdf.money(row.totalEarnings), pdf.money(row.avgPerJob), pdf.money(row.commission)])
+            }],
+            note: 'Revenue and model performance follow the selected reporting period.',
+            signatures: ['Prepared By', 'Finance Approval', 'Management']
+        });
     }
 
     function formatCurrencySafe(value) {

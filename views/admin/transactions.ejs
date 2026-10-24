@@ -29,9 +29,13 @@
             }
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/admin-navigation.css">
     <script src="/js/admin-navigation.js" defer></script>
+    <script src="/vendor/jspdf/jspdf.umd.min.js" defer></script>
+    <script src="/vendor/jspdf-autotable/jspdf.plugin.autotable.min.js" defer></script>
+    <script src="/js/pdf-reports.js" defer></script>
 </head>
 <body class="bg-gray-50">
 
@@ -78,7 +82,7 @@
             </button>
             <button onclick="exportTransactions()"
                     class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
-                <i class="fas fa-file-export mr-2"></i>Export
+                <i class="fas fa-file-pdf mr-2"></i>Export PDF
             </button>
         </div>
     </div>
@@ -556,95 +560,23 @@
     }
 
     function exportAgentFeeBreakdownPdf() {
-        const rows = getAgentBreakdownRows();
-        if (!rows.length) {
-            showToast('Tidak ada data agent fee untuk export PDF', 'error');
-            return;
-        }
-
-        const totalGross = rows.reduce((sum, row) => sum + row.totalGross, 0);
-        const totalAdminFee = rows.reduce((sum, row) => sum + row.totalAdminFee, 0);
-        const totalAgentFee = rows.reduce((sum, row) => sum + row.totalAgentFee, 0);
-        const totalNet = rows.reduce((sum, row) => sum + row.totalNet, 0);
-        const reportNo = `AFR-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
-        const generatedAt = new Date().toLocaleString('id-ID');
-        const sections = rows.map((agent) => {
-            const tableRows = agent.transactionRows.map((tx, index) => `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${formatDateSafe(tx.date)}</td>
-                    <td>${tx.model}<br><span>${tx.grade}</span></td>
-                    <td>${tx.client}</td>
-                    <td class="right">${tx.trx.toLocaleString('id-ID')}</td>
-                    <td class="right">${formatCurrencySafe(tx.gross)}</td>
-                    <td class="right">${formatCurrencySafe(tx.adminFee)}</td>
-                    <td class="right strong">${formatCurrencySafe(tx.agentFee)}</td>
-                    <td class="right">${formatCurrencySafe(tx.net)}</td>
-                </tr>`).join('');
-            return `
-                <section class="agent-section">
-                    <div class="agent-head"><div><div class="label">Agent</div><h2>${agent.name}</h2></div><div class="agent-total">${formatCurrencySafe(agent.totalAgentFee)}</div></div>
-                    <div class="mini-summary"><div><span>Gross</span><b>${formatCurrencySafe(agent.totalGross)}</b></div><div><span>Admin</span><b>${formatCurrencySafe(agent.totalAdminFee)}</b></div><div><span>Net</span><b>${formatCurrencySafe(agent.totalNet)}</b></div><div><span>Records</span><b>${agent.transactionRows.length}</b></div></div>
-                    <table><thead><tr><th>#</th><th>Date</th><th>Model / Grade</th><th>Client</th><th class="right">TRX</th><th class="right">Gross</th><th class="right">Admin</th><th class="right">Agent Fee</th><th class="right">Net</th></tr></thead><tbody>${tableRows}</tbody></table>
-                </section>`;
-        }).join('');
-
-        const html = `<!doctype html>
-<html>
-<head>
-  <title>${reportNo}</title>
-  <style>
-    @page { size: A4 landscape; margin: 12mm; }
-    * { box-sizing: border-box; }
-    body { font-family: Inter, Arial, sans-serif; margin: 0; background: #e5e7eb; color: #0f172a; }
-    .page { max-width: 1180px; margin: 24px auto; background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 24px 70px rgba(15, 23, 42, .18); border: 1px solid #dbe3ef; }
-    .hero { padding: 30px 34px; color: #fff; background: linear-gradient(135deg, #0f172a 0%, #7c3aed 52%, #2563eb 100%); }
-    .topline { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
-    .brand-wrap { display: flex; align-items: center; gap: 16px; }
-    .logo { width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28); font-size: 26px; font-weight: 900; }
-    .brand { font-size: 28px; font-weight: 900; letter-spacing: .06em; line-height: 1; }
-    .subtitle { color: #ede9fe; margin-top: 7px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
-    .report-meta { text-align: right; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.20); border-radius: 16px; padding: 12px 16px; min-width: 250px; }
-    .content { padding: 28px 34px 34px; }
-    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 26px; }
-    .card { border: 1px solid #e2e8f0; border-left: 5px solid #7c3aed; border-radius: 18px; padding: 16px; background: #f8fafc; }
-    .label { color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: .10em; font-weight: 800; }
-    .value { font-weight: 900; margin-top: 8px; font-size: 16px; }
-    .agent-section { page-break-inside: avoid; margin-top: 22px; border: 1px solid #e2e8f0; border-radius: 18px; overflow: hidden; }
-    .agent-head { display: flex; justify-content: space-between; align-items: flex-end; padding: 16px 18px; background: #0f172a; color: #fff; }
-    .agent-head .label { color: #cbd5e1; } h2 { margin: 4px 0 0; } .agent-total { font-size: 22px; font-weight: 900; }
-    .mini-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #e2e8f0; }
-    .mini-summary div { background: #f8fafc; padding: 10px 12px; } .mini-summary span { color: #64748b; font-size: 10px; text-transform: uppercase; display: block; } .mini-summary b { display: block; margin-top: 4px; }
-    table { width: 100%; border-collapse: collapse; font-size: 10px; }
-    th, td { padding: 9px 8px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
-    th { background: #f1f5f9; color: #475569; text-transform: uppercase; font-size: 9px; letter-spacing: .08em; }
-    td span { color: #64748b; font-size: 9px; } .right { text-align: right; } .strong { font-weight: 900; color: #dc2626; }
-    .footer { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 44px; }
-    .sign-box { text-align: center; color: #475569; font-size: 12px; } .sign-line { height: 58px; border-bottom: 1px solid #94a3b8; margin-bottom: 8px; }
-    .doc-footer { margin-top: 24px; padding-top: 14px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
-    @media print { body { background: #fff; } .page { box-shadow: none; margin: 0; max-width: none; border-radius: 0; border: none; } .hero { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
-  </style>
-</head>
-<body>
-  <div class="page">
-    <div class="hero"><div class="topline"><div class="brand-wrap"><div class="logo">OM</div><div><div class="brand">OMDoGaTot Agency</div><div class="subtitle">Enterprise Agent Fee Breakdown Report</div></div></div><div class="report-meta"><strong>${reportNo}</strong><br>Generated: ${generatedAt}</div></div></div>
-    <div class="content">
-      <div class="summary"><div class="card"><div class="label">Gross Revenue</div><div class="value">${formatCurrencySafe(totalGross)}</div></div><div class="card"><div class="label">Admin Fee</div><div class="value">${formatCurrencySafe(totalAdminFee)}</div></div><div class="card"><div class="label">Agent Fee</div><div class="value">${formatCurrencySafe(totalAgentFee)}</div></div><div class="card"><div class="label">Net Model Payout</div><div class="value">${formatCurrencySafe(totalNet)}</div></div></div>
-      ${sections}
-      <div class="footer"><div class="sign-box"><div class="sign-line"></div>Prepared By</div><div class="sign-box"><div class="sign-line"></div>Finance Approval</div><div class="sign-box"><div class="sign-line"></div>Management</div></div>
-      <div class="doc-footer"><span>Confidential Agent Fee Document</span><span>OMDoGaTot Agency</span></div>
-    </div>
-  </div>
-  <script>window.onload = () => { window.print(); }<\/script>
-</body>
-</html>`;
-        const win = window.open('', '_blank');
-        if (!win) {
-            showToast('Popup diblokir browser. Izinkan popup untuk export PDF.', 'error');
-            return;
-        }
-        win.document.write(html);
-        win.document.close();
+        const agents = getAgentBreakdownRows();
+        if (!agents.length) return showToast('Tidak ada data agent fee untuk export PDF', 'error');
+        const pdf = SkyPdf;
+        pdf.download({
+            prefix: 'AFR', title: 'Agent Fee Report', landscape: true,
+            context: getPdfFilterContext(),
+            metrics: [['Gross Revenue', pdf.money(pdf.sum(agents, 'totalGross'))], ['Admin Fee', pdf.money(pdf.sum(agents, 'totalAdminFee'))], ['Agent Fee', pdf.money(pdf.sum(agents, 'totalAgentFee'))], ['Net Model Payout', pdf.money(pdf.sum(agents, 'totalNet'))]],
+            sections: agents.map(agent => ({
+                title: agent.name,
+                columns: ['#', 'Date', 'Model / Grade', 'Client', 'TRX', 'Gross', 'Admin Fee', 'Agent Fee', 'Net Payout'],
+                numeric: [4, 5, 6, 7, 8],
+                rows: agent.transactionRows.map((tx, index) => [index + 1, pdf.date(tx.date), tx.model + '\n' + tx.grade, tx.client, tx.trx, pdf.money(tx.gross), pdf.money(tx.adminFee), pdf.money(tx.agentFee), pdf.money(tx.net)]),
+                totals: ['TOTAL', '', '', '', pdf.sum(agent.transactionRows, 'trx'), pdf.money(agent.totalGross), pdf.money(agent.totalAdminFee), pdf.money(agent.totalAgentFee), pdf.money(agent.totalNet)]
+            })),
+            note: 'Gross - Admin Fee - Agent Fee = Net Model Payout.',
+            signatures: ['Prepared By', 'Finance Approval', 'Management']
+        });
     }
 
     function updateSummaryCards() {
@@ -885,73 +817,26 @@
 
 
     function exportTransactionPdf() {
-        if (!lastTransactionDetail) {
-            showToast('Detail transaksi belum dimuat', 'error');
-            return;
-        }
-        const { tx, model } = lastTransactionDetail;
-        const grossAmount = Number(tx.gross_amount || 0);
-        const adminFeeAmount = Number(tx.admin_fee || 0);
-        const agentFeeAmount = Number(tx.agent_fee_total || Math.max(grossAmount - adminFeeAmount - Number(tx.net_amount || 0), 0));
-        const netAmount = Number(tx.net_amount || 0);
-        const rateAmount = Number(tx.model_rate || model.rate || tx.current_model_rate || 0);
-        const slipNo = `SLIP-${String(tx.id || '').padStart(6, '0')}`;
-        const html = `<!doctype html>
-<html>
-<head>
-  <title>${slipNo}</title>
-  <style>
-    @page { size: A4; margin: 14mm; }
-    * { box-sizing: border-box; }
-    body { font-family: Inter, Arial, sans-serif; margin: 0; background: #eef2f7; color: #0f172a; }
-    .page { max-width: 760px; margin: 28px auto; background: #fff; border-radius: 20px; overflow: hidden; border: 1px solid #dbe3ef; box-shadow: 0 20px 60px rgba(15,23,42,.16); }
-    .hero { padding: 28px 32px; color: #fff; background: linear-gradient(135deg, #0f172a, #1d4ed8 58%, #16a34a); }
-    .brand { font-size: 24px; font-weight: 900; letter-spacing: .06em; }
-    .subtitle { margin-top: 6px; color: #dbeafe; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
-    .content { padding: 30px 32px; }
-    .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; margin-bottom: 24px; }
-    .label { color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: .10em; font-weight: 800; }
-    .value { font-weight: 900; margin-top: 5px; }
-    table { width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
-    th, td { padding: 14px 12px; border-bottom: 1px solid #e2e8f0; text-align: left; }
-    th { background: #0f172a; color: white; text-transform: uppercase; font-size: 10px; letter-spacing: .08em; }
-    .right { text-align: right; }
-    .total { font-size: 19px; font-weight: 900; color: #047857; }
-    .note { margin-top: 14px; color: #64748b; font-size: 12px; }
-    .signs { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 34px; }
-    .sign { text-align: center; color: #475569; font-size: 12px; padding-top: 56px; border-bottom: 1px solid #94a3b8; }
-    @media print { body { background: #fff; } .page { box-shadow: none; margin: 0; max-width: none; border-radius: 0; border: none; } .hero { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
-  </style>
-</head>
-<body>
-  <div class="page">
-    <div class="hero"><div class="brand">OMDoGaTot Agency</div><div class="subtitle">Enterprise Payroll Slip • ${slipNo}</div></div>
-    <div class="content">
-      <div class="meta">
-        <div><div class="label">Model</div><div class="value">${model.full_name || tx.model_name || '-'}</div></div>
-        <div><div class="label">Model Grade</div><div class="value">${model.grade_name || tx.model_grade_name || '-'}</div></div>
-        <div><div class="label">Client</div><div class="value">${tx.client_name || '-'}</div></div>
-        <div><div class="label">Date</div><div class="value">${formatDateSafe(tx.transaction_date)}</div></div>
-      </div>
-      <table>
-        <thead><tr><th>Description</th><th class="right">Amount</th></tr></thead>
-        <tbody>
-          <tr><td>Gross (${tx.transaction_count || 0} trx × ${formatCurrencySafe(rateAmount)})</td><td class="right">${formatCurrencySafe(grossAmount)}</td></tr>
-          <tr><td>Admin Fee</td><td class="right">-${formatCurrencySafe(adminFeeAmount)}</td></tr>
-          <tr><td>Agent Fee</td><td class="right">-${formatCurrencySafe(agentFeeAmount)}</td></tr>
-          <tr><td class="total">Net Model Payout</td><td class="right total">${formatCurrencySafe(netAmount)}</td></tr>
-        </tbody>
-      </table>
-      <div class="note"><strong>Formula:</strong> Gross - Admin Fee - Agent Fee = Net Model Payout. Notes: ${tx.notes || '-'}</div>
-      <div class="signs"><div class="sign">Finance</div><div class="sign">Model</div></div>
-    </div>
-  </div>
-  <script>window.onload = () => { window.print(); }<\/script>
-</body>
-</html>`;
-        const win = window.open('', '_blank');
-        win.document.write(html);
-        win.document.close();
+        if (!lastTransactionDetail) return showToast('Detail transaksi belum dimuat', 'error');
+        const { tx, model = {} } = lastTransactionDetail;
+        const pdf = SkyPdf;
+        const rate = tx.model_rate ?? model.rate ?? tx.current_model_rate ?? 0;
+        pdf.download({
+            prefix: 'SLIP', reference: `SLIP-${String(tx.id).padStart(6, '0')}`, title: 'Payroll Slip',
+            context: `Model: ${model.full_name || tx.model_name || '-'}  |  Grade: ${model.grade_name || tx.model_grade_name || '-'}\nClient: ${tx.client_name || '-'}  |  Date: ${pdf.date(tx.transaction_date)}`,
+            metrics: [['Net Model Payout', pdf.money(tx.net_amount)], ['Transactions', tx.transaction_count || 0]],
+            sections: [{
+                title: 'Payment Breakdown', columns: ['Description', 'Amount'], numeric: [1],
+                rows: [
+                    [`Gross (${tx.transaction_count || 0} TRX x ${pdf.money(rate)})`, pdf.money(tx.gross_amount)],
+                    ['Admin Fee', '-' + pdf.money(tx.admin_fee)],
+                    ['Agent Fee', '-' + pdf.money(getAgentFeeAmount(tx))]
+                ],
+                totals: ['NET MODEL PAYOUT', pdf.money(tx.net_amount)]
+            }],
+            note: `Gross - Admin Fee - Agent Fee = Net Model Payout.\nNotes: ${tx.notes || '-'}`,
+            signatures: ['Finance', 'Model']
+        });
     }
 
     async function openEditTransaction(id) {
@@ -1042,144 +927,56 @@
 
 
     function exportClientInvoice() {
-        const rows = filteredTransactions.length ? filteredTransactions : allTransactions;
-        if (!rows.length) {
-            showToast('Tidak ada transaksi untuk dibuat invoice', 'error');
-            return;
-        }
-        const clientMap = new Map();
-        rows.forEach((tx) => {
-            const client = tx.client_name || 'N/A';
-            if (!clientMap.has(client)) clientMap.set(client, []);
-            clientMap.get(client).push(tx);
+        const rows = filteredTransactions;
+        if (!rows.length) return showToast('Tidak ada transaksi untuk dibuat invoice', 'error');
+        const pdf = SkyPdf;
+        const clients = new Map();
+        rows.forEach(tx => {
+            const name = tx.client_name || 'N/A';
+            if (!clients.has(name)) clients.set(name, []);
+            clients.get(name).push(tx);
         });
-        const invoiceNo = `INV-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
-        const generatedAt = new Date().toLocaleString('id-ID');
-        const sections = Array.from(clientMap.entries()).map(([client, txRows]) => {
-            const total = txRows.reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
-            const lines = txRows.map((tx, index) => `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${formatDateSafe(tx.transaction_date)}</td>
-                    <td>${tx.model_name || '-'}</td>
-                    <td>${tx.model_grade_name || '-'}</td>
-                    <td class="right">${Number(tx.transaction_count || 0)}</td>
-                    <td class="right">${formatCurrencySafe(tx.model_rate || 0)}</td>
-                    <td class="right strong">${formatCurrencySafe(tx.gross_amount || 0)}</td>
-                </tr>`).join('');
-            return `<section class="client-section"><div class="client-head"><div><div class="label">Bill To</div><h2>${client}</h2></div><div class="client-total">${formatCurrencySafe(total)}</div></div><table><thead><tr><th>#</th><th>Date</th><th>Model</th><th>Grade</th><th class="right">Trx</th><th class="right">Rate</th><th class="right">Amount</th></tr></thead><tbody>${lines}</tbody></table></section>`;
-        }).join('');
-        const grandTotal = rows.reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
-        const html = `<!doctype html><html><head><title>${invoiceNo}</title><style>
-            @page { size: A4; margin: 14mm; } *{box-sizing:border-box} body{font-family:Inter,Arial,sans-serif;background:#eef2f7;color:#0f172a;margin:0}.page{max-width:900px;margin:24px auto;background:white;border-radius:22px;overflow:hidden;border:1px solid #dbe3ef;box-shadow:0 24px 70px rgba(15,23,42,.18)}.hero{padding:30px 34px;color:white;background:linear-gradient(135deg,#0f172a,#1d4ed8 55%,#16a34a)}.topline{display:flex;justify-content:space-between;gap:20px}.brand{font-size:28px;font-weight:900;letter-spacing:.06em}.subtitle{color:#dbeafe;text-transform:uppercase;font-size:12px;letter-spacing:.08em;margin-top:6px}.meta{text-align:right;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:12px 16px}.content{padding:30px 34px}.summary{display:flex;justify-content:space-between;align-items:center;border:1px solid #e2e8f0;border-radius:18px;padding:16px;margin-bottom:24px;background:#f8fafc}.label{color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:800}h2{margin:4px 0 0}.client-section{margin-top:24px}.client-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px}.client-total{font-size:22px;font-weight:900;color:#047857}table{width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden}th,td{padding:11px 10px;border-bottom:1px solid #e5e7eb;text-align:left}th{background:#0f172a;color:white;text-transform:uppercase;font-size:10px;letter-spacing:.08em}.right{text-align:right}.strong{font-weight:900}.footer{display:grid;grid-template-columns:1fr 1fr;margin-top:38px;gap:48px}.sign{text-align:center;color:#475569;font-size:12px;padding-top:58px;border-bottom:1px solid #94a3b8}@media print{body{background:white}.page{box-shadow:none;margin:0;max-width:none;border-radius:0;border:none}.hero{print-color-adjust:exact;-webkit-print-color-adjust:exact}}</style></head><body><div class="page"><div class="hero"><div class="topline"><div><div class="brand">OMDoGaTot Agency</div><div class="subtitle">Enterprise Client Invoice</div></div><div class="meta"><strong>${invoiceNo}</strong><br>${generatedAt}</div></div></div><div class="content"><div class="summary"><div><div class="label">Invoice Total</div><h2>${formatCurrencySafe(grandTotal)}</h2></div><div><div class="label">Clients</div><h2>${clientMap.size}</h2></div><div><div class="label">Transactions</div><h2>${rows.length}</h2></div></div>${sections}<div class="footer"><div class="sign">Finance</div><div class="sign">Client Approval</div></div></div></div><script>window.onload=()=>window.print();<\/script></body></html>`;
-        const win = window.open('', '_blank');
-        if (!win) return showToast('Popup diblokir browser. Izinkan popup untuk membuat invoice.', 'error');
-        win.document.write(html);
-        win.document.close();
+        pdf.download({
+            prefix: 'INV', title: 'Client Invoice Summary', confidential: false,
+            context: getPdfFilterContext(),
+            metrics: [['Invoice Total', pdf.money(pdf.sum(rows, 'gross_amount'))], ['Clients', clients.size], ['Records', rows.length]],
+            sections: Array.from(clients, ([client, records]) => ({
+                title: 'Bill To: ' + client,
+                columns: ['#', 'Date', 'Model / Grade', 'TRX', 'Rate', 'Amount'], numeric: [3, 4, 5],
+                rows: records.map((tx, index) => [index + 1, pdf.date(tx.transaction_date), (tx.model_name || '-') + '\n' + (tx.model_grade_name || '-'), tx.transaction_count || 0, pdf.money(tx.model_rate), pdf.money(tx.gross_amount)]),
+                totals: ['CLIENT TOTAL', '', '', pdf.sum(records, 'transaction_count'), '', pdf.money(pdf.sum(records, 'gross_amount'))]
+            })),
+            note: 'Amounts follow the selected transaction records. This document does not confirm payment.',
+            signatures: ['Finance', 'Client Approval']
+        });
+    }
+
+    function getPdfFilterContext() {
+        const model = document.getElementById('modelFilter');
+        const status = document.getElementById('statusFilter');
+        const from = document.getElementById('fromDate').value;
+        const to = document.getElementById('toDate').value;
+        return `Period: ${from ? SkyPdf.date(from) : 'All dates'} - ${to ? SkyPdf.date(to) : 'All dates'}  |  Model: ${model.selectedOptions[0]?.textContent || 'All Models'}  |  Status: ${status.selectedOptions[0]?.textContent || 'All Status'}`;
     }
 
     function exportTransactions() {
-        const rows = filteredTransactions.length ? filteredTransactions : allTransactions;
-        if (!rows.length) {
-            showToast('Tidak ada transaksi untuk diexport', 'error');
-            return;
-        }
-
-        const totalGross = rows.reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
-        const totalAdminFee = rows.reduce((sum, tx) => sum + Number(tx.admin_fee || 0), 0);
-        const totalAgentFee = rows.reduce((sum, tx) => {
-            const gross = Number(tx.gross_amount || 0);
-            const adminFee = Number(tx.admin_fee || 0);
-            const net = Number(tx.net_amount || 0);
-            return sum + Number(tx.agent_fee_total || Math.max(gross - adminFee - net, 0));
-        }, 0);
-        const totalNet = rows.reduce((sum, tx) => sum + Number(tx.net_amount || 0), 0);
-        const reportNo = `TXR-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
-        const generatedAt = new Date().toLocaleString('id-ID');
-        const tableRows = rows.map((tx, index) => {
-            const gross = Number(tx.gross_amount || 0);
-            const adminFee = Number(tx.admin_fee || 0);
-            const net = Number(tx.net_amount || 0);
-            const agentFee = Number(tx.agent_fee_total || Math.max(gross - adminFee - net, 0));
-            return `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${formatDateSafe(tx.transaction_date)}</td>
-                    <td>${tx.model_name || '-'}</td>
-                    <td>${tx.model_grade_name || '-'}</td>
-                    <td>${tx.client_name || '-'}</td>
-                    <td class="right">${Number(tx.transaction_count || 0)}</td>
-                    <td class="right">${formatCurrencySafe(gross)}</td>
-                    <td class="right">${formatCurrencySafe(adminFee)}</td>
-                    <td class="right">${formatCurrencySafe(agentFee)}</td>
-                    <td class="right strong">${formatCurrencySafe(net)}</td>
-                </tr>`;
-        }).join('');
-
-        const html = `<!doctype html>
-<html>
-<head>
-  <title>${reportNo}</title>
-  <style>
-    @page { size: A4 landscape; margin: 12mm; }
-    * { box-sizing: border-box; }
-    body { font-family: Inter, Arial, sans-serif; margin: 0; background: #e5e7eb; color: #0f172a; }
-    .page { max-width: 1180px; margin: 24px auto; background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 24px 70px rgba(15, 23, 42, .18); border: 1px solid #dbe3ef; }
-    .hero { position: relative; padding: 30px 34px; color: #fff; background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 52%, #16a34a 100%); }
-    .hero:after { content: 'CONFIDENTIAL'; position: absolute; right: 34px; bottom: 10px; font-size: 42px; font-weight: 900; letter-spacing: .14em; opacity: .08; }
-    .topline { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
-    .brand-wrap { display: flex; align-items: center; gap: 16px; }
-    .logo { width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28); font-size: 26px; font-weight: 900; }
-    .brand { font-size: 28px; font-weight: 900; letter-spacing: .06em; line-height: 1; }
-    .subtitle { color: #dbeafe; margin-top: 7px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
-    .report-meta { text-align: right; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.20); border-radius: 16px; padding: 12px 16px; min-width: 250px; }
-    .report-no { font-size: 20px; font-weight: 900; }
-    .generated { color: #e0f2fe; font-size: 12px; margin-top: 6px; }
-    .content { padding: 28px 34px 34px; }
-    .section-title { display: flex; justify-content: space-between; align-items: end; margin-bottom: 16px; }
-    .section-title h1 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
-    .pill { display: inline-flex; align-items: center; padding: 7px 12px; border-radius: 999px; background: #ecfdf5; color: #047857; font-weight: 800; font-size: 12px; border: 1px solid #bbf7d0; }
-    .summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin: 18px 0 26px; }
-    .card { border: 1px solid #e2e8f0; border-radius: 18px; padding: 16px; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); box-shadow: 0 8px 22px rgba(15,23,42,.06); }
-    .card.accent { border-left: 5px solid #2563eb; } .card.green { border-left: 5px solid #16a34a; } .card.orange { border-left: 5px solid #f59e0b; } .card.purple { border-left: 5px solid #7c3aed; } .card.dark { border-left: 5px solid #0f172a; }
-    .label { color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: .10em; font-weight: 800; }
-    .value { font-weight: 900; margin-top: 8px; font-size: 16px; letter-spacing: -.02em; }
-    .table-wrap { border: 1px solid #e2e8f0; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 30px rgba(15,23,42,.07); }
-    table { width: 100%; border-collapse: collapse; font-size: 11px; }
-    th, td { padding: 11px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
-    th { background: #0f172a; color: white; text-transform: uppercase; font-size: 9px; letter-spacing: .09em; white-space: nowrap; }
-    tbody tr:nth-child(even) { background: #f8fafc; }
-    .right { text-align: right; } .strong { font-weight: 900; color: #047857; }
-    .formula { margin: 16px 0 0; padding: 12px 14px; border-radius: 14px; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; font-size: 12px; }
-    .footer { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 44px; }
-    .sign-box { text-align: center; color: #475569; font-size: 12px; }
-    .sign-line { height: 58px; border-bottom: 1px solid #94a3b8; margin-bottom: 8px; }
-    .doc-footer { margin-top: 24px; padding-top: 14px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
-    @media print { body { background: #fff; } .page { box-shadow: none; margin: 0; max-width: none; border-radius: 0; border: none; } .hero { print-color-adjust: exact; -webkit-print-color-adjust: exact; } .card, .table-wrap { box-shadow: none; } }
-  </style>
-</head>
-<body>
-  <div class="page">
-    <div class="hero"><div class="topline"><div class="brand-wrap"><div class="logo">OM</div><div><div class="brand">OMDoGaTot Agency</div><div class="subtitle">Enterprise Transaction Payroll Report</div></div></div><div class="report-meta"><div class="report-no">${reportNo}</div><div class="generated">Generated: ${generatedAt}</div></div></div></div>
-    <div class="content">
-      <div class="section-title"><div><h1>Payroll Transaction Summary</h1><div class="label">Filtered export from agency transaction dashboard</div></div><div class="pill">Finance Ready</div></div>
-      <div class="summary"><div class="card accent"><div class="label">Records</div><div class="value">${rows.length}</div></div><div class="card green"><div class="label">Gross Revenue</div><div class="value">${formatCurrencySafe(totalGross)}</div></div><div class="card orange"><div class="label">Admin Fee</div><div class="value">${formatCurrencySafe(totalAdminFee)}</div></div><div class="card purple"><div class="label">Agent Fee</div><div class="value">${formatCurrencySafe(totalAgentFee)}</div></div><div class="card dark"><div class="label">Net Model Payout</div><div class="value">${formatCurrencySafe(totalNet)}</div></div></div>
-      <div class="table-wrap"><table><thead><tr><th>#</th><th>Date</th><th>Model</th><th>Grade</th><th>Client</th><th class="right">Trx</th><th class="right">Gross</th><th class="right">Admin</th><th class="right">Agent</th><th class="right">Net</th></tr></thead><tbody>${tableRows}</tbody></table></div>
-      <div class="formula"><strong>Formula:</strong> Gross - Admin Fee - Agent Fee = Net Model Payout. Export follows the currently filtered transaction list.</div>
-      <div class="footer"><div class="sign-box"><div class="sign-line"></div>Prepared By</div><div class="sign-box"><div class="sign-line"></div>Finance Approval</div><div class="sign-box"><div class="sign-line"></div>Management</div></div>
-      <div class="doc-footer"><span>Confidential Payroll Document</span><span>OMDoGaTot Agency</span></div>
-    </div>
-  </div>
-  <script>window.onload = () => { window.print(); }<\/script>
-</body>
-</html>`;
-        const win = window.open('', '_blank');
-        if (!win) {
-            showToast('Popup diblokir browser. Izinkan popup untuk export PDF.', 'error');
-            return;
-        }
-        win.document.write(html);
-        win.document.close();
+        const rows = filteredTransactions;
+        if (!rows.length) return showToast('Tidak ada transaksi untuk diexport', 'error');
+        const pdf = SkyPdf;
+        const agentTotal = rows.reduce((total, tx) => total + getAgentFeeAmount(tx), 0);
+        pdf.download({
+            prefix: 'TXR', title: 'Transaction & Payroll Report', landscape: true,
+            context: getPdfFilterContext(),
+            metrics: [['Records', rows.length], ['Gross Revenue', pdf.money(pdf.sum(rows, 'gross_amount'))], ['Admin Fee', pdf.money(pdf.sum(rows, 'admin_fee'))], ['Agent Fee', pdf.money(agentTotal)], ['Net Model Payout', pdf.money(pdf.sum(rows, 'net_amount'))]],
+            sections: [{
+                title: 'Transaction Register',
+                columns: ['#', 'Date', 'Model / Grade', 'Client', 'TRX', 'Gross', 'Admin Fee', 'Agent Fee', 'Net Payout'], numeric: [4, 5, 6, 7, 8],
+                rows: rows.map((tx, index) => [index + 1, pdf.date(tx.transaction_date), (tx.model_name || '-') + '\n' + (tx.model_grade_name || '-'), tx.client_name || '-', tx.transaction_count || 0, pdf.money(tx.gross_amount), pdf.money(tx.admin_fee), pdf.money(getAgentFeeAmount(tx)), pdf.money(tx.net_amount)]),
+                totals: ['TOTAL', '', '', '', pdf.sum(rows, 'transaction_count'), pdf.money(pdf.sum(rows, 'gross_amount')), pdf.money(pdf.sum(rows, 'admin_fee')), pdf.money(agentTotal), pdf.money(pdf.sum(rows, 'net_amount'))]
+            }],
+            note: 'Gross - Admin Fee - Agent Fee = Net Model Payout. All records matching the active filters are included, across all table pages.',
+            signatures: ['Prepared By', 'Finance Approval', 'Management']
+        });
     }
 
     async function loadClientKpis() {
