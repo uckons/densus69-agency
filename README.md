@@ -1,4 +1,4 @@
-# SkyLin Agency - Modeling Agency Management System
+# Sky Agency - Modeling Agency Management System
 
 A comprehensive, full-featured web-based modeling agency management system built without Docker, using modern web technologies.
 
@@ -46,8 +46,8 @@ Before you begin, ensure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/uckons/skylin-agency.git
-cd skylin-agency
+git clone https://github.com/uckons/densus69-agency.git
+cd densus69-agency
 ```
 
 ### 2. Install Dependencies
@@ -150,13 +150,13 @@ Auth pages expect logo file at:
 public/images/skylin-logo.png
 ```
 
-If the file is not present, UI will automatically show text fallback **SkyLin**.
+If the file is not present, UI will automatically show text fallback **Sky Agency**.
 
 
 ## 📁 Project Structure
 
 ```
-skylin-agency/
+densus69-agency/
 ├── config/
 │   └── database.js              # PostgreSQL connection
 ├── middleware/
@@ -230,7 +230,7 @@ Or manually insert an admin user in the database:
 ```sql
 -- Password: admin123
 INSERT INTO users (email, password, role) 
-VALUES ('admin@skylinagency.com', '$2a$10$YourHashedPasswordHere', 'admin');
+VALUES ('admin@densus69.my.id', '$2a$10$YourHashedPasswordHere', 'admin');
 ```
 
 ## 🔧 API Endpoints
@@ -328,7 +328,7 @@ Example:
 
 ```bash
 npm install -g pm2
-pm2 start server.js --name skylin-agency
+pm2 start server.js --name sky-agency
 pm2 save
 pm2 startup
 ```
