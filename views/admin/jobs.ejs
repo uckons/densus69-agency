@@ -32,6 +32,9 @@
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/admin-navigation.css">
     <script src="/js/admin-navigation.js" defer></script>
+    <script src="/vendor/jspdf/jspdf.umd.min.js" defer></script>
+    <script src="/vendor/jspdf-autotable/jspdf.plugin.autotable.min.js" defer></script>
+    <script src="/js/pdf-reports.js" defer></script>
 </head>
 <body class="bg-gray-50">
 
@@ -72,7 +75,7 @@
                                 <i class="fas fa-plus mr-2"></i>Add Job
                             </button>
                             <button onclick="exportJobs()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
-                                <i class="fas fa-file-export mr-2"></i>Export
+                                <i class="fas fa-file-pdf mr-2"></i>Export PDF
                             </button>
                         </div>
                     </div>
@@ -294,11 +297,11 @@
             document.getElementById('jobClientAddress').textContent = `Alamat: ${address}`;
         }
 
-        function filterJobs() {
+        function getFilteredJobs() {
             const search = document.getElementById('search').value.toLowerCase();
             const status = document.getElementById('statusFilter').value.toLowerCase();
 
-            const filteredJobs = jobsCache.filter((job) => {
+            return jobsCache.filter((job) => {
                 const matchSearch = !search ||
                     String(job.title || '').toLowerCase().includes(search) ||
                     String(job.client_name || '').toLowerCase().includes(search);
@@ -306,7 +309,10 @@
                 return matchSearch && matchStatus;
             });
 
-            renderJobs(filteredJobs);
+        }
+
+        function filterJobs() {
+            renderJobs(getFilteredJobs());
         }
         
         function resetFilters() {
@@ -599,7 +605,23 @@
         }
         
         function exportJobs() {
-            showToast('Export functionality coming soon!', 'info');
+            const rows = getFilteredJobs();
+            if (!rows.length) return showToast('Tidak ada job sesuai filter untuk diexport.', 'error');
+            const pdf = SkyPdf;
+            pdf.download({
+                prefix: 'JOB', title: 'Job & Assignment Report', landscape: true,
+                context: `Search: ${document.getElementById('search').value || 'All jobs'}  |  Status: ${document.getElementById('statusFilter').value || 'All status'}`,
+                metrics: [['Jobs', rows.length], ['Open', rows.filter(job => job.status === 'open').length], ['Assignments', pdf.sum(rows, 'assigned_model_count')], ['Offered Budget', pdf.money(pdf.sum(rows, 'payment_offered'))]],
+                sections: [{
+                    title: 'Job Register',
+                    columns: ['Job', 'Client', 'Date', 'Offered Payment', 'Assigned Models', 'Assigned', 'Unassigned', 'Status'], numeric: [3, 5, 6],
+                    rows: rows.map(job => [job.title || '-', job.client_name || '-', pdf.date(job.job_date), pdf.money(job.payment_offered),
+                        (job.assigned_models || []).map(model => model.full_name).join('\n') || '-',
+                        job.assigned_model_count || 0, job.unassigned_model_count || 0, job.status || '-'])
+                }],
+                note: 'Offered budget is the sum of payment offers, not realized revenue. Assignment figures follow the job dashboard and active filters.',
+                signatures: ['Operations', 'Management']
+            });
         }
 
         document.addEventListener('DOMContentLoaded', loadJobs);

@@ -10,6 +10,43 @@
     const text = value => String(value ?? '-').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
     const sum = (rows, key) => rows.reduce((total, row) => total + Number(row[key] || 0), 0);
 
+    function chartImages(configurations) {
+        if (typeof window.Chart !== 'function') throw new Error('Grafik belum termuat. Refresh halaman dan coba lagi.');
+        return configurations.map(({ title, type, data, horizontal = false }) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1200;
+            canvas.height = 600;
+            let chart;
+            try {
+                chart = new window.Chart(canvas, {
+                    type,
+                    data: structuredClone(data),
+                    options: {
+                        responsive: false, animation: false, devicePixelRatio: 1,
+                        ...(horizontal ? { indexAxis: 'y' } : {}),
+                        font: { family: 'Arial', size: 22 },
+                        plugins: { legend: { position: 'bottom', labels: { font: { size: 22 }, padding: 20 } } },
+                        ...(type === 'doughnut' ? {} : { scales: {
+                            x: { ticks: { font: { size: 20 }, maxRotation: 35 } },
+                            y: { beginAtZero: true, ticks: { font: { size: 20 } } }
+                        } })
+                    }
+                });
+                // Composite onto white so transparent charts render consistently in PDF viewers.
+                const background = document.createElement('canvas');
+                background.width = canvas.width;
+                background.height = canvas.height;
+                const context = background.getContext('2d');
+                context.fillStyle = '#FFFFFF';
+                context.fillRect(0, 0, background.width, background.height);
+                context.drawImage(canvas, 0, 0);
+                return { title, image: background.toDataURL('image/png'), aspect: canvas.width / canvas.height };
+            } finally {
+                chart?.destroy();
+            }
+        });
+    }
+
     function createReport(options) {
         if (!window.jspdf?.jsPDF) throw new Error('PDF belum termuat. Refresh halaman dan coba lagi.');
         const doc = new window.jspdf.jsPDF({ orientation: options.landscape ? 'landscape' : 'portrait', unit: 'mm', format: 'a4', compress: true });
@@ -74,6 +111,23 @@
             label(lines, margin, y, 8);
             y += lines.length * 4 + 6;
         }
+        const charts = options.charts || [];
+        for (let index = 0; index < charts.length; index += 2) {
+            if (height - 23 - y < 65) { doc.addPage(); y = 65; }
+            const cardHeight = Math.min(82, height - 23 - y);
+            const cardWidth = (usable - 6) / 2;
+            charts.slice(index, index + 2).forEach((chart, column) => {
+                const x = margin + column * (cardWidth + 6);
+                doc.setDrawColor(palette.line);
+                doc.roundedRect(x, y, cardWidth, cardHeight, 2, 2, 'S');
+                label(chart.title, x + 4, y + 7, 10, palette.ink, true);
+                const imageWidth = Math.min(cardWidth - 8, (cardHeight - 16) * chart.aspect);
+                const imageHeight = imageWidth / chart.aspect;
+                doc.addImage(chart.image, 'PNG', x + (cardWidth - imageWidth) / 2, y + 12, imageWidth, imageHeight);
+            });
+            y += cardHeight + 8;
+        }
+        if (charts.length && options.sections?.length) { doc.addPage(); y = 65; }
         for (const section of options.sections || []) {
             if (y > height - 55) { doc.addPage(); y = 65; }
             const columns = section.columns;
@@ -143,5 +197,5 @@
             if (typeof showToast === 'function') showToast(error.message || 'PDF gagal dibuat. Silakan coba lagi.', 'error');
         }
     }
-    window.SkyPdf = { download, money, date, sum };
+    window.SkyPdf = { download, chartImages, money, date, sum };
 })();

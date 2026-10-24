@@ -32,6 +32,9 @@
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/admin-navigation.css">
     <script src="/js/admin-navigation.js" defer></script>
+    <script src="/vendor/jspdf/jspdf.umd.min.js" defer></script>
+    <script src="/vendor/jspdf-autotable/jspdf.plugin.autotable.min.js" defer></script>
+    <script src="/js/pdf-reports.js" defer></script>
 </head>
 <body class="bg-gray-50">
 
@@ -72,7 +75,7 @@
                 <i class="fas fa-user-plus mr-2"></i>Add Manual Model
             </button>
             <button onclick="exportModels()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
-                <i class="fas fa-file-export mr-2"></i>Export
+                <i class="fas fa-file-pdf mr-2"></i>Export PDF
             </button>
         </div>
     </div>
@@ -382,9 +385,33 @@
     }
     
     function exportModels() {
-        showLoading();
-        window.location.href = '/admin/models/export';
-        setTimeout(hideLoading, 2000);
+        filterModels();
+        const visibleIds = new Set(Array.from(document.querySelectorAll('#models-table-body tr[data-model-id]'))
+            .filter(row => row.style.display !== 'none').map(row => row.dataset.modelId));
+        const rows = modelsCache.filter(model => visibleIds.has(String(model.id)));
+        if (!rows.length) return showToast('Tidak ada model sesuai filter untuk diexport.', 'error');
+        const pdf = SkyPdf;
+        const filters = ['search', 'statusFilter', 'genderFilter', 'cityFilter'].map(id => {
+            const element = document.getElementById(id);
+            return element.value ? `${element.previousElementSibling?.textContent.trim() || id}: ${element.value}` : '';
+        }).filter(Boolean).join(' | ');
+        pdf.download({
+            prefix: 'MDL', title: 'Model Directory', landscape: true,
+            context: filters || 'All models / All filters',
+            metrics: [['Models', rows.length], ['Vacant', rows.filter(model => model.status === 'vacant').length], ['Working', rows.filter(model => model.status === 'working').length], ['Agents', new Set(rows.map(model => model.agent_id ?? model.agent_name).filter(Boolean)).size]],
+            sections: [{
+                title: 'Model Register',
+                columns: ['Model / Email', 'Phone', 'Gender / Address', 'Grade / Rate per TRX', 'Agent', 'Model Fee / TRX', 'Agent Fee / TRX', 'Status'], numeric: [5, 6],
+                rows: rows.map(model => [
+                    (model.full_name || '-') + '\n' + (model.email || '-'), model.phone || '-',
+                    (model.gender || '-') + '\n' + (model.address || '-'),
+                    (model.grade_name || '-') + '\n' + pdf.money(model.grade_rate_per_trx ?? model.rate),
+                    model.agent_name || '-', pdf.money(model.estimated_model_fee), pdf.money(model.estimated_agent_fee), model.status || '-'
+                ])
+            }],
+            note: 'Model and agent fees are estimates per transaction, not cumulative payroll. This directory follows the visible model filters.',
+            signatures: ['Prepared By', 'Management']
+        });
     }
 
     async function loadModelsData() {

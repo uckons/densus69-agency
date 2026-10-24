@@ -29,7 +29,7 @@
             }
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="/vendor/chartjs/chart.umd.js"></script>
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/admin-navigation.css">
     <script src="/js/admin-navigation.js" defer></script>
@@ -359,8 +359,19 @@
         const pdf = SkyPdf;
         const from = document.getElementById('startDate').value;
         const to = document.getElementById('endDate').value;
+        let charts;
+        try {
+            charts = pdf.chartImages([
+                { title: 'Revenue Trend', type: 'line', data: { labels: chartData.revenueLabels || [], datasets: [{ label: 'Revenue', data: chartData.revenueData || [], borderColor: '#2563EB', backgroundColor: '#DBEAFE', fill: true, tension: 0.3 }] } },
+                { title: 'Revenue by Grade', type: 'doughnut', data: { labels: chartData.jobTypeLabels || [], datasets: [{ data: chartData.jobTypeData || [], backgroundColor: ['#2563EB', '#C59B52', '#16A34A', '#7C3AED', '#F97316', '#64748B'] }] } },
+                { title: 'Top Models', type: 'bar', horizontal: true, data: { labels: chartData.topModelsLabels || [], datasets: [{ label: 'Earnings', data: chartData.topModelsData || [], backgroundColor: '#7C3AED' }] } },
+                { title: 'Monthly Comparison', type: 'bar', data: { labels: chartData.monthlyLabels || [], datasets: [{ label: 'This Year', data: chartData.thisYearData || [], backgroundColor: '#2563EB' }, { label: 'Last Year', data: chartData.lastYearData || [], backgroundColor: '#94A3B8' }] } }
+            ]);
+        } catch (error) {
+            return showToast(error.message || 'Grafik PDF gagal dibuat.', 'error');
+        }
         pdf.download({
-            prefix: 'ANL', title: 'Revenue Analytics Report', landscape: true,
+            prefix: 'ANL', title: 'Revenue Analytics Report', landscape: true, charts,
             context: `Period: ${from ? pdf.date(from) : 'All dates'} - ${to ? pdf.date(to) : 'All dates'}`,
             metrics: [['Total Revenue', pdf.money(analyticsSummary.totalRevenue)], ['Avg Transaction', pdf.money(analyticsSummary.avgTransaction)], ['Commission Earned', pdf.money(analyticsSummary.totalCommission)], ['Top Model', analyticsSummary.topModelName || 'N/A'], ['Transactions', analyticsSummary.totalTransactions || 0]],
             sections: [{
