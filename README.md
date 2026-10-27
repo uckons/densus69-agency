@@ -281,20 +281,22 @@ VALUES ('admin@densus69.my.id', '$2a$10$YourHashedPasswordHere', 'admin');
 
 ## 💰 Transaction & Salary Calculation
 
-The system automatically calculates salaries using the formula:
+Client deductions are configured in **Clients**. Safety and admin fee are rates per TRX; other deductions apply once per recorded transaction. The transaction form contains **Denda** and **Cash Advance**.
 
-```
-Gross Amount = Transaction Count × Model Rate
-Admin Fee = Rp 50,000 (fixed)
-Net Amount = Gross Amount - Admin Fee
+```text
+Gross = TRX × Model Rate
+Net = Gross − ((Safety + Client Admin Fee) × TRX)
+      − Other Deductions − Denda − Cash Advance − Agent Fee
+Agent Fee = TRX × recorded agent flat rate
 ```
 
-Example:
-- Model Rate: Rp 200,000
-- Transactions: 5
-- Gross: 5 × 200,000 = Rp 1,000,000
-- Admin Fee: Rp 50,000
-- Net Salary: Rp 950,000
+Example: rate Rp 500,000, 3 TRX, safety Rp 10,000/TRX, admin Rp 5,000/TRX, other deductions Rp 25,000, denda Rp 20,000, cash advance Rp 50,000, and agent Rp 20,000/TRX produce **Rp 1,300,000 net**.
+
+Transaction rates are recorded at creation. Client/model rate changes affect future transactions; they do not rewrite existing payroll. Editing a transaction retains its saved rates unless its client changes. Changing the client uses that client's current deduction rates. An amount below zero remains a negative balance, following the formula.
+
+The server applies the additive migration in `database/payroll-schema.js` before listening. Existing gross/net amounts remain unchanged; an existing transaction's former admin fee is displayed as its historical denda. No manual schema reset is required.
+
+Run payroll regression tests with `node --test tests/payroll.test.js`.
 
 ## 🎨 UI/UX Guidelines
 

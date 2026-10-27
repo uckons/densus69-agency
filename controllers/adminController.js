@@ -46,20 +46,6 @@ async function ensureModelAgentColumns() {
     END $$;
   `);
 
-  await db.query(`
-    UPDATE transactions t
-    SET model_rate = COALESCE(m.rate, t.model_rate),
-        gross_amount = t.transaction_count * COALESCE(m.rate, t.model_rate),
-        net_amount = GREATEST(
-          (t.transaction_count * COALESCE(m.rate, t.model_rate))
-          - COALESCE(t.admin_fee, 0)
-          - (t.transaction_count * LEAST(COALESCE(m.agent_fee_flat, 0), COALESCE(m.rate, t.model_rate))),
-          0
-        )
-    FROM models m
-    WHERE t.model_id = m.id
-  `);
-
   const gradeCountResult = await db.query('SELECT COUNT(*)::int AS total FROM model_grades');
   if (gradeCountResult.rows[0].total === 0) {
     await db.query(`
@@ -378,15 +364,7 @@ exports.updateManualModel = async (req, res) => {
       ]
     );
 
-    await client.query(
-      `UPDATE transactions
-       SET model_rate = $1::numeric,
-           gross_amount = transaction_count * $1::numeric,
-           net_amount = GREATEST((transaction_count * $1::numeric) - COALESCE(admin_fee, 0) - (transaction_count * LEAST($2::numeric, $1::numeric)), 0)
-       WHERE model_id = $3`,
-      [parsedRate, parsedAgentFeeFlat, id]
-    );
-
+    // Existing transactions retain their recorded rates and deductions.
     await client.query('COMMIT');
 
     return res.json({

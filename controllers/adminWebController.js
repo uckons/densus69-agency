@@ -155,7 +155,7 @@ exports.showTransactions = async (req, res) => {
         m.full_name as model_name,
         g.grade_name as model_grade_name,
         a.full_name as agent_name,
-        GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0), 0) as agent_fee_total
+        COALESCE(t.agent_fee_amount, GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0), 0)) as agent_fee_total
       FROM transactions t
       LEFT JOIN models m ON t.model_id = m.id
       LEFT JOIN model_grades g ON m.grade_id = g.id
@@ -185,7 +185,7 @@ exports.showAnalytics = async (req, res) => {
         t.*,
         m.full_name AS model_name,
         g.grade_name AS model_grade_name,
-        GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0), 0) AS agent_fee_total
+        COALESCE(t.agent_fee_amount, GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0), 0)) AS agent_fee_total
       FROM transactions t
       LEFT JOIN models m ON t.model_id = m.id
       LEFT JOIN model_grades g ON m.grade_id = g.id

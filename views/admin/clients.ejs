@@ -48,7 +48,7 @@
             </div>
             <div class="bg-white rounded-xl shadow-md overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs uppercase">Client</th><th class="px-6 py-3 text-left text-xs uppercase">Alamat</th><th class="px-6 py-3 text-left text-xs uppercase">Contact</th><th class="px-6 py-3 text-right text-xs uppercase">Aksi</th></tr></thead>
+                    <thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs uppercase">Client</th><th class="px-6 py-3 text-left text-xs uppercase">Alamat</th><th class="px-6 py-3 text-left text-xs uppercase">Contact</th><th class="px-6 py-3 text-left text-xs uppercase">Safety / TRX</th><th class="px-6 py-3 text-left text-xs uppercase">Admin Fee / TRX</th><th class="px-6 py-3 text-left text-xs uppercase">Lain-lain / Pencatatan</th><th class="px-6 py-3 text-right text-xs uppercase">Aksi</th></tr></thead>
                     <tbody id="clientsBody" class="divide-y divide-gray-200"></tbody>
                 </table>
             </div>
@@ -57,7 +57,7 @@
 </div>
 
 <div id="clientModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-xl p-6">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-xl max-h-[90dvh] overflow-y-auto p-6">
         <h3 id="clientModalTitle" class="text-xl font-bold mb-4">Tambah Client</h3>
         <input type="hidden" id="clientId">
         <div class="space-y-3">
@@ -65,6 +65,12 @@
             <textarea id="clientAddress" rows="2" placeholder="Alamat" class="w-full border rounded-lg px-3 py-2"></textarea>
             <input id="clientContactName" type="text" placeholder="Nama Contact" class="w-full border rounded-lg px-3 py-2">
             <input id="clientContactPhone" type="text" placeholder="No Contact" class="w-full border rounded-lg px-3 py-2">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <label class="text-sm">Safety / TRX (Rp)<input id="clientSafetyFee" type="number" min="0" step="0.01" value="0" class="w-full border rounded-lg px-3 py-2"></label>
+                <label class="text-sm">Admin Fee / TRX (Rp)<input id="clientAdminFee" type="number" min="0" step="0.01" value="0" class="w-full border rounded-lg px-3 py-2"></label>
+                <label class="text-sm">Lain-lain (Rp)<input id="clientOtherDeduction" type="number" min="0" step="0.01" value="0" class="w-full border rounded-lg px-3 py-2"></label>
+            </div>
+            <p class="text-xs text-gray-500">Safety dan admin fee dikalikan jumlah TRX. Lain-lain dipotong sekali per pencatatan transaksi. Tarif baru tidak mengubah transaksi yang sudah tersimpan.</p>
         </div>
         <div class="flex justify-end gap-2 mt-6">
             <button onclick="closeClientModal()" class="px-4 py-2 border rounded-lg">Cancel</button>
@@ -84,8 +90,8 @@ async function loadClients(){
 }
 function renderClients(){
   const body=document.getElementById('clientsBody');
-  if(!clientsCache.length){body.innerHTML='<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">Belum ada client</td></tr>';return;}
-  body.innerHTML=clientsCache.map(c=>`<tr><td class="px-6 py-4">${c.client_name||'-'}</td><td class="px-6 py-4">${c.address||'-'}</td><td class="px-6 py-4">${c.contact_name||'-'} (${c.contact_phone||'-'})</td><td class="px-6 py-4 text-right"><button onclick="openClientModal(${c.id})" class="text-blue-600 mr-2"><i class="fas fa-edit"></i></button><button onclick="deleteClient(${c.id})" class="text-red-600"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+  if(!clientsCache.length){body.innerHTML='<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Belum ada client</td></tr>';return;}
+  body.innerHTML=clientsCache.map(c=>`<tr><td class="px-6 py-4">${c.client_name||'-'}</td><td class="px-6 py-4">${c.address||'-'}</td><td class="px-6 py-4">${c.contact_name||'-'} (${c.contact_phone||'-'})</td><td class="px-6 py-4">Rp ${Number(c.safety_fee||0).toLocaleString('id-ID')}</td><td class="px-6 py-4">Rp ${Number(c.admin_fee||0).toLocaleString('id-ID')}</td><td class="px-6 py-4">Rp ${Number(c.other_deduction||0).toLocaleString('id-ID')}</td><td class="px-6 py-4 text-right"><button onclick="openClientModal(${c.id})" class="text-blue-600 mr-2"><i class="fas fa-edit"></i></button><button onclick="deleteClient(${c.id})" class="text-red-600"><i class="fas fa-trash"></i></button></td></tr>`).join('');
 }
 function openClientModal(id=null){
   document.getElementById('clientId').value='';
@@ -93,6 +99,7 @@ function openClientModal(id=null){
   document.getElementById('clientAddress').value='';
   document.getElementById('clientContactName').value='';
   document.getElementById('clientContactPhone').value='';
+  ['clientSafetyFee','clientAdminFee','clientOtherDeduction'].forEach(id=>document.getElementById(id).value=0);
   document.getElementById('clientModalTitle').textContent='Tambah Client';
   if(id){
     const c=clientsCache.find(x=>Number(x.id)===Number(id));
@@ -102,6 +109,9 @@ function openClientModal(id=null){
     document.getElementById('clientAddress').value=c.address||'';
     document.getElementById('clientContactName').value=c.contact_name||'';
     document.getElementById('clientContactPhone').value=c.contact_phone||'';
+    document.getElementById('clientSafetyFee').value=c.safety_fee||0;
+    document.getElementById('clientAdminFee').value=c.admin_fee||0;
+    document.getElementById('clientOtherDeduction').value=c.other_deduction||0;
     document.getElementById('clientModalTitle').textContent='Edit Client';
   }
   document.getElementById('clientModal').classList.remove('hidden');
@@ -113,8 +123,12 @@ async function submitClient(){
     client_name:document.getElementById('clientName').value.trim(),
     address:document.getElementById('clientAddress').value.trim(),
     contact_name:document.getElementById('clientContactName').value.trim(),
-    contact_phone:document.getElementById('clientContactPhone').value.trim()
+    contact_phone:document.getElementById('clientContactPhone').value.trim(),
+    safety_fee:Number(document.getElementById('clientSafetyFee').value),
+    admin_fee:Number(document.getElementById('clientAdminFee').value),
+    other_deduction:Number(document.getElementById('clientOtherDeduction').value)
   };
+  if([payload.safety_fee,payload.admin_fee,payload.other_deduction].some(v=>!Number.isFinite(v)||v<0)){showToast('Potongan harus angka nol atau lebih','error');return;}
   if(!payload.client_name){showToast('Nama client wajib diisi','error');return;}
   const url=id?`/api/admin/clients/${id}`:'/api/admin/clients';
   const method=id?'PUT':'POST';

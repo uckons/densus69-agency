@@ -8,6 +8,7 @@ const startServer = async () => {
   try {
     // Test database connection
     await db.query('SELECT NOW()');
+    await require('./database/payroll-schema')();
     console.log('✓ Database connection successful');
     
     // Start server

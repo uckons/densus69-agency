@@ -1,6 +1,33 @@
 const { Transaction, Model } = require('../models');
 const db = require('../config/database');
-const { calculateSalary } = require('../utils/calculation');
+const ensurePayrollSchema = require('../database/payroll-schema');
+
+function money(value, name) {
+  const result = Number(value ?? 0);
+  if (!Number.isFinite(result) || result < 0 || result > 9999999999.99) {
+    const error = new Error(`${name} harus berupa angka nol atau lebih`);
+    error.status = 400; throw error;
+  }
+  return Math.round(result * 100) / 100;
+}
+function count(value) {
+  const result = Number(value);
+  if (!Number.isSafeInteger(result) || result < 1) {
+    const error = new Error('Jumlah TRX harus bilangan bulat positif');
+    error.status = 400; throw error;
+  }
+  return result;
+}
+async function clientSnapshot(name) {
+  await ensurePayrollSchema();
+  const result = await db.query('SELECT * FROM clients WHERE LOWER(TRIM(client_name)) = LOWER(TRIM($1))', [name]);
+  if (result.rows.length !== 1) {
+    const error = new Error('Pilih client yang sudah terdaftar di menu Clients');
+    error.status = 400; throw error;
+  }
+  const client = result.rows[0];
+  return { client_name: client.client_name, safety_fee: Number(client.safety_fee), client_admin_fee: Number(client.admin_fee), other_deduction: Number(client.other_deduction) };
+}
 
 /**
  * Get models that are assigned to jobs
@@ -29,7 +56,7 @@ exports.getAssignedModels = async (req, res) => {
     return res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Get assigned models error:', error);
-    return res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    return res.status(error.status || 500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 
@@ -88,27 +115,15 @@ exports.createTransaction = async (req, res) => {
       });
     }
 
-    // Calculate amounts
-    const parsedAdminFee = Number(admin_fee || 0);
-
-    const { grossAmount, adminFee, netAmount } = calculateSalary(
-      parseInt(transaction_count),
-      parseFloat(model.rate),
-      parsedAdminFee,
-      parseFloat(model.agent_fee_flat || 0)
-    );
-
-    // Create transaction
+    const snapshot = await clientSnapshot(client_name);
     const transaction = await Transaction.create({
-      model_id,
-      client_name,
-      transaction_count: parseInt(transaction_count),
-      transaction_date,
-      model_rate: parseFloat(model.rate),
-      admin_fee: adminFee,
-      agent_fee_flat: parseFloat(model.agent_fee_flat || 0),
-      notes: description || null,
-      created_by: req.user?.id || null
+      ...snapshot, model_id,
+      transaction_count: count(transaction_count), transaction_date,
+      model_rate: Number(model.rate),
+      fine: money(req.body.fine ?? admin_fee, 'Denda'),
+      cash_advance: money(req.body.cash_advance, 'Cash Advance'),
+      agent_fee_per_trx: Math.min(Number(model.agent_fee_flat || 0), Number(model.rate)),
+      notes: description || null, created_by: req.user?.userId || req.user?.id || null
     });
 
     res.status(201).json({
@@ -118,9 +133,9 @@ exports.createTransaction = async (req, res) => {
     });
   } catch (error) {
     console.error('Create transaction error:', error);
-    res.status(500).json({
+    res.status(error.status || 500).json({
       success: false,
-      message: 'Server error',
+      message: error.status === 400 ? error.message : 'Server error',
       error: error.message
     });
   }
@@ -163,7 +178,7 @@ exports.getClientKpis = async (req, res) => {
     });
   } catch (error) {
     console.error('Get client KPI error:', error);
-    return res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    return res.status(error.status || 500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 
@@ -205,9 +220,9 @@ exports.getTransactions = async (req, res) => {
     });
   } catch (error) {
     console.error('Get transactions error:', error);
-    res.status(500).json({
+    res.status(error.status || 500).json({
       success: false,
-      message: 'Server error',
+      message: error.status === 400 ? error.message : 'Server error',
       error: error.message
     });
   }
@@ -245,9 +260,9 @@ exports.getTransactionById = async (req, res) => {
     });
   } catch (error) {
     console.error('Get transaction error:', error);
-    res.status(500).json({
+    res.status(error.status || 500).json({
       success: false,
-      message: 'Server error',
+      message: error.status === 400 ? error.message : 'Server error',
       error: error.message
     });
   }
@@ -285,45 +300,29 @@ exports.updateTransaction = async (req, res) => {
       });
     }
 
-    const updateData = {};
-
-    // If transaction_count or admin fee is updated, recalculate amounts
-    if ((transaction_count !== undefined && transaction_count !== null && transaction_count !== '') || admin_fee !== undefined) {
-      const parsedTransactionCount = transaction_count !== undefined && transaction_count !== null && transaction_count !== ''
-        ? parseInt(transaction_count)
-        : parseInt(transaction.transaction_count || 0);
-      const parsedAdminFee = admin_fee !== undefined ? Number(admin_fee || 0) : Number(transaction.admin_fee || 0);
-      const { grossAmount, adminFee, netAmount } = calculateSalary(
-        parsedTransactionCount,
-        parseFloat(model.rate),
-        parsedAdminFee,
-        parseFloat(model.agent_fee_flat || 0)
-      );
-      
-      updateData.transaction_count = parsedTransactionCount;
-      updateData.gross_amount = grossAmount;
-      updateData.admin_fee = adminFee;
-      updateData.agent_fee_flat = parseFloat(model.agent_fee_flat || 0);
-      updateData.net_amount = netAmount;
-    }
-
-    if (client_name !== undefined) {
-      updateData.client_name = String(client_name || '').trim();
-    }
-
-    if (transaction_date) {
-      updateData.transaction_date = transaction_date;
-    }
-
-    if (description !== undefined) {
-      updateData.notes = description;
-    }
-
-    if (notes !== undefined) {
-      updateData.notes = notes;
-    }
-
-    await Transaction.update(id, updateData);
+    await ensurePayrollSchema();
+    const name = client_name === undefined ? transaction.client_name : String(client_name).trim();
+    const changedClient = name.toLowerCase() !== String(transaction.client_name).trim().toLowerCase();
+    const snapshot = changedClient ? await clientSnapshot(name) : {
+      client_name: transaction.client_name,
+      safety_fee: Number(transaction.safety_fee || 0),
+      client_admin_fee: Number(transaction.client_admin_fee || 0),
+      other_deduction: Number(transaction.other_deduction || 0)
+    };
+    const newFine = money(req.body.fine ?? admin_fee ?? transaction.fine ?? transaction.admin_fee, 'Denda');
+    const newCash = money(req.body.cash_advance ?? transaction.cash_advance, 'Cash Advance');
+    const newCount = count(transaction_count ?? transaction.transaction_count);
+    await Transaction.update(id, {
+      ...snapshot,
+      preserveAmounts: !changedClient && newFine === Number(transaction.fine ?? transaction.admin_fee) && newCash === Number(transaction.cash_advance || 0) && newCount === Number(transaction.transaction_count),
+      transaction_date: transaction_date || transaction.transaction_date,
+      transaction_count: newCount,
+      model_rate: Number(transaction.model_rate),
+      fine: newFine,
+      cash_advance: newCash,
+      agent_fee_per_trx: Number(transaction.agent_fee_per_trx ?? (Number(transaction.agent_fee_total || 0) / Number(transaction.transaction_count))),
+      notes: notes ?? description ?? transaction.notes
+    });
 
     const updatedTransaction = await Transaction.findById(id);
 
@@ -334,9 +333,9 @@ exports.updateTransaction = async (req, res) => {
     });
   } catch (error) {
     console.error('Update transaction error:', error);
-    res.status(500).json({
+    res.status(error.status || 500).json({
       success: false,
-      message: 'Server error',
+      message: error.status === 400 ? error.message : 'Server error',
       error: error.message
     });
   }
@@ -365,9 +364,9 @@ exports.deleteTransaction = async (req, res) => {
     });
   } catch (error) {
     console.error('Delete transaction error:', error);
-    res.status(500).json({
+    res.status(error.status || 500).json({
       success: false,
-      message: 'Server error',
+      message: error.status === 400 ? error.message : 'Server error',
       error: error.message
     });
   }

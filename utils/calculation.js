@@ -1,22 +1,10 @@
-/**
- * Calculate salary for a transaction
- * Formula: (Transaction Count × Model Rate) - Admin Fee - (Agent Flat Fee × Transaction Count)
- */
-const calculateSalary = (transactionCount, modelRate, adminFee = 50000, agentFeeFlat = 0) => {
-  const safeTransactionCount = Number(transactionCount || 0);
-  const safeModelRate = Number(modelRate || 0);
-  const safeAdminFee = Number(adminFee || 0);
-  const safeAgentFeeFlat = Number(agentFeeFlat || 0);
-  const grossAmount = safeTransactionCount * safeModelRate;
-  const totalAgentFee = safeTransactionCount * Math.min(safeAgentFeeFlat, safeModelRate);
-  const netAmount = Math.max(grossAmount - safeAdminFee - totalAgentFee, 0);
-  
-  return {
-    grossAmount,
-    adminFee: safeAdminFee,
-    agentFee: totalAgentFee,
-    netAmount
-  };
+const Payroll = require('../public/js/payroll');
+
+// Client safety/admin rates apply per TRX; other deductions apply once.
+const calculateSalary = (transactionCount, modelRate, fine = 0, agentFeeFlat = 0, clientFees = {}) => {
+  const values = Payroll.calculate({ transaction_count: transactionCount, model_rate: modelRate,
+    fine, agent_fee_per_trx: agentFeeFlat, ...clientFees });
+  return { ...values, grossAmount: values.gross, adminFee: values.admin, agentFee: values.agent, netAmount: values.net };
 };
 
 /**

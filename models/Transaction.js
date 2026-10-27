@@ -1,33 +1,23 @@
 const db = require('../config/database');
+const Payroll = require('../public/js/payroll');
 
 const Transaction = {
   // Create a new transaction
-  create: async (transactionData) => {
-    const {
-      model_id, client_name, transaction_date, transaction_count,
-      model_rate, admin_fee = 50000, agent_fee_flat = 0, notes, created_by
-    } = transactionData;
-
-    // Calculate amounts
-    const gross_amount = transaction_count * model_rate;
-    const total_agent_fee = transaction_count * Math.min(Number(agent_fee_flat || 0), Number(model_rate || 0));
-    const net_amount = Math.max(gross_amount - admin_fee - total_agent_fee, 0);
-
-    const query = `
-      INSERT INTO transactions (
-        model_id, client_name, transaction_date, transaction_count,
-        model_rate, admin_fee, gross_amount, net_amount, notes, created_by
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-      RETURNING *
-    `;
-
-    const params = [
-      model_id, client_name, transaction_date, transaction_count,
-      model_rate, admin_fee, gross_amount, net_amount, notes, created_by
-    ];
-
-    const result = await db.query(query, params);
+  create: async (data) => {
+    const totals = Payroll.calculate(data);
+    const values = {
+      model_id: data.model_id, client_name: data.client_name,
+      transaction_date: data.transaction_date, transaction_count: data.transaction_count,
+      model_rate: data.model_rate, admin_fee: totals.admin,
+      gross_amount: totals.gross, net_amount: totals.net,
+      notes: data.notes ?? null, created_by: data.created_by ?? null,
+      safety_fee: data.safety_fee, client_admin_fee: data.client_admin_fee,
+      other_deduction: data.other_deduction, fine: totals.fine,
+      cash_advance: totals.cash, agent_fee_per_trx: data.agent_fee_per_trx,
+      agent_fee_amount: totals.agent, deduction_version: 2
+    };
+    const columns = Object.keys(values);
+    const result = await db.query(`INSERT INTO transactions (${columns.join(', ')}) VALUES (${columns.map((_, index) => '$' + (index + 1)).join(', ')}) RETURNING *`, Object.values(values));
     return result.rows[0];
   },
 
@@ -41,7 +31,7 @@ const Transaction = {
         COALESCE(m.agent_fee_flat, 0) as current_agent_fee_flat,
         g.grade_name as model_grade_name,
         g.rate_per_trx as model_grade_rate,
-        GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0), 0) as agent_fee_total,
+        COALESCE(t.agent_fee_amount, GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0), 0)) as agent_fee_total,
         u.email as created_by_email
       FROM transactions t
       LEFT JOIN models m ON t.model_id = m.id
@@ -60,7 +50,7 @@ const Transaction = {
         t.*,
         m.full_name as model_name,
         g.grade_name as model_grade_name,
-        GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0), 0) as agent_fee_total
+        COALESCE(t.agent_fee_amount, GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0), 0)) as agent_fee_total
       FROM transactions t
       LEFT JOIN models m ON t.model_id = m.id
       LEFT JOIN model_grades g ON m.grade_id = g.id
@@ -165,96 +155,24 @@ const Transaction = {
   },
 
   // Update transaction
-  update: async (id, transactionData) => {
-    const {
-      model_id, client_name, transaction_date, transaction_count,
-      model_rate, admin_fee, agent_fee_flat, notes
-    } = transactionData;
-
-    const updates = [];
-    const params = [];
-    let paramCount = 1;
-
-    if (model_id !== undefined) {
-      updates.push(`model_id = $${paramCount}`);
-      params.push(model_id);
-      paramCount++;
+  update: async (id, data) => {
+    if (data.preserveAmounts) {
+      const result = await db.query('UPDATE transactions SET client_name=$1, transaction_date=$2, notes=$3 WHERE id=$4 RETURNING *', [data.client_name, data.transaction_date, data.notes, id]);
+      return result.rows[0];
     }
-
-    if (client_name !== undefined) {
-      updates.push(`client_name = $${paramCount}`);
-      params.push(client_name);
-      paramCount++;
-    }
-
-    if (transaction_date !== undefined) {
-      updates.push(`transaction_date = $${paramCount}`);
-      params.push(transaction_date);
-      paramCount++;
-    }
-
-    if (transaction_count !== undefined) {
-      updates.push(`transaction_count = $${paramCount}`);
-      params.push(transaction_count);
-      paramCount++;
-    }
-
-    if (model_rate !== undefined) {
-      updates.push(`model_rate = $${paramCount}`);
-      params.push(model_rate);
-      paramCount++;
-    }
-
-    if (admin_fee !== undefined) {
-      updates.push(`admin_fee = $${paramCount}`);
-      params.push(admin_fee);
-      paramCount++;
-    }
-
-    if (notes !== undefined) {
-      updates.push(`notes = $${paramCount}`);
-      params.push(notes);
-      paramCount++;
-    }
-
-    // Recalculate amounts if relevant fields changed
-    if (transaction_count !== undefined || model_rate !== undefined || admin_fee !== undefined || agent_fee_flat !== undefined) {
-      // Get current values
-      const current = await db.query('SELECT * FROM transactions WHERE id = $1', [id]);
-      if (current.rows.length > 0) {
-        const currentTx = current.rows[0];
-        const newCount = transaction_count !== undefined ? transaction_count : currentTx.transaction_count;
-        const newRate = model_rate !== undefined ? model_rate : currentTx.model_rate;
-        const newFee = admin_fee !== undefined ? admin_fee : currentTx.admin_fee;
-        const newAgentFeeFlat = agent_fee_flat !== undefined ? agent_fee_flat : 0;
-
-        const gross_amount = newCount * newRate;
-        const total_agent_fee = newCount * Math.min(Number(newAgentFeeFlat || 0), Number(newRate || 0));
-        const net_amount = Math.max(gross_amount - newFee - total_agent_fee, 0);
-
-        updates.push(`gross_amount = $${paramCount}`);
-        params.push(gross_amount);
-        paramCount++;
-
-        updates.push(`net_amount = $${paramCount}`);
-        params.push(net_amount);
-        paramCount++;
-      }
-    }
-
-    if (updates.length === 0) {
-      throw new Error('No fields to update');
-    }
-
-    params.push(id);
-    const query = `
-      UPDATE transactions 
-      SET ${updates.join(', ')}
-      WHERE id = $${paramCount}
-      RETURNING *
-    `;
-
-    const result = await db.query(query, params);
+    const totals = Payroll.calculate(data);
+    const values = {
+      client_name: data.client_name, transaction_date: data.transaction_date,
+      transaction_count: data.transaction_count, model_rate: data.model_rate,
+      admin_fee: totals.admin, gross_amount: totals.gross, net_amount: totals.net,
+      notes: data.notes, safety_fee: data.safety_fee,
+      client_admin_fee: data.client_admin_fee, other_deduction: data.other_deduction,
+      fine: totals.fine, cash_advance: totals.cash,
+      agent_fee_per_trx: data.agent_fee_per_trx, agent_fee_amount: totals.agent,
+      deduction_version: 2
+    };
+    const columns = Object.keys(values);
+    const result = await db.query(`UPDATE transactions SET ${columns.map((name, i) => name + ' = $' + (i + 1)).join(', ')} WHERE id = $${columns.length + 1} RETURNING *`, [...Object.values(values), id]);
     return result.rows[0];
   },
 
