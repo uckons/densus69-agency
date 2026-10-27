@@ -298,7 +298,13 @@ Transaction rates are recorded at creation. Client/model rate changes affect fut
 
 The server applies the additive migration in `database/payroll-schema.js` before listening. Existing gross/net amounts remain unchanged; an existing transaction's former admin fee is displayed as its historical denda. No manual schema reset is required.
 
-Run payroll regression tests with `node --test tests/payroll.test.js`.
+Client payments are recorded from **Transactions → Bayar**. Enter the actual amount, receipt date, method and optional reference. Partial payments are supported. Dashboard, Transactions and Analytics revenue use active payment receipts by **payment date**, independently of the invoice transaction date. Invoice totals and unpaid balances are displayed separately. Historical transactions begin unpaid until their actual payments are entered; no receipts are inferred from recorded payroll.
+
+Incorrect receipts can be voided with a reason; the audit history remains. Duplicate request keys are idempotent and payments cannot exceed the remaining invoice balance. Paid invoices cannot be reduced below active receipts or moved to another client. Transactions with any payment history cannot be deleted.
+
+The additive startup migration also creates `client_payments` and its indexes. Existing payroll and invoice amounts remain unchanged.
+
+Run regression tests with `node --test tests/*.test.js`.
 
 ## 🎨 UI/UX Guidelines
 

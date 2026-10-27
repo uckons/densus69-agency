@@ -156,9 +156,19 @@ const Transaction = {
 
   // Update transaction
   update: async (id, data) => {
+    await require('../database/payroll-schema')();
+    const client = await db.pool.connect();
+    try {
+    await client.query('BEGIN');
+    const current = (await client.query('SELECT * FROM transactions WHERE id=$1 FOR UPDATE', [id])).rows[0];
+    if (!current) throw Object.assign(new Error('Transaksi tidak ditemukan'), {status:404});
+    const paid = (await client.query('SELECT COALESCE(SUM(amount),0) AS total FROM client_payments WHERE transaction_id=$1 AND voided_at IS NULL', [id])).rows[0].total;
+    if (!data.preserveAmounts && Math.round(Payroll.invoice(data).total * 100) < Math.round(Number(paid) * 100)) throw Object.assign(new Error('Tagihan tidak boleh lebih kecil dari pembayaran yang sudah diterima. Batalkan pembayaran yang keliru terlebih dahulu.'), {status:409});
+    if (data.client_name !== current.client_name && Number(paid) > 0) throw Object.assign(new Error('Client tidak dapat diganti setelah ada pembayaran aktif'), {status:409});
     if (data.preserveAmounts) {
-      const result = await db.query('UPDATE transactions SET client_name=$1, transaction_date=$2, notes=$3 WHERE id=$4 RETURNING *', [data.client_name, data.transaction_date, data.notes, id]);
-      return result.rows[0];
+      const result = await client.query('UPDATE transactions SET client_name=$1, transaction_date=$2, notes=$3 WHERE id=$4 RETURNING *', [data.client_name, data.transaction_date, data.notes, id]);
+      await client.query('COMMIT');
+    return result.rows[0];
     }
     const totals = Payroll.calculate(data);
     const values = {
@@ -172,8 +182,11 @@ const Transaction = {
       deduction_version: 2
     };
     const columns = Object.keys(values);
-    const result = await db.query(`UPDATE transactions SET ${columns.map((name, i) => name + ' = $' + (i + 1)).join(', ')} WHERE id = $${columns.length + 1} RETURNING *`, [...Object.values(values), id]);
+    const result = await client.query(`UPDATE transactions SET ${columns.map((name, i) => name + ' = $' + (i + 1)).join(', ')} WHERE id = $${columns.length + 1} RETURNING *`, [...Object.values(values), id]);
+    await client.query('COMMIT');
     return result.rows[0];
+    } catch (error) { await client.query('ROLLBACK'); throw error; }
+    finally { client.release(); }
   },
 
   // Delete transaction

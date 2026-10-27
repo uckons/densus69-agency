@@ -37,6 +37,7 @@
     <script src="/vendor/jspdf-autotable/jspdf.plugin.autotable.min.js" defer></script>
     <script src="/js/pdf-reports.js" defer></script>
     <script src="/js/payroll.js"></script>
+    <script src="/js/client-payments.js" defer></script>
 </head>
 <body class="bg-gray-50">
 
@@ -106,7 +107,7 @@
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
                         onchange="filterTransactions()">
                     <option value="">All Status</option>
-                    <option value="recorded">Recorded</option>
+                    <option value="unpaid">Belum Dibayar</option><option value="partial">Sebagian</option><option value="paid">Lunas</option>
                 </select>
             </div>
 
@@ -138,7 +139,7 @@
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
-            <p class="text-gray-500 text-sm font-medium">Total Revenue</p>
+            <p class="text-gray-500 text-sm font-medium">Uang Masuk</p>
             <p id="summary-completed" class="text-3xl font-bold text-gray-800 mt-2">Rp 0</p>
         </div>
 
@@ -178,9 +179,14 @@
         </div>
     </div>
 
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white rounded-xl shadow-md p-5"><p class="text-sm text-gray-500">Tagihan Client (transaksi terpilih)</p><p id="summary-invoiced" class="text-2xl font-bold"></p></div>
+        <div class="bg-white rounded-xl shadow-md p-5"><p class="text-sm text-gray-500">Sisa Tagihan (transaksi terpilih)</p><p id="summary-outstanding" class="text-2xl font-bold text-orange-700"></p></div>
+    </div>
+    <p class="text-xs text-gray-500">Uang masuk memakai tanggal pembayaran. Daftar transaksi dan tagihan memakai tanggal transaksi. Pembayaran lama perlu dicatat agar masuk laporan.</p>
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-pink-500">
-            <p class="text-gray-500 text-sm font-medium">Top Client (Revenue)</p>
+            <p class="text-gray-500 text-sm font-medium">Top Client (Uang Masuk)</p>
             <p id="kpi-top-client" class="text-lg font-bold text-gray-800 mt-2">-</p>
             <p id="kpi-top-client-revenue" class="text-sm text-gray-500 mt-1">Rp 0</p>
         </div>
@@ -222,7 +228,7 @@
 
     <div class="bg-white rounded-xl shadow-md p-6">
         <div class="flex items-center justify-between mb-3">
-            <h3 class="text-lg font-bold text-gray-800">Revenue Trend (Transactions)</h3>
+            <h3 class="text-lg font-bold text-gray-800">Tren Uang Masuk</h3>
             <span id="tx-count-info" class="text-sm text-gray-500">0 records</span>
         </div>
         <div class="h-64">
@@ -278,6 +284,8 @@
         </div>
     </div>
 </div>
+
+<%- include('../partials/client-payments') %>
 
 <!-- Transaction Detail Modal -->
 <div id="transactionDetailModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
@@ -385,9 +393,10 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Trx x ${Number(transaction.transaction_count || 0)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${transaction.client_name || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">Gross: ${formatCurrencySafe(transaction.gross_amount)}<div class="text-xs text-emerald-700 mt-1">Bersih: ${formatCurrencySafe(transaction.net_amount)}</div></td>
-                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">recorded</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">Gross: ${formatCurrencySafe(transaction.gross_amount)}<div class="text-xs text-emerald-700 mt-1">Bersih: ${formatCurrencySafe(transaction.net_amount)}</div><div class="text-xs text-gray-500 mt-1">Tagihan: ${formatCurrencySafe(Payroll.invoice(transaction).total)}<br>Diterima: ${formatCurrencySafe(transaction.amount_paid)} · Sisa: ${formatCurrencySafe(outstandingFor(transaction))}</div></td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">${({unpaid:'Belum Dibayar',partial:'Sebagian',paid:'Lunas'})[paymentStatus(transaction)]}</span></td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="openClientPayments('${transaction.id}')" class="text-green-700 mr-3" title="Catat pembayaran">Bayar</button>
                         <button onclick="viewTransaction('${transaction.id}')" class="text-admin-600 hover:text-admin-900 mr-3" title="View"><i class="fas fa-eye"></i></button>
                         <button onclick="openEditTransaction('${transaction.id}')" class="text-emerald-600 hover:text-emerald-900 mr-3" title="Edit"><i class="fas fa-pen"></i></button>
                         <button onclick="deleteTransaction('${transaction.id}')" class="text-red-600 hover:text-red-900" title="Delete"><i class="fas fa-trash"></i></button>
@@ -561,7 +570,7 @@
 
         content.innerHTML = `
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-                <div class="rounded-2xl border border-gray-200 p-4"><div class="text-xs uppercase tracking-wider text-gray-500 font-bold">Gross Revenue</div><div class="text-2xl font-black mt-1">${formatCurrencySafe(totalGross)}</div></div>
+                <div class="rounded-2xl border border-gray-200 p-4"><div class="text-xs uppercase tracking-wider text-gray-500 font-bold">Gross Transaksi</div><div class="text-2xl font-black mt-1">${formatCurrencySafe(totalGross)}</div></div>
                 <div class="rounded-2xl border border-gray-200 p-4"><div class="text-xs uppercase tracking-wider text-gray-500 font-bold">Total Agent Fee</div><div class="text-2xl font-black mt-1 text-red-600">${formatCurrencySafe(totalAgentFee)}</div></div>
                 <div class="rounded-2xl border border-gray-200 p-4"><div class="text-xs uppercase tracking-wider text-gray-500 font-bold">Net Model Payout</div><div class="text-2xl font-black mt-1 text-emerald-700">${formatCurrencySafe(totalNet)}</div></div>
             </div>
@@ -576,7 +585,7 @@
         pdf.download({
             prefix: 'AFR', title: 'Agent Fee Report',
             context: getPdfFilterContext(),
-            metrics: [['Gross Revenue', pdf.money(pdf.sum(agents, 'totalGross'))], ['Potongan Non-Agen', pdf.money(pdf.sum(agents, 'totalAdminFee'))], ['Agent Fee', pdf.money(pdf.sum(agents, 'totalAgentFee'))], ['Net Model Payout', pdf.money(pdf.sum(agents, 'totalNet'))]],
+            metrics: [['Gross Transaksi', pdf.money(pdf.sum(agents, 'totalGross'))], ['Potongan Non-Agen', pdf.money(pdf.sum(agents, 'totalAdminFee'))], ['Agent Fee', pdf.money(pdf.sum(agents, 'totalAgentFee'))], ['Net Model Payout', pdf.money(pdf.sum(agents, 'totalNet'))]],
             sections: agents.map(agent => ({
                 title: agent.name,
                 columns: ['Model / Client / Date', 'TRX', 'Gross', 'Potongan', 'Agent Fee', 'Net Payout'],
@@ -588,26 +597,32 @@
         });
     }
 
+    function outstandingFor(tx) { return Math.max(Math.round(Payroll.invoice(tx).total * 100) - Math.round(Number(tx.amount_paid || 0) * 100), 0) / 100; }
+    function paymentStatus(tx) { return outstandingFor(tx) <= 0 ? 'paid' : Number(tx.amount_paid || 0) > 0 ? 'partial' : 'unpaid'; }
+    function selectedReceipts() {
+        const model = document.getElementById('modelFilter').value.toLowerCase();
+        const status = document.getElementById('statusFilter').value;
+        const from = document.getElementById('fromDate').value;
+        const to = document.getElementById('toDate').value;
+        return allTransactions.filter(tx => (!model || String(tx.model_name || '').toLowerCase() === model) && (!status || paymentStatus(tx) === status))
+            .flatMap(tx => (tx.payments || []).filter(payment => (!from || payment.payment_date >= from) && (!to || payment.payment_date <= to)).map(payment => ({...payment, client_name:tx.client_name})));
+    }
+
     function updateSummaryCards() {
-        const totalGross = filteredTransactions.reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+        const receipts = selectedReceipts();
+        const totalGross = receipts.reduce((sum, payment) => sum + Number(payment.amount), 0);
+        document.getElementById('summary-invoiced').textContent = formatCurrencySafe(filteredTransactions.reduce((sum, tx) => sum + Payroll.invoice(tx).total, 0));
+        document.getElementById('summary-outstanding').textContent = formatCurrencySafe(filteredTransactions.reduce((sum, tx) => sum + outstandingFor(tx), 0));
         const totalAgentFee = filteredTransactions.reduce((sum, tx) => sum + getAgentFeeAmount(tx), 0);
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const lastDay = new Date(today);
         lastDay.setDate(today.getDate() - 1);
 
-        const lastDayGross = filteredTransactions
-            .filter((tx) => isSameDay(tx.transaction_date, lastDay))
-            .reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
-        const thisWeekGross = filteredTransactions
-            .filter((tx) => isDateInCurrentWeek(tx.transaction_date))
-            .reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
-        const thisMonthGross = filteredTransactions
-            .filter((tx) => isDateInCurrentMonth(tx.transaction_date))
-            .reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
-        const thisYearGross = filteredTransactions
-            .filter((tx) => isDateInCurrentYear(tx.transaction_date))
-            .reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+        const lastDayGross = receipts.filter(payment => isSameDay(payment.payment_date + 'T00:00:00', lastDay)).reduce((sum, payment) => sum + Number(payment.amount), 0);
+        const thisWeekGross = receipts.filter(payment => isDateInCurrentWeek(payment.payment_date + 'T00:00:00')).reduce((sum, payment) => sum + Number(payment.amount), 0);
+        const thisMonthGross = receipts.filter(payment => isDateInCurrentMonth(payment.payment_date + 'T00:00:00')).reduce((sum, payment) => sum + Number(payment.amount), 0);
+        const thisYearGross = receipts.filter(payment => isDateInCurrentYear(payment.payment_date + 'T00:00:00')).reduce((sum, payment) => sum + Number(payment.amount), 0);
         const clientMap = new Map();
         const agentMap = new Map();
 
@@ -615,7 +630,7 @@
             const client = tx.client_name || 'N/A';
             const gross = Number(tx.gross_amount || 0);
             const agentFee = getAgentFeeAmount(tx);
-            clientMap.set(client, Number(clientMap.get(client) || 0) + gross);
+
 
             const agentName = tx.agent_name || 'No Agent';
             const row = agentMap.get(agentName) || {
@@ -635,6 +650,7 @@
             if (isDateInCurrentYear(tx.transaction_date)) row.year += agentFee;
             agentMap.set(agentName, row);
         });
+        receipts.forEach(payment => clientMap.set(payment.client_name, Number(clientMap.get(payment.client_name) || 0) + Number(payment.amount)));
         const topClient = Array.from(clientMap.entries()).sort((a, b) => b[1] - a[1])[0];
 
         document.getElementById('summary-completed').textContent = formatCurrencySafe(totalGross);
@@ -644,7 +660,7 @@
         document.getElementById('summary-this-month').textContent = formatCurrencySafe(thisMonthGross);
         document.getElementById('summary-this-year').textContent = formatCurrencySafe(thisYearGross);
         document.getElementById('summary-total-transactions').textContent = Number(filteredTransactions.length).toLocaleString('id-ID');
-        document.getElementById('kpi-total-clients').textContent = Number(clientMap.size).toLocaleString('id-ID');
+        document.getElementById('kpi-total-clients').textContent = Number(new Set(filteredTransactions.map(tx=>tx.client_name)).size).toLocaleString('id-ID');
         document.getElementById('kpi-top-client').textContent = topClient?.[0] || '-';
         document.getElementById('kpi-top-client-revenue').textContent = formatCurrencySafe(topClient?.[1] || 0);
         renderAgentPerformance(agentMap);
@@ -655,11 +671,9 @@
         if (!ctx) return;
 
         const map = new Map();
-        filteredTransactions.forEach((tx) => {
-            const d = new Date(tx.transaction_date);
-            if (Number.isNaN(d.getTime())) return;
-            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-            map.set(key, Number(map.get(key) || 0) + Number(tx.gross_amount || 0));
+        selectedReceipts().forEach(payment => {
+            const key = payment.payment_date;
+            map.set(key, Number(map.get(key) || 0) + Number(payment.amount));
         });
 
         const labels = Array.from(map.keys()).sort();
@@ -677,7 +691,7 @@
                     return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
                 }),
                 datasets: [{
-                    label: 'Revenue',
+                    label: 'Uang Masuk',
                     data: values,
                     borderColor: 'rgb(59, 130, 246)',
                     backgroundColor: 'rgba(59, 130, 246, 0.12)',
@@ -728,7 +742,7 @@
         filteredTransactions = allTransactions.filter((tx) => {
             const txDate = tx.transaction_date ? new Date(tx.transaction_date) : null;
             const matchSearch = !selectedModel || String(tx.model_name || '').toLowerCase() === selectedModel;
-            const matchStatus = !status || status === 'recorded';
+            const matchStatus = !status || status === 'recorded' || paymentStatus(tx) === status;
             const matchFrom = !fromDate || (txDate && txDate >= new Date(fromDate + 'T00:00:00'));
             const matchTo = !toDate || (txDate && txDate <= new Date(toDate + 'T23:59:59'));
             return matchSearch && matchStatus && matchFrom && matchTo;
@@ -988,7 +1002,7 @@
         pdf.download({
             prefix: 'INV', title: 'Client Invoice Summary', confidential: false,
             context: getPdfFilterContext(),
-            metrics: [['Invoice Total', pdf.money(invoiceSum(rows, 'total'))], ['Gross', pdf.money(invoiceSum(rows, 'gross'))], ['Client Deductions', pdf.money(invoiceSum(rows, 'safety') + invoiceSum(rows, 'admin') + invoiceSum(rows, 'other'))], ['Clients', clients.size], ['Records', rows.length]],
+            metrics: [['Invoice Total', pdf.money(invoiceSum(rows, 'total'))], ['Gross', pdf.money(invoiceSum(rows, 'gross'))], ['Client Deductions', pdf.money(invoiceSum(rows, 'safety') + invoiceSum(rows, 'admin') + invoiceSum(rows, 'other'))], ['Clients', clients.size], ['Records', rows.length], ['Diterima', pdf.money(rows.reduce((sum, tx) => sum + Number(tx.amount_paid || 0), 0))], ['Sisa Tagihan', pdf.money(rows.reduce((sum, tx) => sum + outstandingFor(tx), 0))]],
             sections: Array.from(clients, ([client, records]) => ({
                 title: 'Bill To: ' + client,
                 columns: ['Model / Detail', 'TRX', 'Gross', 'Potongan', 'Tagihan'], numeric: [1, 2, 3, 4],
@@ -1018,7 +1032,7 @@
         pdf.download({
             prefix: 'TXR', title: 'Transaction & Payroll Report',
             context: getPdfFilterContext(),
-            metrics: [['Records', rows.length], ['Gross Revenue', pdf.money(pdf.sum(rows, 'gross_amount'))], ['Potongan Non-Agen', pdf.money(rows.reduce((sum, tx) => sum + getNonAgentDeductions(tx), 0))], ['Agent Fee', pdf.money(agentTotal)], ['Net Model Payout', pdf.money(pdf.sum(rows, 'net_amount'))]],
+            metrics: [['Records', rows.length], ['Gross Transaksi', pdf.money(pdf.sum(rows, 'gross_amount'))], ['Potongan Non-Agen', pdf.money(rows.reduce((sum, tx) => sum + getNonAgentDeductions(tx), 0))], ['Agent Fee', pdf.money(agentTotal)], ['Net Model Payout', pdf.money(pdf.sum(rows, 'net_amount'))]],
             sections: [{
                 title: 'Transaction Register',
                 columns: ['Model / Client / Date', 'TRX', 'Gross', 'Potongan', 'Agent Fee', 'Net Payout'], numeric: [1, 2, 3, 4, 5],

@@ -150,7 +150,7 @@
                     <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-emerald-500">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-gray-500 text-sm font-medium">Total Revenue</p>
+                                <p class="text-gray-500 text-sm font-medium">Uang Masuk</p>
                                 <p class="text-3xl font-bold text-gray-800 mt-2">
                                     <%= typeof stats !== 'undefined' ? formatCurrency(stats.totalRevenue) : formatCurrency(0) %>
                                 </p>
@@ -193,12 +193,17 @@
                 </div>
 
                 <!-- Charts -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="bg-white rounded-xl shadow-md p-5"><p class="text-gray-500 text-sm">Total Tagihan Client</p><p class="text-2xl font-bold"><%= formatCurrency(typeof stats !== 'undefined' ? stats.totalInvoiced || 0 : 0) %></p></div>
+                <div class="bg-white rounded-xl shadow-md p-5"><p class="text-gray-500 text-sm">Sisa Tagihan Belum Dibayar</p><p class="text-2xl font-bold text-orange-700"><%= formatCurrency(typeof stats !== 'undefined' ? stats.outstanding || 0 : 0) %></p></div>
+            </div>
+            <p class="text-xs text-gray-500 mb-4">Uang masuk berdasarkan pembayaran tercatat, bukan nilai gross transaksi. Catat pembayaran melalui menu Transactions → Bayar.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <!-- Monthly Revenue Chart -->
                     <div class="bg-white rounded-xl shadow-md p-6">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">
                             <i class="fas fa-chart-line text-admin-600 mr-2"></i>
-                            Monthly Revenue Trend
+                            Tren Uang Masuk Bulanan
                         </h3>
                         <div class="h-64">
                             <canvas id="revenueChart"></canvas>
@@ -316,7 +321,7 @@
                 data: {
                     labels,
                     datasets: [{
-                        label: 'Revenue',
+                        label: 'Uang Masuk',
                         data: values,
                         borderColor: 'rgb(59, 130, 246)',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',

@@ -1,5 +1,6 @@
 const { Model, Transaction, User } = require('../models');
 const db = require('../config/database');
+const Receipts = require('../utils/receipts');
 const {
   calculateTotalRevenue,
   calculateAdminFees,
@@ -79,20 +80,22 @@ exports.getDashboard = async (req, res) => {
     }
 
     // Calculate revenue statistics
-    const totalRevenue = calculateTotalRevenue(transactions);
+    const cashData = await Receipts.all();
+    const cash = Receipts.summarize(cashData.transactions, cashData.payments, start_date, end_date);
+    const totalRevenue = cash.totalRevenue;
     const adminFees = calculateAdminFees(transactions);
     const netPayouts = calculateNetPayout(transactions);
     const revenueByModel = groupRevenueByModel(transactions);
 
-    // Calculate monthly revenue for chart
     const monthlyRevenue = {};
-    transactions.forEach(t => {
-      const month = new Date(t.transaction_date).toISOString().substring(0, 7);
-      if (!monthlyRevenue[month]) {
-        monthlyRevenue[month] = 0;
-      }
-      monthlyRevenue[month] += parseFloat(t.gross_amount || 0);
+    cash.receipts.forEach(payment => {
+      const month = payment.receipt_date.slice(0, 7);
+      monthlyRevenue[month] = Number(monthlyRevenue[month] || 0) + Number(payment.amount);
     });
+    cash.receipts.forEach(payment => {
+      if (!revenueByModel.some(row => row.modelId === payment.model_id)) revenueByModel.push({modelId:payment.model_id,modelName:payment.model_name,totalRevenue:0,totalTransactions:0,netEarnings:0});
+    });
+    revenueByModel.forEach(row => { row.totalRevenue = cash.receipts.filter(payment => payment.model_id === row.modelId).reduce((sum, payment) => sum + Number(payment.amount), 0); });
 
     res.json({
       success: true,
@@ -102,7 +105,7 @@ exports.getDashboard = async (req, res) => {
           activeModels: activeModels.length,
           pendingModels: pendingModels.length,
           totalTransactions: transactions.length,
-          totalRevenue,
+          totalRevenue, totalInvoiced: cash.totalInvoiced, outstanding: cash.outstanding,
           adminFees,
           netPayouts
         },
@@ -650,46 +653,19 @@ exports.getRevenueAnalytics = async (req, res) => {
       );
     }
 
-    // Group data based on period
+    const cashData = await Receipts.all();
+    let payments = cashData.payments.filter(payment => (!year || payment.receipt_date.slice(0,4) === String(year)) && (!month || Number(payment.receipt_date.slice(5,7)) === Number(month)));
     const analytics = {};
-    
-    if (period === 'day') {
-      // Group by day
-      transactions.forEach(t => {
-        const day = new Date(t.transaction_date).toISOString().split('T')[0];
-        if (!analytics[day]) {
-          analytics[day] = { revenue: 0, transactions: 0, adminFees: 0 };
-        }
-        analytics[day].revenue += parseFloat(t.gross_amount || 0);
-        analytics[day].adminFees += parseFloat(t.admin_fee || 0);
-        analytics[day].transactions += 1;
-      });
-    } else if (period === 'month') {
-      // Group by month
-      transactions.forEach(t => {
-        const month = new Date(t.transaction_date).toISOString().substring(0, 7);
-        if (!analytics[month]) {
-          analytics[month] = { revenue: 0, transactions: 0, adminFees: 0 };
-        }
-        analytics[month].revenue += parseFloat(t.gross_amount || 0);
-        analytics[month].adminFees += parseFloat(t.admin_fee || 0);
-        analytics[month].transactions += 1;
-      });
-    } else if (period === 'year') {
-      // Group by year
-      transactions.forEach(t => {
-        const year = new Date(t.transaction_date).getFullYear().toString();
-        if (!analytics[year]) {
-          analytics[year] = { revenue: 0, transactions: 0, adminFees: 0 };
-        }
-        analytics[year].revenue += parseFloat(t.gross_amount || 0);
-        analytics[year].adminFees += parseFloat(t.admin_fee || 0);
-        analytics[year].transactions += 1;
-      });
-    }
+    payments.forEach(payment => {
+      const key = period === 'day' ? payment.receipt_date : period === 'year' ? payment.receipt_date.slice(0,4) : payment.receipt_date.slice(0,7);
+      if (!analytics[key]) analytics[key] = {revenue:0, transactions:0, adminFees:0};
+      analytics[key].revenue += Number(payment.amount); analytics[key].transactions += 1;
+    });
 
+    const selectedIds = new Set(transactions.map(tx => tx.id));
+    const balances = Receipts.summarize(cashData.transactions.filter(tx => selectedIds.has(tx.id)), payments);
     // Calculate totals
-    const totalRevenue = calculateTotalRevenue(transactions);
+    const totalRevenue = payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
     const totalAdminFees = calculateAdminFees(transactions);
     const totalNetPayouts = calculateNetPayout(transactions);
 
@@ -699,7 +675,7 @@ exports.getRevenueAnalytics = async (req, res) => {
         period,
         analytics,
         summary: {
-          totalRevenue,
+          totalRevenue, totalInvoiced: balances.totalInvoiced, outstanding: balances.outstanding, receiptCount: payments.length,
           totalAdminFees,
           totalNetPayouts,
           totalTransactions: transactions.length

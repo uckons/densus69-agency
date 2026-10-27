@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const Receipts = require('../utils/receipts');
 
 // Helper function to format currency
 const formatCurrency = (amount) => {
@@ -21,7 +22,10 @@ async function ensureAnalyticsSchema() {
 
 exports.showDashboard = async (req, res) => {
   try {
-    console.log('Admin Dashboard - User:', req.user);
+    await require('../database/payroll-schema')();
+    await ensureAnalyticsSchema();
+    const cashData = await Receipts.all();
+    const cashSummary = Receipts.summarize(cashData.transactions, cashData.payments);
     
     // Get total models
     const modelsResult = await db.query('SELECT COUNT(*) as total FROM models');
@@ -32,16 +36,16 @@ exports.showDashboard = async (req, res) => {
     const totalJobs = parseInt(jobsResult.rows[0].total) || 0;
 
     // Get total transactions
-    const transactionsResult = await db.query('SELECT COUNT(*) as total, COALESCE(SUM(gross_amount), 0) as total_revenue FROM transactions');
+    const transactionsResult = await db.query('SELECT COUNT(*) as total, (SELECT COALESCE(SUM(amount),0) FROM client_payments WHERE voided_at IS NULL) as total_revenue FROM transactions');
     const totalTransactions = parseInt(transactionsResult.rows[0].total) || 0;
     const totalRevenue = parseFloat(transactionsResult.rows[0].total_revenue) || 0;
 
     // Get monthly revenue
     const monthlyRevenueResult = await db.query(`
-      SELECT COALESCE(SUM(gross_amount), 0) as monthly_revenue 
-      FROM transactions 
-      WHERE EXTRACT(MONTH FROM transaction_date) = EXTRACT(MONTH FROM NOW())
-      AND EXTRACT(YEAR FROM transaction_date) = EXTRACT(YEAR FROM NOW())
+      SELECT COALESCE(SUM(amount), 0) as monthly_revenue
+      FROM client_payments
+      WHERE voided_at IS NULL AND EXTRACT(MONTH FROM payment_date) = EXTRACT(MONTH FROM (NOW() AT TIME ZONE 'Asia/Jakarta'))
+      AND EXTRACT(YEAR FROM payment_date) = EXTRACT(YEAR FROM (NOW() AT TIME ZONE 'Asia/Jakarta'))
     `);
     const monthlyRevenue = parseFloat(monthlyRevenueResult.rows[0].monthly_revenue) || 0;
 
@@ -76,16 +80,10 @@ exports.showDashboard = async (req, res) => {
     `);
 
     // Get monthly revenue data for chart (last 12 months)
-    const monthlyChartResult = await db.query(`
-      SELECT
-        TO_CHAR(DATE_TRUNC('month', transaction_date), 'YYYY-MM') AS year_month,
-        TO_CHAR(DATE_TRUNC('month', transaction_date), 'Mon') AS month,
-        COALESCE(SUM(gross_amount), 0) AS revenue
-      FROM transactions
-      WHERE transaction_date >= (DATE_TRUNC('month', NOW()) - INTERVAL '11 months')
-      GROUP BY 1, 2
-      ORDER BY 1 ASC
-    `);
+    const monthlyChartResult = await db.query(`SELECT TO_CHAR(payment_date, 'YYYY-MM') AS year_month,
+        TO_CHAR(payment_date, 'Mon') AS month, SUM(amount) AS revenue FROM client_payments
+        WHERE voided_at IS NULL AND payment_date >= (DATE_TRUNC('month', NOW() AT TIME ZONE 'Asia/Jakarta') - INTERVAL '11 months')
+        GROUP BY 1,2 ORDER BY 1`);
 
     res.render('admin/dashboard', {
       user: req.user,
@@ -94,6 +92,7 @@ exports.showDashboard = async (req, res) => {
         totalJobs,
         totalTransactions,
         totalRevenue,
+        totalInvoiced: cashSummary.totalInvoiced, outstanding: cashSummary.outstanding,
         monthlyRevenue,
         pendingBookings,
         activeJobs
@@ -165,7 +164,7 @@ exports.showTransactions = async (req, res) => {
     
     res.render('admin/transactions', {
       user: req.user,
-      transactions: transactionsResult.rows,
+      transactions: await Receipts.attach(transactionsResult.rows),
       formatCurrency: formatCurrency
     });
   } catch (error) {
@@ -201,9 +200,11 @@ exports.showAnalytics = async (req, res) => {
       const endDate = new Date(`${end_date}T23:59:59`);
       transactions = transactions.filter((tx) => new Date(tx.transaction_date) <= endDate);
     }
-    const totalRevenue = transactions.reduce((sum, tx) => sum + Number(tx.gross_amount || 0), 0);
+    const cashData = await Receipts.all();
+    const cashSummary = Receipts.summarize(cashData.transactions, cashData.payments, start_date, end_date);
+    const totalRevenue = cashSummary.totalRevenue;
     const totalTransactions = transactions.length;
-    const avgTransaction = totalTransactions ? totalRevenue / totalTransactions : 0;
+    const avgTransaction = cashSummary.receiptCount ? totalRevenue / cashSummary.receiptCount : 0;
     const totalCommission = transactions.reduce((sum, tx) => sum + Number(tx.agent_fee_total || 0), 0);
 
     const byModel = new Map();
@@ -211,7 +212,7 @@ exports.showAnalytics = async (req, res) => {
     const byGrade = new Map();
     const thisYearByMonth = Array(12).fill(0);
     const lastYearByMonth = Array(12).fill(0);
-    const currentYear = new Date().getFullYear();
+    const currentYear = Number(new Intl.DateTimeFormat('en', {timeZone:'Asia/Jakarta', year:'numeric'}).format(new Date()));
 
     transactions.forEach((tx) => {
       const modelId = tx.model_id || tx.model_name || 'unknown';
@@ -227,16 +228,17 @@ exports.showAnalytics = async (req, res) => {
       modelRow.commission += Number(tx.agent_fee_total || 0);
       byModel.set(modelId, modelRow);
 
-      const d = tx.transaction_date ? new Date(tx.transaction_date) : null;
-      if (d && !Number.isNaN(d.getTime())) {
-        const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        byMonth.set(monthKey, Number(byMonth.get(monthKey) || 0) + Number(tx.gross_amount || 0));
-        if (d.getFullYear() === currentYear) thisYearByMonth[d.getMonth()] += Number(tx.gross_amount || 0);
-        if (d.getFullYear() === currentYear - 1) lastYearByMonth[d.getMonth()] += Number(tx.gross_amount || 0);
-      }
-
-      const grade = tx.model_grade_name || 'No Grade';
-      byGrade.set(grade, Number(byGrade.get(grade) || 0) + Number(tx.gross_amount || 0));
+    });
+    cashSummary.receipts.forEach(payment => {
+      const [year, month] = payment.receipt_date.split('-').map(Number);
+      if (year === currentYear) thisYearByMonth[month - 1] += Number(payment.amount);
+      if (year === currentYear - 1) lastYearByMonth[month - 1] += Number(payment.amount);
+    });
+    cashSummary.receipts.forEach(payment => {
+      const monthKey = payment.receipt_date.slice(0, 7);
+      byMonth.set(monthKey, Number(byMonth.get(monthKey) || 0) + Number(payment.amount));
+      const grade = payment.grade_name || 'No Grade';
+      byGrade.set(grade, Number(byGrade.get(grade) || 0) + Number(payment.amount));
     });
 
     const modelStats = Array.from(byModel.values())
@@ -252,7 +254,7 @@ exports.showAnalytics = async (req, res) => {
     const topModels = modelStats.slice(0, 10);
 
     const analytics = {
-      totalRevenue,
+      totalRevenue, totalInvoiced: cashSummary.totalInvoiced, outstanding: cashSummary.outstanding, receiptCount: cashSummary.receiptCount,
       revenueGrowth: 0,
       avgTransaction,
       totalTransactions,

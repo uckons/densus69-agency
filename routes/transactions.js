@@ -3,9 +3,17 @@ const router = express.Router();
 const transactionController = require('../controllers/transactionController');
 const { auth, isAdmin } = require('../middleware/auth');
 const { validateTransaction, validateTransactionUpdate, checkValidation } = require('../utils/validation');
+const payments = require('../controllers/paymentController');
 
 // All routes require authentication and admin role
 router.use(auth, isAdmin);
+for (const name of ['id', 'paymentId']) router.param(name, (req, res, next, value) => {
+  if (!/^[1-9][0-9]*$/.test(value) || !Number.isSafeInteger(Number(value))) return res.status(400).json({success:false,message:'ID tidak valid'});
+  next();
+});
+router.get('/:id/payments', payments.list);
+router.post('/:id/payments', payments.create);
+router.post('/:id/payments/:paymentId/void', payments.void);
 
 // POST /api/transactions - Create new transaction
 router.post('/', validateTransaction, checkValidation, transactionController.createTransaction);

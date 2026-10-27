@@ -23,6 +23,21 @@ module.exports = function ensurePayrollSchema() {
                 await client.query(`ALTER TABLE transactions ADD COLUMN IF NOT EXISTS ${name} NUMERIC(12,2) CHECK (${name} >= 0)`);
             }
             await client.query('ALTER TABLE transactions ADD COLUMN IF NOT EXISTS deduction_version INTEGER NOT NULL DEFAULT 1');
+            await client.query(`CREATE TABLE IF NOT EXISTS client_payments (
+                id SERIAL PRIMARY KEY,
+                transaction_id INTEGER NOT NULL REFERENCES transactions(id) ON DELETE RESTRICT,
+                amount NUMERIC(12,2) NOT NULL CHECK (amount > 0),
+                payment_date DATE NOT NULL,
+                method VARCHAR(30) NOT NULL DEFAULT 'transfer',
+                reference VARCHAR(150), notes TEXT,
+                request_key UUID UNIQUE NOT NULL,
+                created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                voided_at TIMESTAMPTZ, voided_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                void_reason TEXT
+            )`);
+            await client.query('CREATE INDEX IF NOT EXISTS client_payments_transaction_idx ON client_payments(transaction_id)');
+            await client.query('CREATE INDEX IF NOT EXISTS client_payments_date_idx ON client_payments(payment_date) WHERE voided_at IS NULL');
             await client.query('COMMIT');
         } catch (error) {
             await client.query('ROLLBACK');

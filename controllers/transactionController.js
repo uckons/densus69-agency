@@ -56,7 +56,7 @@ exports.getAssignedModels = async (req, res) => {
     return res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Get assigned models error:', error);
-    return res.status(error.status || 500).json({ success: false, message: 'Server error', error: error.message });
+    return res.status(error.status || (error.code === '23503' ? 409 : 500)).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 
@@ -133,9 +133,9 @@ exports.createTransaction = async (req, res) => {
     });
   } catch (error) {
     console.error('Create transaction error:', error);
-    res.status(error.status || 500).json({
+    res.status(error.status || (error.code === '23503' ? 409 : 500)).json({
       success: false,
-      message: error.status === 400 ? error.message : 'Server error',
+      message: error.status ? error.message : (error.code === '23503' ? 'Transaksi memiliki riwayat pembayaran dan tidak dapat dihapus' : 'Server error'),
       error: error.message
     });
   }
@@ -147,26 +147,12 @@ exports.createTransaction = async (req, res) => {
  */
 exports.getClientKpis = async (req, res) => {
   try {
-    const result = await db.query(`
-      SELECT
-        COUNT(DISTINCT client_name) AS total_clients,
-        COALESCE(SUM(gross_amount), 0) AS total_revenue
-      FROM transactions
-      WHERE client_name IS NOT NULL AND TRIM(client_name) <> ''
-    `);
-
-    const topClientResult = await db.query(`
-      SELECT
-        client_name,
-        COUNT(*)::int AS total_records,
-        COALESCE(SUM(transaction_count), 0)::int AS total_trx,
-        COALESCE(SUM(gross_amount), 0) AS total_revenue
-      FROM transactions
-      WHERE client_name IS NOT NULL AND TRIM(client_name) <> ''
-      GROUP BY client_name
-      ORDER BY total_revenue DESC
-      LIMIT 1
-    `);
+    await ensurePayrollSchema();
+    const result = await db.query(`SELECT COUNT(DISTINCT client_name) AS total_clients,
+      (SELECT COALESCE(SUM(amount),0) FROM client_payments WHERE voided_at IS NULL) AS total_revenue FROM transactions`);
+    const topClientResult = await db.query(`SELECT t.client_name, SUM(p.amount) AS total_revenue
+      FROM client_payments p JOIN transactions t ON t.id=p.transaction_id WHERE p.voided_at IS NULL
+      GROUP BY t.client_name ORDER BY total_revenue DESC LIMIT 1`);
 
     return res.json({
       success: true,
@@ -178,7 +164,7 @@ exports.getClientKpis = async (req, res) => {
     });
   } catch (error) {
     console.error('Get client KPI error:', error);
-    return res.status(error.status || 500).json({ success: false, message: 'Server error', error: error.message });
+    return res.status(error.status || (error.code === '23503' ? 409 : 500)).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 
@@ -215,14 +201,14 @@ exports.getTransactions = async (req, res) => {
 
     res.json({
       success: true,
-      data: transactions,
+      data: await require('../utils/receipts').attach(transactions),
       count: transactions.length
     });
   } catch (error) {
     console.error('Get transactions error:', error);
-    res.status(error.status || 500).json({
+    res.status(error.status || (error.code === '23503' ? 409 : 500)).json({
       success: false,
-      message: error.status === 400 ? error.message : 'Server error',
+      message: error.status ? error.message : (error.code === '23503' ? 'Transaksi memiliki riwayat pembayaran dan tidak dapat dihapus' : 'Server error'),
       error: error.message
     });
   }
@@ -260,9 +246,9 @@ exports.getTransactionById = async (req, res) => {
     });
   } catch (error) {
     console.error('Get transaction error:', error);
-    res.status(error.status || 500).json({
+    res.status(error.status || (error.code === '23503' ? 409 : 500)).json({
       success: false,
-      message: error.status === 400 ? error.message : 'Server error',
+      message: error.status ? error.message : (error.code === '23503' ? 'Transaksi memiliki riwayat pembayaran dan tidak dapat dihapus' : 'Server error'),
       error: error.message
     });
   }
@@ -333,9 +319,9 @@ exports.updateTransaction = async (req, res) => {
     });
   } catch (error) {
     console.error('Update transaction error:', error);
-    res.status(error.status || 500).json({
+    res.status(error.status || (error.code === '23503' ? 409 : 500)).json({
       success: false,
-      message: error.status === 400 ? error.message : 'Server error',
+      message: error.status ? error.message : (error.code === '23503' ? 'Transaksi memiliki riwayat pembayaran dan tidak dapat dihapus' : 'Server error'),
       error: error.message
     });
   }
@@ -364,9 +350,9 @@ exports.deleteTransaction = async (req, res) => {
     });
   } catch (error) {
     console.error('Delete transaction error:', error);
-    res.status(error.status || 500).json({
+    res.status(error.status || (error.code === '23503' ? 409 : 500)).json({
       success: false,
-      message: error.status === 400 ? error.message : 'Server error',
+      message: error.status ? error.message : (error.code === '23503' ? 'Transaksi memiliki riwayat pembayaran dan tidak dapat dihapus' : 'Server error'),
       error: error.message
     });
   }

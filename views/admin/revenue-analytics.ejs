@@ -109,30 +109,30 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-md p-6 text-white">
             <div class="flex items-center justify-between mb-2">
-                <p class="text-green-100 text-sm font-medium">Total Revenue</p>
+                <p class="text-green-100 text-sm font-medium">Uang Masuk</p>
                 <i class="fas fa-chart-line text-2xl text-green-100"></i>
             </div>
             <p class="text-3xl font-bold"><%= typeof analytics !== 'undefined' ? formatCurrency(analytics.totalRevenue) : formatCurrency(0) %></p>
             <p class="text-green-100 text-sm mt-2">
                 <i class="fas fa-arrow-up mr-1"></i>
-                <%= typeof analytics !== 'undefined' ? analytics.revenueGrowth : 0 %>% from last period
+                Berdasarkan tanggal pembayaran
             </p>
         </div>
         
         <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-md p-6 text-white">
             <div class="flex items-center justify-between mb-2">
-                <p class="text-blue-100 text-sm font-medium">Avg Transaction</p>
+                <p class="text-blue-100 text-sm font-medium">Rata-rata Pembayaran</p>
                 <i class="fas fa-calculator text-2xl text-blue-100"></i>
             </div>
             <p class="text-3xl font-bold"><%= typeof analytics !== 'undefined' ? formatCurrency(analytics.avgTransaction) : formatCurrency(0) %></p>
             <p class="text-blue-100 text-sm mt-2">
-                <%= typeof analytics !== 'undefined' ? analytics.totalTransactions : 0 %> total transactions
+                <%= typeof analytics !== 'undefined' ? analytics.receiptCount || 0 : 0 %> pembayaran tercatat
             </p>
         </div>
         
         <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-md p-6 text-white">
             <div class="flex items-center justify-between mb-2">
-                <p class="text-purple-100 text-sm font-medium">Commission Earned</p>
+                <p class="text-purple-100 text-sm font-medium">Fee Agen Transaksi</p>
                 <i class="fas fa-percentage text-2xl text-purple-100"></i>
             </div>
             <p class="text-3xl font-bold"><%= typeof analytics !== 'undefined' ? formatCurrency(analytics.totalCommission) : formatCurrency(0) %></p>
@@ -153,13 +153,18 @@
         </div>
     </div>
     
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white rounded-xl shadow-md p-5"><p class="text-gray-500 text-sm">Tagihan Client (periode transaksi)</p><p class="text-2xl font-bold"><%= formatCurrency(typeof analytics !== 'undefined' ? analytics.totalInvoiced || 0 : 0) %></p></div>
+        <div class="bg-white rounded-xl shadow-md p-5"><p class="text-gray-500 text-sm">Sisa Tagihan (transaksi periode ini)</p><p class="text-2xl font-bold text-orange-700"><%= formatCurrency(typeof analytics !== 'undefined' ? analytics.outstanding || 0 : 0) %></p></div>
+    </div>
+    <p class="text-xs text-gray-500">Uang masuk memakai tanggal pembayaran; tagihan dan pendapatan model memakai tanggal transaksi.</p>
     <!-- Charts -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Revenue Trend Chart -->
+        <!-- Tren Uang Masuk Chart -->
         <div class="bg-white rounded-xl shadow-md p-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">
                 <i class="fas fa-chart-area mr-2 text-admin-500"></i>
-                Revenue Trend
+                Tren Uang Masuk
             </h3>
             <div class="relative h-80 w-full"><canvas id="revenueTrendChart" class="h-full w-full"></canvas></div>
         </div>
@@ -251,13 +256,13 @@
     const analyticsSummary = <%- typeof analytics !== 'undefined' ? JSON.stringify(analytics) : '{}' %>;
     const modelStatsData = <%- typeof modelStats !== 'undefined' ? JSON.stringify(modelStats) : '[]' %>;
     
-    // Revenue Trend Chart
+    // Tren Uang Masuk Chart
     new Chart(document.getElementById('revenueTrendChart'), {
         type: 'line',
         data: {
             labels: chartData.revenueLabels || [],
             datasets: [{
-                label: 'Revenue',
+                label: 'Uang Masuk',
                 data: chartData.revenueData || [],
                 borderColor: 'rgb(59, 130, 246)',
                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -362,8 +367,8 @@
         let charts;
         try {
             charts = pdf.chartImages([
-                { title: 'Revenue Trend', type: 'line', data: { labels: chartData.revenueLabels || [], datasets: [{ label: 'Revenue', data: chartData.revenueData || [], borderColor: '#2563EB', backgroundColor: '#DBEAFE', fill: true, tension: 0.3 }] } },
-                { title: 'Revenue by Grade', type: 'doughnut', data: { labels: chartData.jobTypeLabels || [], datasets: [{ data: chartData.jobTypeData || [], backgroundColor: ['#2563EB', '#C59B52', '#16A34A', '#7C3AED', '#F97316', '#64748B'] }] } },
+                { title: 'Tren Uang Masuk', type: 'line', data: { labels: chartData.revenueLabels || [], datasets: [{ label: 'Uang Masuk', data: chartData.revenueData || [], borderColor: '#2563EB', backgroundColor: '#DBEAFE', fill: true, tension: 0.3 }] } },
+                { title: 'Uang Masuk per Grade', type: 'doughnut', data: { labels: chartData.jobTypeLabels || [], datasets: [{ data: chartData.jobTypeData || [], backgroundColor: ['#2563EB', '#C59B52', '#16A34A', '#7C3AED', '#F97316', '#64748B'] }] } },
                 { title: 'Top Models', type: 'bar', horizontal: true, data: { labels: chartData.topModelsLabels || [], datasets: [{ label: 'Earnings', data: chartData.topModelsData || [], backgroundColor: '#7C3AED' }] } },
                 { title: 'Monthly Comparison', type: 'bar', data: { labels: chartData.monthlyLabels || [], datasets: [{ label: 'This Year', data: chartData.thisYearData || [], backgroundColor: '#2563EB' }, { label: 'Last Year', data: chartData.lastYearData || [], backgroundColor: '#94A3B8' }] } }
             ]);
@@ -373,7 +378,7 @@
         pdf.download({
             prefix: 'ANL', title: 'Revenue Analytics Report', charts,
             context: `Period: ${from ? pdf.date(from) : 'All dates'} - ${to ? pdf.date(to) : 'All dates'}`,
-            metrics: [['Total Revenue', pdf.money(analyticsSummary.totalRevenue)], ['Avg Transaction', pdf.money(analyticsSummary.avgTransaction)], ['Commission Earned', pdf.money(analyticsSummary.totalCommission)], ['Top Model', analyticsSummary.topModelName || 'N/A'], ['Transactions', analyticsSummary.totalTransactions || 0]],
+            metrics: [['Uang Masuk', pdf.money(analyticsSummary.totalRevenue)], ['Rata-rata Bayar', pdf.money(analyticsSummary.avgTransaction)], ['Fee Agen', pdf.money(analyticsSummary.totalCommission)], ['Top Model', analyticsSummary.topModelName || 'N/A'], ['Tagihan Client', pdf.money(analyticsSummary.totalInvoiced)], ['Sisa Tagihan', pdf.money(analyticsSummary.outstanding)]],
             sections: [{
                 title: 'Model Performance',
                 columns: ['#', 'Model', 'Jobs', 'Total Earnings', 'Avg / Job', 'Commission'], numeric: [2, 3, 4, 5],
