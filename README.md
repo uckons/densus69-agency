@@ -292,7 +292,7 @@ Agent Fee = TRX × recorded agent flat rate
 
 Example: rate Rp 500,000, 3 TRX, safety Rp 10,000/TRX, admin Rp 5,000/TRX, other deductions Rp 25,000, denda Rp 20,000, cash advance Rp 50,000, and agent Rp 20,000/TRX produce **Rp 1,300,000 net**.
 
-Client invoice total = (TRX × recorded model rate) − ((Safety + Client Admin Fee) × TRX) − Other Deductions. Denda, Cash Advance, and Agent Fee affect model payroll only. Invoice PDFs show line deductions, client subtotals, and the grand total using saved transaction rates.
+Client invoice total = (TRX × recorded model rate) − ((Safety + Client Admin Fee) × TRX) − Other Deductions. Denda, Cash Advance, and Agent Fee affect model payroll only. Invoice PDFs show line deductions, client subtotals, and the grand total using saved transaction rates. All PDF reports use A4 portrait, with compact columns and no explanatory formula footnotes.
 
 Transaction rates are recorded at creation. Client/model rate changes affect future transactions; they do not rewrite existing payroll. Editing a transaction retains its saved rates unless its client changes. Changing the client uses that client's current deduction rates. An amount below zero remains a negative balance, following the formula.
 

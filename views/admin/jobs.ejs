@@ -609,17 +609,16 @@
             if (!rows.length) return showToast('Tidak ada job sesuai filter untuk diexport.', 'error');
             const pdf = SkyPdf;
             pdf.download({
-                prefix: 'JOB', title: 'Job & Assignment Report', landscape: true,
+                prefix: 'JOB', title: 'Job & Assignment Report',
                 context: `Search: ${document.getElementById('search').value || 'All jobs'}  |  Status: ${document.getElementById('statusFilter').value || 'All status'}`,
                 metrics: [['Jobs', rows.length], ['Open', rows.filter(job => job.status === 'open').length], ['Assignments', pdf.sum(rows, 'assigned_model_count')], ['Offered Budget', pdf.money(pdf.sum(rows, 'payment_offered'))]],
                 sections: [{
                     title: 'Job Register',
-                    columns: ['Job', 'Client', 'Date', 'Offered Payment', 'Assigned Models', 'Assigned', 'Unassigned', 'Status'], numeric: [3, 5, 6],
-                    rows: rows.map(job => [job.title || '-', job.client_name || '-', pdf.date(job.job_date), pdf.money(job.payment_offered),
-                        (job.assigned_models || []).map(model => model.full_name).join('\n') || '-',
-                        job.assigned_model_count || 0, job.unassigned_model_count || 0, job.status || '-'])
+                    columns: ['Job / Client / Date', 'Offered Payment', 'Assigned Models', 'Unassigned', 'Status'], numeric: [1, 3],
+                    rows: rows.map(job => [(job.title || '-') + '\n' + (job.client_name || '-') + '\n' + pdf.date(job.job_date), pdf.money(job.payment_offered),
+                        'Assigned: ' + (job.assigned_model_count || 0) + '\n' + ((job.assigned_models || []).map(model => model.full_name).join('\n') || '-'),
+                        job.unassigned_model_count || 0, job.status || '-'])
                 }],
-                note: 'Offered budget is the sum of payment offers, not realized revenue. Assignment figures follow the job dashboard and active filters.',
                 signatures: ['Operations', 'Management']
             });
         }

@@ -396,20 +396,18 @@
             return element.value ? `${element.previousElementSibling?.textContent.trim() || id}: ${element.value}` : '';
         }).filter(Boolean).join(' | ');
         pdf.download({
-            prefix: 'MDL', title: 'Model Directory', landscape: true,
+            prefix: 'MDL', title: 'Model Directory',
             context: filters || 'All models / All filters',
             metrics: [['Models', rows.length], ['Vacant', rows.filter(model => model.status === 'vacant').length], ['Working', rows.filter(model => model.status === 'working').length], ['Agents', new Set(rows.map(model => model.agent_id ?? model.agent_name).filter(Boolean)).size]],
             sections: [{
                 title: 'Model Register',
-                columns: ['Model / Email', 'Phone', 'Gender / Address', 'Grade / Rate per TRX', 'Agent', 'Model Fee / TRX', 'Agent Fee / TRX', 'Status'], numeric: [5, 6],
+                columns: ['Model / Contact', 'Grade / Rate', 'Agent', 'Fee per TRX', 'Status'], numeric: [],
                 rows: rows.map(model => [
-                    (model.full_name || '-') + '\n' + (model.email || '-'), model.phone || '-',
-                    (model.gender || '-') + '\n' + (model.address || '-'),
+                    (model.full_name || '-') + '\n' + (model.email || '-') + '\n' + (model.phone || '-') + '\n' + (model.gender || '-') + '\n' + (model.address || '-'),
                     (model.grade_name || '-') + '\n' + pdf.money(model.grade_rate_per_trx ?? model.rate),
-                    model.agent_name || '-', pdf.money(model.estimated_model_fee), pdf.money(model.estimated_agent_fee), model.status || '-'
+                    model.agent_name || '-', 'Model: ' + pdf.money(model.estimated_model_fee) + '\nAgent: ' + pdf.money(model.estimated_agent_fee), model.status || '-'
                 ])
             }],
-            note: 'Model and agent fees are estimates per transaction, not cumulative payroll. This directory follows the visible model filters.',
             signatures: ['Prepared By', 'Management']
         });
     }

@@ -574,17 +574,16 @@
         if (!agents.length) return showToast('Tidak ada data agent fee untuk export PDF', 'error');
         const pdf = SkyPdf;
         pdf.download({
-            prefix: 'AFR', title: 'Agent Fee Report', landscape: true,
+            prefix: 'AFR', title: 'Agent Fee Report',
             context: getPdfFilterContext(),
             metrics: [['Gross Revenue', pdf.money(pdf.sum(agents, 'totalGross'))], ['Potongan Non-Agen', pdf.money(pdf.sum(agents, 'totalAdminFee'))], ['Agent Fee', pdf.money(pdf.sum(agents, 'totalAgentFee'))], ['Net Model Payout', pdf.money(pdf.sum(agents, 'totalNet'))]],
             sections: agents.map(agent => ({
                 title: agent.name,
-                columns: ['#', 'Date', 'Model / Grade', 'Client', 'TRX', 'Gross', 'Potongan Non-Agen', 'Agent Fee', 'Net Payout'],
-                numeric: [4, 5, 6, 7, 8],
-                rows: agent.transactionRows.map((tx, index) => [index + 1, pdf.date(tx.date), tx.model + '\n' + tx.grade, tx.client, tx.trx, pdf.money(tx.gross), pdf.money(tx.adminFee), pdf.money(tx.agentFee), pdf.money(tx.net)]),
-                totals: ['TOTAL', '', '', '', pdf.sum(agent.transactionRows, 'trx'), pdf.money(agent.totalGross), pdf.money(agent.totalAdminFee), pdf.money(agent.totalAgentFee), pdf.money(agent.totalNet)]
+                columns: ['Model / Client / Date', 'TRX', 'Gross', 'Potongan', 'Agent Fee', 'Net Payout'],
+                numeric: [1, 2, 3, 4, 5],
+                rows: agent.transactionRows.map((tx, index) => [tx.model + '\n' + tx.grade + '\n' + tx.client + '\n' + pdf.date(tx.date), tx.trx, pdf.money(tx.gross), pdf.money(tx.adminFee), pdf.money(tx.agentFee), pdf.money(tx.net)]),
+                totals: ['TOTAL', pdf.sum(agent.transactionRows, 'trx'), pdf.money(agent.totalGross), pdf.money(agent.totalAdminFee), pdf.money(agent.totalAgentFee), pdf.money(agent.totalNet)]
             })),
-            note: 'Gross - ((Safety + Admin Fee Client) x TRX) - Lain-lain - Denda - Cash Advance - Agent Fee = Net Model Payout.',
             signatures: ['Prepared By', 'Finance Approval', 'Management']
         });
     }
@@ -815,7 +814,6 @@
                             <div><span class="font-semibold">Cash Advance:</span> ${formatCurrencySafe(deductions.cash)}</div>
                             <div><span class="font-semibold">Agent Fee:</span> Rp ${agentFee}</div>
                             <div><span class="font-semibold">Net Model:</span> Rp ${net}</div>
-                            <div class="md:col-span-2 text-xs text-gray-500">Formula: ${Payroll.formula} = Net Model</div>
                         </div>
                     </div>
                     <div><span class="font-semibold">Created By:</span> ${tx.created_by_email || '-'}</div>
@@ -853,7 +851,7 @@
                 ],
                 totals: ['NET MODEL PAYOUT', pdf.money(tx.net_amount)]
             }],
-            note: `Gross - ((Safety + Admin Fee Client) x TRX) - Lain-lain - Denda - Cash Advance - Agent Fee = Net Model Payout.\nNotes: ${tx.notes || '-'}`,
+            note: tx.notes || '',
             signatures: ['Finance', 'Model']
         });
     }
@@ -988,19 +986,18 @@
             clients.get(name).push(tx);
         });
         pdf.download({
-            prefix: 'INV', title: 'Client Invoice Summary', confidential: false, landscape: true,
+            prefix: 'INV', title: 'Client Invoice Summary', confidential: false,
             context: getPdfFilterContext(),
             metrics: [['Invoice Total', pdf.money(invoiceSum(rows, 'total'))], ['Gross', pdf.money(invoiceSum(rows, 'gross'))], ['Client Deductions', pdf.money(invoiceSum(rows, 'safety') + invoiceSum(rows, 'admin') + invoiceSum(rows, 'other'))], ['Clients', clients.size], ['Records', rows.length]],
             sections: Array.from(clients, ([client, records]) => ({
                 title: 'Bill To: ' + client,
-                columns: ['#', 'Date', 'Model / Grade / Rate', 'TRX', 'Gross', 'Safety + Admin', 'Lain-lain', 'Tagihan'], numeric: [3, 4, 5, 6, 7],
+                columns: ['Model / Detail', 'TRX', 'Gross', 'Potongan', 'Tagihan'], numeric: [1, 2, 3, 4],
                 rows: records.map((tx, index) => {
                     const bill = Payroll.invoice(tx);
-                    return [index + 1, pdf.date(tx.transaction_date), (tx.model_name || '-') + '\n' + (tx.model_grade_name || '-') + '\nRate: ' + pdf.money(tx.model_rate), tx.transaction_count || 0, pdf.money(bill.gross), pdf.money(bill.safety + bill.admin), pdf.money(bill.other), pdf.money(bill.total)];
+                    return [(tx.model_name || '-') + '\n' + (tx.model_grade_name || '-') + '\n' + pdf.date(tx.transaction_date) + '\nRate: ' + pdf.money(tx.model_rate), tx.transaction_count || 0, pdf.money(bill.gross), 'Safety + Admin\n' + pdf.money(bill.safety + bill.admin) + '\nLain-lain\n' + pdf.money(bill.other), pdf.money(bill.total)];
                 }),
-                totals: ['CLIENT TOTAL', '', '', pdf.sum(records, 'transaction_count'), pdf.money(invoiceSum(records, 'gross')), pdf.money(invoiceSum(records, 'safety') + invoiceSum(records, 'admin')), pdf.money(invoiceSum(records, 'other')), pdf.money(invoiceSum(records, 'total'))]
+                totals: ['CLIENT TOTAL', pdf.sum(records, 'transaction_count'), pdf.money(invoiceSum(records, 'gross')), pdf.money(invoiceSum(records, 'safety') + invoiceSum(records, 'admin') + invoiceSum(records, 'other')), pdf.money(invoiceSum(records, 'total'))]
             })),
-            note: 'Tagihan = (TRX x Rate) - ((Safety + Admin Fee Client) x TRX) - Lain-lain. Lain-lain dipotong sekali per pencatatan transaksi. Tarif mengikuti data transaksi tersimpan. Denda, Cash Advance, dan Agent Fee tidak mengurangi tagihan client. Invoice ini bukan bukti pembayaran.',
             signatures: ['Finance', 'Client Approval']
         });
     }
@@ -1019,16 +1016,15 @@
         const pdf = SkyPdf;
         const agentTotal = rows.reduce((total, tx) => total + getAgentFeeAmount(tx), 0);
         pdf.download({
-            prefix: 'TXR', title: 'Transaction & Payroll Report', landscape: true,
+            prefix: 'TXR', title: 'Transaction & Payroll Report',
             context: getPdfFilterContext(),
             metrics: [['Records', rows.length], ['Gross Revenue', pdf.money(pdf.sum(rows, 'gross_amount'))], ['Potongan Non-Agen', pdf.money(rows.reduce((sum, tx) => sum + getNonAgentDeductions(tx), 0))], ['Agent Fee', pdf.money(agentTotal)], ['Net Model Payout', pdf.money(pdf.sum(rows, 'net_amount'))]],
             sections: [{
                 title: 'Transaction Register',
-                columns: ['#', 'Date', 'Model / Grade', 'Client', 'TRX', 'Gross', 'Potongan Non-Agen', 'Agent Fee', 'Net Payout'], numeric: [4, 5, 6, 7, 8],
-                rows: rows.map((tx, index) => [index + 1, pdf.date(tx.transaction_date), (tx.model_name || '-') + '\n' + (tx.model_grade_name || '-'), tx.client_name || '-', tx.transaction_count || 0, pdf.money(tx.gross_amount), pdf.money(getNonAgentDeductions(tx)), pdf.money(getAgentFeeAmount(tx)), pdf.money(tx.net_amount)]),
-                totals: ['TOTAL', '', '', '', pdf.sum(rows, 'transaction_count'), pdf.money(pdf.sum(rows, 'gross_amount')), pdf.money(rows.reduce((sum, tx) => sum + getNonAgentDeductions(tx), 0)), pdf.money(agentTotal), pdf.money(pdf.sum(rows, 'net_amount'))]
+                columns: ['Model / Client / Date', 'TRX', 'Gross', 'Potongan', 'Agent Fee', 'Net Payout'], numeric: [1, 2, 3, 4, 5],
+                rows: rows.map((tx, index) => [(tx.model_name || '-') + '\n' + (tx.model_grade_name || '-') + '\n' + (tx.client_name || '-') + '\n' + pdf.date(tx.transaction_date), tx.transaction_count || 0, pdf.money(tx.gross_amount), pdf.money(getNonAgentDeductions(tx)), pdf.money(getAgentFeeAmount(tx)), pdf.money(tx.net_amount)]),
+                totals: ['TOTAL', pdf.sum(rows, 'transaction_count'), pdf.money(pdf.sum(rows, 'gross_amount')), pdf.money(rows.reduce((sum, tx) => sum + getNonAgentDeductions(tx), 0)), pdf.money(agentTotal), pdf.money(pdf.sum(rows, 'net_amount'))]
             }],
-            note: 'Gross - ((Safety + Admin Fee Client) x TRX) - Lain-lain - Denda - Cash Advance - Agent Fee = Net Model Payout. All records matching the active filters are included, across all table pages.',
             signatures: ['Prepared By', 'Finance Approval', 'Management']
         });
     }

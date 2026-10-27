@@ -49,7 +49,7 @@
 
     function createReport(options) {
         if (!window.jspdf?.jsPDF) throw new Error('PDF belum termuat. Refresh halaman dan coba lagi.');
-        const doc = new window.jspdf.jsPDF({ orientation: options.landscape ? 'landscape' : 'portrait', unit: 'mm', format: 'a4', compress: true });
+        const doc = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
         if (typeof doc.autoTable !== 'function') throw new Error('Komponen tabel PDF belum termuat.');
         const width = doc.internal.pageSize.getWidth();
         const height = doc.internal.pageSize.getHeight();
@@ -92,17 +92,19 @@
         let y = 65;
         const metrics = options.metrics || [];
         if (metrics.length) {
-            const cardWidth = (usable - (metrics.length - 1) * 3) / metrics.length;
+            const metricColumns = Math.min(3, metrics.length);
+            const cardWidth = (usable - (metricColumns - 1) * 3) / metricColumns;
             metrics.forEach(([name, value], i) => {
-                const x = margin + i * (cardWidth + 3);
+                const x = margin + (i % metricColumns) * (cardWidth + 3);
+                const cardY = y + Math.floor(i / metricColumns) * 31;
                 doc.setFillColor(palette.light);
-                doc.roundedRect(x, y, cardWidth, 27, 2, 2, 'F');
+                doc.roundedRect(x, cardY, cardWidth, 27, 2, 2, 'F');
                 doc.setFillColor(palette.gold);
-                doc.rect(x + 3, y + 5, 1, 16, 'F');
-                fit(name.toUpperCase(), x + 7, y + 8, cardWidth - 11, 6.5, palette.muted, true, 1);
-                fit(value, x + 7, y + 17, cardWidth - 11, 10, palette.ink, true, 2);
+                doc.rect(x + 3, cardY + 5, 1, 16, 'F');
+                fit(name.toUpperCase(), x + 7, cardY + 8, cardWidth - 11, 6.5, palette.muted, true, 1);
+                fit(value, x + 7, cardY + 17, cardWidth - 11, 10, palette.ink, true, 2);
             });
-            y += 36;
+            y += Math.ceil(metrics.length / metricColumns) * 31 + 5;
         }
         if (options.context) {
             doc.setFont('helvetica', 'normal');
@@ -112,20 +114,15 @@
             y += lines.length * 4 + 6;
         }
         const charts = options.charts || [];
-        for (let index = 0; index < charts.length; index += 2) {
-            if (height - 23 - y < 65) { doc.addPage(); y = 65; }
-            const cardHeight = Math.min(82, height - 23 - y);
-            const cardWidth = (usable - 6) / 2;
-            charts.slice(index, index + 2).forEach((chart, column) => {
-                const x = margin + column * (cardWidth + 6);
-                doc.setDrawColor(palette.line);
-                doc.roundedRect(x, y, cardWidth, cardHeight, 2, 2, 'S');
-                label(chart.title, x + 4, y + 7, 10, palette.ink, true);
-                const imageWidth = Math.min(cardWidth - 8, (cardHeight - 16) * chart.aspect);
-                const imageHeight = imageWidth / chart.aspect;
-                doc.addImage(chart.image, 'PNG', x + (cardWidth - imageWidth) / 2, y + 12, imageWidth, imageHeight);
-            });
-            y += cardHeight + 8;
+        for (const chart of charts) {
+            const cardHeight = 100;
+            if (y + cardHeight > height - 23) { doc.addPage(); y = 65; }
+            doc.setDrawColor(palette.line);
+            doc.roundedRect(margin, y, usable, cardHeight, 2, 2, 'S');
+            label(chart.title, margin + 4, y + 7, 10, palette.ink, true);
+            const imageWidth = Math.min(usable - 8, (cardHeight - 16) * chart.aspect);
+            doc.addImage(chart.image, 'PNG', margin + (usable - imageWidth) / 2, y + 12, imageWidth, imageWidth / chart.aspect);
+            y += cardHeight + 6;
         }
         if (charts.length && options.sections?.length) { doc.addPage(); y = 65; }
         for (const section of options.sections || []) {
@@ -144,7 +141,7 @@
                 theme: 'plain',
                 showHead: 'everyPage',
                 rowPageBreak: 'avoid',
-                styles: { font: 'helvetica', fontSize: options.landscape ? 8 : 8.5, cellPadding: 3, overflow: 'linebreak', textColor: palette.ink, lineColor: palette.line, lineWidth: { bottom: 0.15 }, valign: 'middle' },
+                styles: { font: 'helvetica', fontSize: 8, cellPadding: 3, overflow: 'linebreak', textColor: palette.ink, lineColor: palette.line, lineWidth: { bottom: 0.15 }, valign: 'middle' },
                 headStyles: { fillColor: palette.light, textColor: palette.muted, fontStyle: 'bold', fontSize: 7.5 },
                 alternateRowStyles: { fillColor: '#F8FAFC' },
                 footStyles: { fillColor: '#EAF0F7', fontStyle: 'bold', textColor: palette.ink },

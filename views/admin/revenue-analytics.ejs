@@ -371,7 +371,7 @@
             return showToast(error.message || 'Grafik PDF gagal dibuat.', 'error');
         }
         pdf.download({
-            prefix: 'ANL', title: 'Revenue Analytics Report', landscape: true, charts,
+            prefix: 'ANL', title: 'Revenue Analytics Report', charts,
             context: `Period: ${from ? pdf.date(from) : 'All dates'} - ${to ? pdf.date(to) : 'All dates'}`,
             metrics: [['Total Revenue', pdf.money(analyticsSummary.totalRevenue)], ['Avg Transaction', pdf.money(analyticsSummary.avgTransaction)], ['Commission Earned', pdf.money(analyticsSummary.totalCommission)], ['Top Model', analyticsSummary.topModelName || 'N/A'], ['Transactions', analyticsSummary.totalTransactions || 0]],
             sections: [{
@@ -379,7 +379,6 @@
                 columns: ['#', 'Model', 'Jobs', 'Total Earnings', 'Avg / Job', 'Commission'], numeric: [2, 3, 4, 5],
                 rows: modelStatsData.map((row, index) => [index + 1, row.name || '-', row.jobsCompleted || 0, pdf.money(row.totalEarnings), pdf.money(row.avgPerJob), pdf.money(row.commission)])
             }],
-            note: 'Revenue and model performance follow the selected reporting period.',
             signatures: ['Prepared By', 'Finance Approval', 'Management']
         });
     }
