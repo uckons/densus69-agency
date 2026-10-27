@@ -1000,9 +1000,7 @@
             clients.get(name).push(tx);
         });
         pdf.download({
-            prefix: 'INV', title: 'Client Invoice Summary', confidential: false,
-            context: getPdfFilterContext(),
-            metrics: [['Invoice Total', pdf.money(invoiceSum(rows, 'total'))], ['Gross', pdf.money(invoiceSum(rows, 'gross'))], ['Client Deductions', pdf.money(invoiceSum(rows, 'safety') + invoiceSum(rows, 'admin') + invoiceSum(rows, 'other'))], ['Clients', clients.size], ['Records', rows.length], ['Diterima', pdf.money(rows.reduce((sum, tx) => sum + Number(tx.amount_paid || 0), 0))], ['Sisa Tagihan', pdf.money(rows.reduce((sum, tx) => sum + outstandingFor(tx), 0))]],
+            prefix: 'INV', title: 'Client Invoice', confidential: false,
             sections: Array.from(clients, ([client, records]) => ({
                 title: 'Bill To: ' + client,
                 columns: ['Model / Detail', 'TRX', 'Gross', 'Potongan', 'Tagihan'], numeric: [1, 2, 3, 4],
@@ -1011,7 +1009,10 @@
                     return [(tx.model_name || '-') + '\n' + (tx.model_grade_name || '-') + '\n' + pdf.date(tx.transaction_date) + '\nRate: ' + pdf.money(tx.model_rate), tx.transaction_count || 0, pdf.money(bill.gross), 'Safety + Admin\n' + pdf.money(bill.safety + bill.admin) + '\nLain-lain\n' + pdf.money(bill.other), pdf.money(bill.total)];
                 }),
                 totals: ['CLIENT TOTAL', pdf.sum(records, 'transaction_count'), pdf.money(invoiceSum(records, 'gross')), pdf.money(invoiceSum(records, 'safety') + invoiceSum(records, 'admin') + invoiceSum(records, 'other')), pdf.money(invoiceSum(records, 'total'))]
-            })),
+            })).concat(clients.size > 1 ? [{
+                title: 'Total Invoice', columns: ['Keterangan', 'Jumlah'], numeric: [1],
+                rows: [['Total Tagihan', pdf.money(invoiceSum(rows, 'total'))]]
+            }] : []),
             signatures: ['Finance', 'Client Approval']
         });
     }
