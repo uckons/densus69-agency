@@ -981,22 +981,26 @@
         if (!rows.length) return showToast('Tidak ada transaksi untuk dibuat invoice', 'error');
         const pdf = SkyPdf;
         const clients = new Map();
+        const invoiceSum = (records, key) => records.reduce((sum, tx) => sum + Payroll.invoice(tx)[key], 0);
         rows.forEach(tx => {
             const name = tx.client_name || 'N/A';
             if (!clients.has(name)) clients.set(name, []);
             clients.get(name).push(tx);
         });
         pdf.download({
-            prefix: 'INV', title: 'Client Invoice Summary', confidential: false,
+            prefix: 'INV', title: 'Client Invoice Summary', confidential: false, landscape: true,
             context: getPdfFilterContext(),
-            metrics: [['Invoice Total', pdf.money(pdf.sum(rows, 'gross_amount'))], ['Clients', clients.size], ['Records', rows.length]],
+            metrics: [['Invoice Total', pdf.money(invoiceSum(rows, 'total'))], ['Gross', pdf.money(invoiceSum(rows, 'gross'))], ['Client Deductions', pdf.money(invoiceSum(rows, 'safety') + invoiceSum(rows, 'admin') + invoiceSum(rows, 'other'))], ['Clients', clients.size], ['Records', rows.length]],
             sections: Array.from(clients, ([client, records]) => ({
                 title: 'Bill To: ' + client,
-                columns: ['#', 'Date', 'Model / Grade', 'TRX', 'Rate', 'Amount'], numeric: [3, 4, 5],
-                rows: records.map((tx, index) => [index + 1, pdf.date(tx.transaction_date), (tx.model_name || '-') + '\n' + (tx.model_grade_name || '-'), tx.transaction_count || 0, pdf.money(tx.model_rate), pdf.money(tx.gross_amount)]),
-                totals: ['CLIENT TOTAL', '', '', pdf.sum(records, 'transaction_count'), '', pdf.money(pdf.sum(records, 'gross_amount'))]
+                columns: ['#', 'Date', 'Model / Grade / Rate', 'TRX', 'Gross', 'Safety + Admin', 'Lain-lain', 'Tagihan'], numeric: [3, 4, 5, 6, 7],
+                rows: records.map((tx, index) => {
+                    const bill = Payroll.invoice(tx);
+                    return [index + 1, pdf.date(tx.transaction_date), (tx.model_name || '-') + '\n' + (tx.model_grade_name || '-') + '\nRate: ' + pdf.money(tx.model_rate), tx.transaction_count || 0, pdf.money(bill.gross), pdf.money(bill.safety + bill.admin), pdf.money(bill.other), pdf.money(bill.total)];
+                }),
+                totals: ['CLIENT TOTAL', '', '', pdf.sum(records, 'transaction_count'), pdf.money(invoiceSum(records, 'gross')), pdf.money(invoiceSum(records, 'safety') + invoiceSum(records, 'admin')), pdf.money(invoiceSum(records, 'other')), pdf.money(invoiceSum(records, 'total'))]
             })),
-            note: 'Amounts follow the selected transaction records. This document does not confirm payment.',
+            note: 'Tagihan = (TRX x Rate) - ((Safety + Admin Fee Client) x TRX) - Lain-lain. Lain-lain dipotong sekali per pencatatan transaksi. Tarif mengikuti data transaksi tersimpan. Denda, Cash Advance, dan Agent Fee tidak mengurangi tagihan client. Invoice ini bukan bukti pembayaran.',
             signatures: ['Finance', 'Client Approval']
         });
     }

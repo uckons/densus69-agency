@@ -29,3 +29,13 @@ test('rounds decimal money at each deduction to cents', () => {
         fine: 0.20, cash_advance: 0.30, agent_fee_per_trx: 2.05});
     assert.equal(result.net, 288.30);
 });
+test('client invoice subtracts only client deductions and ignores model payroll deductions', () => {
+    const tx = { transaction_count: 2, model_rate: 250000, safety_fee: 10000,
+        client_admin_fee: 10000, other_deduction: 15000,
+        fine: 30000, cash_advance: 50000, agent_fee_amount: 60000, net_amount: 305000 };
+    assert.deepEqual(Payroll.invoice(tx), {gross: 500000, safety: 20000, admin: 20000, other: 15000, total: 445000});
+    assert.equal(Payroll.invoice({...tx, fine: 999999, cash_advance: 999999, agent_fee_amount: 999999}).total, 445000);
+});
+test('legacy admin fee is not treated as a client deduction on an invoice', () => {
+    assert.equal(Payroll.invoice({transaction_count: 2, model_rate: 250000, admin_fee: 50000}).total, 500000);
+});

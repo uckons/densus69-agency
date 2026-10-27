@@ -27,5 +27,13 @@
             net: Number(tx.net_amount || 0)
         };
     }
-    return { calculate, breakdown, formula: 'Gross - ((Safety + Admin Fee Client) x TRX) - Lain-lain - Denda - Cash Advance - Agent Fee' };
+    function invoice(tx) {
+        const count = Number(tx.transaction_count || 0);
+        const gross = amount(tx.model_rate == null ? tx.gross_amount : count * Number(tx.model_rate));
+        const safety = amount(count * Number(tx.safety_fee || 0));
+        const admin = amount(count * Number(tx.client_admin_fee || 0));
+        const other = amount(tx.other_deduction);
+        return { gross, safety, admin, other, total: amount(gross - safety - admin - other) };
+    }
+    return { calculate, breakdown, invoice, formula: 'Gross - ((Safety + Admin Fee Client) x TRX) - Lain-lain - Denda - Cash Advance - Agent Fee' };
 });
