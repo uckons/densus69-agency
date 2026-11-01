@@ -10,6 +10,7 @@ const {
 
 
 async function ensureModelAgentColumns() {
+  await require('../database/payroll-schema')();
   await db.query(`
     CREATE TABLE IF NOT EXISTS model_grades (
       id SERIAL PRIMARY KEY,
@@ -147,7 +148,7 @@ exports.getModels = async (req, res) => {
         g.grade_name,
         COALESCE(g.rate_per_trx, m.rate, 0) AS grade_rate_per_trx,
         COALESCE(m.agent_fee_flat, 0) AS agent_fee_flat,
-        GREATEST(COALESCE(g.rate_per_trx, m.rate, 0) - COALESCE(m.agent_fee_flat, 0), 0) AS estimated_model_fee,
+        (m.salary_rate - LEAST(COALESCE(m.agent_fee_flat, 0), COALESCE(g.rate_per_trx, m.rate, 0))) AS estimated_model_fee,
         LEAST(COALESCE(m.agent_fee_flat, 0), COALESCE(g.rate_per_trx, m.rate, 0)) AS estimated_agent_fee
       FROM models m
       LEFT JOIN users u ON m.user_id = u.id
@@ -246,13 +247,18 @@ exports.createManualModel = async (req, res) => {
     }
 
     const parsedRate = Number(gradeResult.rows[0].rate_per_trx || 0);
+    const salaryRate = req.body.salary_rate === undefined || req.body.salary_rate === null || req.body.salary_rate === '' ? null : Number(req.body.salary_rate);
+    if (salaryRate !== null && (!Number.isFinite(salaryRate) || salaryRate <= 0 || salaryRate > 99999999.99)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({success:false,message:'Rate Gaji Model/TRX harus lebih dari nol dan maksimal Rp99.999.999,99'});
+    }
 
     const modelResult = await client.query(
       `INSERT INTO models (
         user_id, full_name, phone, gender, address,
-        status, is_active, rate, grade_id, agent_id, agent_fee_flat, created_at
-      ) VALUES ($1,$2,$3,$4,$5,'vacant',true,$6,$7,$8,$9,NOW()) RETURNING *`,
-      [userId, full_name, phone || null, gender || null, address || city || null, parsedRate, parsedGradeId, parsedAgentId, parsedAgentFeeFlat]
+        status, is_active, rate, grade_id, agent_id, agent_fee_flat, salary_rate, created_at
+      ) VALUES ($1,$2,$3,$4,$5,'vacant',true,$6,$7,$8,$9,$10,NOW()) RETURNING *`,
+      [userId, full_name, phone || null, gender || null, address || city || null, parsedRate, parsedGradeId, parsedAgentId, parsedAgentFeeFlat, salaryRate]
     );
 
     await client.query('COMMIT');
@@ -339,6 +345,11 @@ exports.updateManualModel = async (req, res) => {
     }
 
     const parsedRate = Number(gradeResult.rows[0].rate_per_trx || 0);
+    const salaryRate = req.body.salary_rate === undefined || req.body.salary_rate === null || req.body.salary_rate === '' ? null : Number(req.body.salary_rate);
+    if (salaryRate !== null && (!Number.isFinite(salaryRate) || salaryRate <= 0 || salaryRate > 99999999.99)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({success:false,message:'Rate Gaji Model/TRX harus lebih dari nol dan maksimal Rp99.999.999,99'});
+    }
 
     const updateResult = await client.query(
       `UPDATE models
@@ -350,7 +361,7 @@ exports.updateManualModel = async (req, res) => {
            grade_id = $6,
            agent_id = $7,
            agent_fee_flat = $8,
-           status = COALESCE($9, status)
+           status = COALESCE($9, status), salary_rate = COALESCE($11, salary_rate)
        WHERE id = $10
        RETURNING *`,
       [
@@ -363,7 +374,7 @@ exports.updateManualModel = async (req, res) => {
         parsedAgentId,
         parsedAgentFeeFlat,
         status || null,
-        id
+        id, salaryRate
       ]
     );
 

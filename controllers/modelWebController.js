@@ -85,7 +85,7 @@ exports.showDashboard = async (req, res) => {
       LIMIT 5
     `, [model.id]);
 
-    const netTransactions = await db.query("SELECT id, TO_CHAR(transaction_date,'YYYY-MM-DD') AS transaction_day, transaction_count, net_amount FROM transactions WHERE model_id=$1 ORDER BY transaction_date DESC, id DESC", [model.id]);
+    const netTransactions = await db.query("SELECT *, TO_CHAR(transaction_date,'YYYY-MM-DD') AS transaction_day FROM transactions WHERE model_id=$1 ORDER BY transaction_date DESC, id DESC", [model.id]);
     res.render('model/dashboard', {
       earningsRows: netTransactions.rows.map(Visibility.transaction),
       user: {

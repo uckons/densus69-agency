@@ -283,22 +283,21 @@ VALUES ('admin@densus69.my.id', '$2a$10$YourHashedPasswordHere', 'admin');
 
 Client deductions are configured in **Clients**. Safety and admin fee are rates per TRX; other deductions apply once per recorded transaction. The transaction form contains **Denda** and **Cash Advance**.
 
+Set **Models → Edit → Rate Gaji Model/TRX** to the salary rate agreed with each model. This is independent of the internal client/grade rate. New transactions require a configured model salary rate and save its snapshot.
+
 ```text
-Gross = TRX × Model Rate
-Net = Gross − ((Safety + Client Admin Fee) × TRX)
-      − Other Deductions − Denda − Cash Advance − Agent Fee
+Model Gross = TRX × recorded model salary rate
+Model Net = Model Gross − Agent Fee − Denda − Cash Advance
 Agent Fee = TRX × recorded agent flat rate
 ```
 
-Example: rate Rp 500,000, 3 TRX, safety Rp 10,000/TRX, admin Rp 5,000/TRX, other deductions Rp 25,000, denda Rp 20,000, cash advance Rp 50,000, and agent Rp 20,000/TRX produce **Rp 1,300,000 net**.
+Client invoice total = (TRX × recorded client rate) − ((Safety + Client Admin Fee) × TRX) − Other Deductions. Client deductions do not reduce the separately configured model salary. All PDF reports use A4 portrait without explanatory formula footnotes.
 
-Client invoice total = (TRX × recorded model rate) − ((Safety + Client Admin Fee) × TRX) − Other Deductions. Denda, Cash Advance, and Agent Fee affect model payroll only. Invoice PDFs show line deductions, client subtotals, and the grand total using saved transaction rates. All PDF reports use A4 portrait, with compact columns and no explanatory formula footnotes.
+Master rate changes affect future transactions only. Existing payroll, invoices and receipts remain unchanged. A transaction's edit form separately supports **Rate Tagihan Client/TRX** and **Rate Gaji Model/TRX**: the former changes its invoice, while the latter changes its payroll. For historical transactions without a salary snapshot, the original calculation remains until a salary rate is explicitly changed. Reducing an invoice below active client payments retains the receipts and displays **Kelebihan Bayar**. Changing the client uses that client's current deduction rates. Negative model balances remain visible.
 
-Transaction rates are recorded at creation. Client/model rate changes affect future transactions; they do not rewrite existing payroll. Editing a transaction retains its saved rates unless **Rate/TRX** is explicitly changed in its edit form. This recalculates that transaction's gross, client invoice and model net pay; the model/grade/job master rate and recorded receipts remain unchanged. A change that reduces the invoice below active client payments is allowed: the original receipts stay intact and the difference appears as **Kelebihan Bayar**. Changing the client uses that client's current deduction rates. An amount below zero remains a negative balance, following the formula.
+The server applies the additive migration in `database/payroll-schema.js` before listening. No manual schema reset is required. Existing salary rates are unset; enter them in Models before creating new transactions. Existing gross/net amounts remain unchanged, and former transaction admin fees remain historical denda.
 
-The server applies the additive migration in `database/payroll-schema.js` before listening. Existing gross/net amounts remain unchanged; an existing transaction's former admin fee is displayed as its historical denda. No manual schema reset is required.
-
-A combined model payslip is available from **Transactions → Slip Gaji Model**: choose the model and an inclusive start/end date range. The model-facing portrait PDF includes only dates, TRX counts, net rates per TRX and net earnings across all matching transactions. It uses saved net amounts regardless of client payment status. Single-transaction payslips use the same net-only policy; internal deductions remain in admin financial reports.
+A combined model payslip is available from **Transactions → Slip Gaji Model** with an inclusive date range. Single and period payslips show dates, TRX counts, model salary rates, model gross, Agent Fee, Denda, Cash Advance and net earnings. Historical model gross is reconstructed from saved net plus these model deductions. Client rates, client gross and client deductions stay private. Payslips use stored earnings independently of client payment status.
 
 Client payments are recorded from **Transactions → Bayar**. Enter the actual amount, receipt date, method and optional reference. Partial payments are supported. Dashboard, Transactions and Analytics revenue use active payment receipts by **payment date**, independently of the invoice transaction date. Invoice totals and unpaid balances are displayed separately. Historical transactions begin unpaid until their actual payments are entered; no receipts are inferred from recorded payroll.
 
@@ -437,4 +436,4 @@ For issues and questions, please open an issue on GitHub.
 **Built with ❤️ for the modeling industry**
 ## Model financial visibility
 
-Model accounts and public endpoints do not receive gross rates, client offer/payment amounts, or internal deduction/commission fields. Profile, authentication, earnings, job and booking responses use explicit serializers. Admin job and transaction APIs retain complete financial details. The model dashboard lists only each transaction date, TRX count, net rate and net earnings. Net rate is the saved net amount divided by its TRX count, rounded to two decimals; a period summary uses the weighted net average. Existing ledger records are retained. Regenerate any model-facing payslips before sharing them.
+Model accounts receive only their own salary rate, model gross, Agent Fee, Denda, Cash Advance and net earnings. They cannot change their salary rate through profile updates. Public profiles exclude all financial fields. Client rates, client gross, payments and client deductions remain private through explicit serializers; admin APIs retain full financial details. Existing ledger records are retained. Regenerate model-facing payslips before sharing them.

@@ -96,6 +96,9 @@
                         <%= typeof model !== 'undefined' && model.weight ? model.weight + ' kg' : 'N/A' %>
                     </span>
                 </div>
+                <% if (typeof model !== 'undefined' && model.salary_rate != null) { %>
+                <div class="flex justify-between"><span class="text-gray-600">Rate Gaji Model/TRX:</span><span class="font-medium text-gray-900"><%= formatCurrency(Number(model.salary_rate)) %></span></div>
+                <% } %>
 
             </div>
         </div>

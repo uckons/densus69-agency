@@ -13,7 +13,7 @@
         const fine = amount(data.fine);
         const cash = amount(data.cash_advance);
         const agent = amount(count * Number(data.agent_fee_per_trx || 0));
-        return { gross, safety, admin, other, fine, cash, agent, net: amount(gross - safety - admin - other - fine - cash - agent) };
+        return { gross, safety, admin, other, fine, cash, agent, net: amount((data.salary_rate != null ? amount(count * Number(data.salary_rate)) : gross - safety - admin - other) - fine - cash - agent) };
     }
     function breakdown(tx) {
         const fine = Number(tx.fine ?? tx.admin_fee ?? 0);
@@ -34,6 +34,11 @@
         const admin = amount(count * Number(tx.client_admin_fee || 0));
         const other = amount(tx.other_deduction);
         return { gross, safety, admin, other, total: amount(gross - safety - admin - other) };
+    }
+    function modelPay(tx) {
+        const values = breakdown(tx);
+        const gross = amount(tx.model_gross_amount ?? (tx.salary_rate != null ? Number(tx.salary_rate) * Number(tx.transaction_count) : values.net + values.agent + values.fine + values.cash));
+        return { gross, rate: tx.salary_rate != null ? Number(tx.salary_rate) : (Number(tx.transaction_count) ? amount(gross / Number(tx.transaction_count)) : 0), agent: values.agent, fine: values.fine, cash: values.cash, net: values.net };
     }
     function netRate(tx) { return Number(tx.transaction_count) > 0 ? amount(Number(tx.net_amount || 0) / Number(tx.transaction_count)) : 0; }
     function balance(tx) {
@@ -57,5 +62,5 @@
         }
         return { rows, totals, count: rows.reduce((sum, tx) => sum + Number(tx.transaction_count || 0), 0) };
     }
-    return { calculate, breakdown, invoice, balance, period, netRate, formula: 'Gross - ((Safety + Admin Fee Client) x TRX) - Lain-lain - Denda - Cash Advance - Agent Fee' };
+    return { calculate, breakdown, invoice, balance, period, netRate, modelPay, formula: 'Gross - ((Safety + Admin Fee Client) x TRX) - Lain-lain - Denda - Cash Advance - Agent Fee' };
 });

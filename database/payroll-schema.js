@@ -38,6 +38,9 @@ module.exports = function ensurePayrollSchema() {
             )`);
             await client.query('CREATE INDEX IF NOT EXISTS client_payments_transaction_idx ON client_payments(transaction_id)');
             await client.query('CREATE INDEX IF NOT EXISTS client_payments_date_idx ON client_payments(payment_date) WHERE voided_at IS NULL');
+            await client.query('ALTER TABLE models ADD COLUMN IF NOT EXISTS salary_rate NUMERIC(10,2) CHECK (salary_rate > 0)');
+            await client.query('ALTER TABLE transactions ADD COLUMN IF NOT EXISTS salary_rate NUMERIC(10,2) CHECK (salary_rate > 0)');
+            await client.query('ALTER TABLE transactions ADD COLUMN IF NOT EXISTS model_gross_amount NUMERIC(12,2)');
             await client.query('COMMIT');
         } catch (error) {
             await client.query('ROLLBACK');

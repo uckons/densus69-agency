@@ -14,7 +14,7 @@ const Transaction = {
       safety_fee: data.safety_fee, client_admin_fee: data.client_admin_fee,
       other_deduction: data.other_deduction, fine: totals.fine,
       cash_advance: totals.cash, agent_fee_per_trx: data.agent_fee_per_trx,
-      agent_fee_amount: totals.agent, deduction_version: 2
+      agent_fee_amount: totals.agent, salary_rate: data.salary_rate ?? null, model_gross_amount: data.salary_rate != null ? Math.round(Number(data.salary_rate) * Number(data.transaction_count) * 100) / 100 : null, deduction_version: data.salary_rate != null ? 3 : 2
     };
     const columns = Object.keys(values);
     const result = await db.query(`INSERT INTO transactions (${columns.join(', ')}) VALUES (${columns.map((_, index) => '$' + (index + 1)).join(', ')}) RETURNING *`, Object.values(values));
@@ -178,7 +178,9 @@ const Transaction = {
       client_admin_fee: data.client_admin_fee, other_deduction: data.other_deduction,
       fine: totals.fine, cash_advance: totals.cash,
       agent_fee_per_trx: data.agent_fee_per_trx, agent_fee_amount: totals.agent,
-      deduction_version: 2
+      salary_rate: data.salary_rate ?? null,
+      model_gross_amount: data.salary_rate != null ? Math.round(Number(data.salary_rate) * Number(data.transaction_count) * 100) / 100 : null,
+      deduction_version: data.salary_rate != null ? 3 : 2
     };
     const columns = Object.keys(values);
     const result = await client.query(`UPDATE transactions SET ${columns.map((name, i) => name + ' = $' + (i + 1)).join(', ')} WHERE id = $${columns.length + 1} RETURNING *`, [...Object.values(values), id]);

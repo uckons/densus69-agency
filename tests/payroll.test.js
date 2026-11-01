@@ -75,3 +75,12 @@ test('rate correction can expose overpayment without changing the amount receive
 test('negative invoice with no actual receipt does not fabricate an overpayment', () => {
     assert.equal(Payroll.balance({transaction_count:1,model_rate:10000,other_deduction:20000,amount_paid:0}).overpaid,0);
 });
+test('custom model salary is independent of client rates and client deductions',()=>{
+ const data={transaction_count:2,model_rate:250000,salary_rate:180000,safety_fee:10000,client_admin_fee:10000,other_deduction:5000,fine:10000,cash_advance:20000,agent_fee_per_trx:30000};
+ assert.equal(Payroll.calculate(data).net,270000);
+ assert.equal(Payroll.calculate({...data,model_rate:230000,safety_fee:70000,client_admin_fee:60000,other_deduction:100000}).net,270000);
+ assert.deepEqual(Payroll.modelPay({...data,gross_amount:500000,model_gross_amount:360000,agent_fee_amount:60000,net_amount:270000}),{gross:360000,rate:180000,agent:60000,fine:10000,cash:20000,net:270000});
+});
+test('historical model gross is reconstructed from stored net and own deductions, not current master rate',()=>{
+ assert.deepEqual(Payroll.modelPay({transaction_count:2,gross_amount:999999,admin_fee:0,fine:10000,cash_advance:20000,agent_fee_amount:60000,net_amount:270000}),{gross:360000,rate:180000,agent:60000,fine:10000,cash:20000,net:270000});
+});

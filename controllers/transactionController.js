@@ -38,7 +38,7 @@ exports.getAssignedModels = async (req, res) => {
       SELECT DISTINCT
         m.id,
         m.full_name,
-        m.rate,
+        m.rate, m.salary_rate,
         COALESCE(m.agent_fee_flat, 0) AS agent_fee_flat,
         m.status,
         m.is_active,
@@ -115,11 +115,12 @@ exports.createTransaction = async (req, res) => {
       });
     }
 
+    if (model.salary_rate == null) return res.status(400).json({success:false,message:'Isi Rate Gaji Model/TRX di menu Models terlebih dahulu'});
     const snapshot = await clientSnapshot(client_name);
     const transaction = await Transaction.create({
       ...snapshot, model_id,
       transaction_count: count(transaction_count), transaction_date,
-      model_rate: Number(model.rate),
+      model_rate: Number(model.rate), salary_rate: Number(model.salary_rate),
       fine: money(req.body.fine ?? admin_fee, 'Denda'),
       cash_advance: money(req.body.cash_advance, 'Cash Advance'),
       agent_fee_per_trx: Math.min(Number(model.agent_fee_flat || 0), Number(model.rate)),
@@ -300,12 +301,14 @@ exports.updateTransaction = async (req, res) => {
     const newCount = count(transaction_count ?? transaction.transaction_count);
     const newRate = money(req.body.model_rate ?? transaction.model_rate, 'Rate/TRX');
     if (newRate <= 0 || newRate > 99999999.99) throw Object.assign(new Error('Rate/TRX harus lebih besar dari nol dan maksimal Rp99.999.999,99'), {status:400});
+    const salaryRate = req.body.salary_rate === undefined ? transaction.salary_rate : money(req.body.salary_rate, 'Rate Gaji Model/TRX');
+    if (salaryRate != null && (salaryRate <= 0 || salaryRate > 99999999.99)) throw Object.assign(new Error('Rate Gaji Model/TRX tidak valid'),{status:400});
     await Transaction.update(id, {
       ...snapshot,
-      preserveAmounts: !changedClient && newRate === Number(transaction.model_rate) && newFine === Number(transaction.fine ?? transaction.admin_fee) && newCash === Number(transaction.cash_advance || 0) && newCount === Number(transaction.transaction_count),
+      preserveAmounts: (salaryRate == null ? transaction.salary_rate == null : Number(salaryRate) === Number(transaction.salary_rate)) && !changedClient && newRate === Number(transaction.model_rate) && newFine === Number(transaction.fine ?? transaction.admin_fee) && newCash === Number(transaction.cash_advance || 0) && newCount === Number(transaction.transaction_count),
       transaction_date: transaction_date || transaction.transaction_date,
       transaction_count: newCount,
-      model_rate: newRate,
+      model_rate: newRate, salary_rate: salaryRate,
       fine: newFine,
       cash_advance: newCash,
       agent_fee_per_trx: Number(transaction.agent_fee_per_trx ?? (Number(transaction.agent_fee_total || 0) / Number(transaction.transaction_count))),
