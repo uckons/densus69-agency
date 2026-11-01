@@ -1,3 +1,4 @@
+const Visibility = require('../utils/model-visibility');
 const db = require('../config/database');
 
 // Helper function to format currency
@@ -84,13 +85,15 @@ exports.showDashboard = async (req, res) => {
       LIMIT 5
     `, [model.id]);
 
+    const netTransactions = await db.query("SELECT id, TO_CHAR(transaction_date,'YYYY-MM-DD') AS transaction_day, transaction_count, net_amount FROM transactions WHERE model_id=$1 ORDER BY transaction_date DESC, id DESC", [model.id]);
     res.render('model/dashboard', {
+      earningsRows: netTransactions.rows.map(Visibility.transaction),
       user: {
         userId: req.user.userId,
         email: req.user.email,
         name: model.full_name
       },
-      model: model,
+      model: Visibility.profile(model),
       stats: {
         totalEarnings: Number(earnings.total_earnings || 0),
         monthlyEarnings: Number(earnings.monthly_earnings || 0),
@@ -101,7 +104,7 @@ exports.showDashboard = async (req, res) => {
         completedJobs: parseInt(stats.completed_jobs) || 0,
         pendingBookings: parseInt(stats.pending_bookings) || 0
       },
-      recentBookings: bookingsResult.rows,
+      recentBookings: bookingsResult.rows.map(Visibility.booking),
       formatCurrency: formatCurrency
     });
   } catch (error) {
@@ -127,7 +130,7 @@ exports.showProfile = async (req, res) => {
     const photosResult = await db.query('SELECT * FROM photos WHERE model_id = $1 ORDER BY is_cover DESC, created_at DESC LIMIT 8', [model.id]);
     res.render('model/profile', {
       user: { ...req.user, name: model.full_name },
-      model,
+      model: Visibility.profile(model),
       gallery: photosResult.rows.map(photo => ({ ...photo, url: photo.file_path })),
       stats: {
         completedJobs: parseInt(statsResult.rows[0]?.completed_jobs) || 0,
@@ -151,7 +154,7 @@ exports.showEditProfile = async (req, res) => {
     
     res.render('model/edit-profile', {
       user: req.user,
-      model: modelResult.rows[0]
+      model: Visibility.profile(modelResult.rows[0])
     });
   } catch (error) {
     console.error('Edit profile error:', error);
@@ -175,7 +178,7 @@ exports.showGallery = async (req, res) => {
     
     res.render('model/gallery', {
       user: req.user,
-      model: model,
+      model: Visibility.profile(model),
       photos: photosResult.rows,
       gallery: photosResult.rows.map(photo => ({ ...photo, url: photo.file_path, _id: photo.id, isPrimary: photo.is_cover, createdAt: photo.created_at }))
     });
@@ -195,7 +198,7 @@ exports.showJobs = async (req, res) => {
     
     res.render('model/jobs', {
       user: req.user,
-      jobs: jobsResult.rows.map(job => ({ ...job, _id: job.id, type: job.type || 'Modeling', date: job.job_date || job.created_at, rate: job.payment_offered || 0, location: job.location || 'TBD' })),
+      jobs: jobsResult.rows.map(job => ({ ...Visibility.job(job), _id: job.id, type: job.type || 'Modeling', date: job.job_date || job.created_at, location: job.location || 'TBD' })),
       formatCurrency
     });
   } catch (error) {
@@ -223,7 +226,7 @@ exports.showBookings = async (req, res) => {
     
     res.render('model/bookings', {
       user: req.user,
-      bookings: bookingsResult.rows.map(booking => ({ ...booking, _id: booking.id, jobType: booking.job_title || 'Modeling Job', date: booking.booking_date || booking.created_at, clientName: booking.client_name || 'Client', amount: booking.payment_amount || booking.payment_offered || 0, location: booking.location || 'TBD', description: booking.notes })),
+      bookings: bookingsResult.rows.map(booking => ({ ...Visibility.booking(booking), _id: booking.id, jobType: booking.job_title || 'Modeling Job', date: booking.booking_date || booking.created_at, clientName: booking.client_name || 'Client', location: booking.location || 'TBD' })),
       formatCurrency
     });
   } catch (error) {

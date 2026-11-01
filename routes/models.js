@@ -19,6 +19,7 @@ router.get('/profile', auth, isModel, modelController.getProfile);
 router.put('/profile', auth, isModel, modelController.updateProfile);
 
 // GET /api/models/dashboard - Get model dashboard
+router.get('/earnings', auth, isModel, modelController.getEarnings);
 router.get('/dashboard', auth, isModel, modelController.getDashboard);
 
 // POST /api/models/photos - Upload photos

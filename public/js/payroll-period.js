@@ -48,18 +48,13 @@
                 context: `Model: ${name}\nPeriode: ${pdf.date(from.value)} - ${pdf.date(to.value)}\n${rows.length} pencatatan / ${count} TRX`,
                 sections: [{
                     title: 'Ringkasan Pendapatan', columns: ['Keterangan', 'Nominal'], numeric: [1],
-                    rows: [['Gross', pdf.money(totals.gross)], ['Safety', '-' + pdf.money(totals.safety)],
-                        ['Admin Fee Client', '-' + pdf.money(totals.admin)], ['Lain-lain', '-' + pdf.money(totals.other)],
-                        ['Denda', '-' + pdf.money(totals.fine)], ['Cash Advance', '-' + pdf.money(totals.cash)], ['Agent Fee', '-' + pdf.money(totals.agent)]],
+                    rows: [['Jumlah TRX', count], ['Rata-rata Bersih/TRX', pdf.money(Payroll.netRate({net_amount:totals.net,transaction_count:count}))]],
                     totals: ['PENDAPATAN BERSIH MODEL', pdf.money(totals.net)]
                 }, {
-                    title: 'Rincian Transaksi', columns: ['Tanggal / Client / Grade', 'TRX', 'Gross', 'Potongan', 'Bersih'], numeric: [1,2,3,4],
-                    rows: rows.map(tx => {
-                        const values = Payroll.breakdown(tx);
-                        const deductions = values.safety + values.admin + values.other + values.fine + values.cash + values.agent;
-                        return [pdf.date(tx.transaction_day || tx.transaction_date) + '\n' + (tx.client_name || '-') + '\n' + (tx.model_grade_name || '-') + '\nRate: ' + pdf.money(tx.model_rate), tx.transaction_count, pdf.money(values.gross), pdf.money(deductions), pdf.money(values.net)];
-                    }),
-                    totals: ['TOTAL', count, pdf.money(totals.gross), pdf.money(totals.safety + totals.admin + totals.other + totals.fine + totals.cash + totals.agent), pdf.money(totals.net)]
+                    title: 'Rincian Pendapatan', columns: ['Tanggal', 'Jumlah TRX', 'Rate Bersih/TRX', 'Pendapatan Bersih'], numeric: [1,2,3],
+                    rows: rows.map(tx => [pdf.date(tx.transaction_day || tx.transaction_date), tx.transaction_count,
+                        pdf.money(Payroll.netRate(tx)), pdf.money(tx.net_amount)]),
+                    totals: ['TOTAL', count, pdf.money(Payroll.netRate({net_amount:totals.net,transaction_count:count})), pdf.money(totals.net)]
                 }],
                 signatures: ['Finance', 'Model']
             });

@@ -15,6 +15,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
     <!-- Custom Colors -->
+
     <script>
         tailwind.config = {
             theme: {
@@ -249,7 +250,15 @@
                 </div>
 
             </div>
-        </main>
+            <section class="bg-white rounded-xl shadow-md m-6 p-6 overflow-x-auto">
+      <h2 class="text-xl font-bold mb-4">Rincian Pendapatan Bersih</h2>
+      <table class="min-w-full text-sm"><thead><tr><th class="p-3 text-left">Tanggal</th><th class="p-3 text-right">Jumlah TRX</th><th class="p-3 text-right">Rate Bersih/TRX</th><th class="p-3 text-right">Pendapatan Bersih</th></tr></thead><tbody>
+      <% (typeof earningsRows !== 'undefined' ? earningsRows : []).forEach(row => { %>
+        <tr class="border-t"><td class="p-3"><%= row.transaction_date %></td><td class="p-3 text-right"><%= row.transaction_count %></td><td class="p-3 text-right"><%= formatCurrency(row.net_rate) %></td><td class="p-3 text-right"><%= formatCurrency(row.net_amount) %></td></tr>
+      <% }); %>
+      </tbody></table>
+    </section>
+</main>
     </div>
 
     <script>

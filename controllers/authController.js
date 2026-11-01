@@ -1,3 +1,4 @@
+const Visibility = require('../utils/model-visibility');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { User, Model } = require('../models');
@@ -144,7 +145,7 @@ exports.login = async (req, res) => {
           email: user.email,
           role: user.role
         },
-        model: modelProfile,
+        model: Visibility.profile(modelProfile),
         token
       }
     });
@@ -205,7 +206,7 @@ exports.getCurrentUser = async (req, res) => {
           role: user.role,
           created_at: user.created_at
         },
-        model: modelProfile
+        model: Visibility.profile(modelProfile)
       }
     });
   } catch (error) {

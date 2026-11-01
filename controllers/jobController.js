@@ -1,3 +1,4 @@
+const Visibility = require('../utils/model-visibility');
 const { Job, Booking, Model } = require('../models');
 const db = require('../config/database');
 
@@ -200,7 +201,7 @@ exports.assignModelToJob = async (req, res) => {
     return res.json({
       success: true,
       message: 'Model berhasil di-assign ke job',
-      data: booking
+      data: Visibility.booking(booking)
     });
   } catch (error) {
     console.error('Assign model to job error:', error);
@@ -307,7 +308,7 @@ exports.getJobs = async (req, res) => {
 
     res.json({
       success: true,
-      data: jobs,
+      data: req.user?.role === 'admin' ? jobs : jobs.map(Visibility.job),
       count: jobs.length
     });
   } catch (error) {
@@ -356,8 +357,8 @@ exports.getJobDetail = async (req, res) => {
     res.json({
       success: true,
       data: {
-        job,
-        bookings: bookingsWithModels
+        job: req.user?.role === 'admin' ? job : Visibility.job(job),
+        bookings: req.user?.role === 'admin' ? bookingsWithModels : []
       }
     });
   } catch (error) {
@@ -430,7 +431,7 @@ exports.applyToJob = async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Application submitted successfully',
-      data: booking
+      data: Visibility.booking(booking)
     });
   } catch (error) {
     console.error('Apply to job error:', error);
@@ -547,7 +548,7 @@ exports.getMyBookings = async (req, res) => {
 
     res.json({
       success: true,
-      data: bookingsWithJobs
+      data: bookingsWithJobs.map(Visibility.booking)
     });
   } catch (error) {
     console.error('Get my bookings error:', error);

@@ -298,7 +298,7 @@ Transaction rates are recorded at creation. Client/model rate changes affect fut
 
 The server applies the additive migration in `database/payroll-schema.js` before listening. Existing gross/net amounts remain unchanged; an existing transaction's former admin fee is displayed as its historical denda. No manual schema reset is required.
 
-A combined model payslip is available from **Transactions → Slip Gaji Model**: choose the model and an inclusive start/end date range. The portrait PDF includes a deduction summary and every matching transaction across clients and table pages, using saved transaction amounts regardless of client payment status.
+A combined model payslip is available from **Transactions → Slip Gaji Model**: choose the model and an inclusive start/end date range. The model-facing portrait PDF includes only dates, TRX counts, net rates per TRX and net earnings across all matching transactions. It uses saved net amounts regardless of client payment status. Single-transaction payslips use the same net-only policy; internal deductions remain in admin financial reports.
 
 Client payments are recorded from **Transactions → Bayar**. Enter the actual amount, receipt date, method and optional reference. Partial payments are supported. Dashboard, Transactions and Analytics revenue use active payment receipts by **payment date**, independently of the invoice transaction date. Invoice totals and unpaid balances are displayed separately. Historical transactions begin unpaid until their actual payments are entered; no receipts are inferred from recorded payroll.
 
@@ -435,3 +435,6 @@ For issues and questions, please open an issue on GitHub.
 ---
 
 **Built with ❤️ for the modeling industry**
+## Model financial visibility
+
+Model accounts and public endpoints do not receive gross rates, client offer/payment amounts, or internal deduction/commission fields. Profile, authentication, earnings, job and booking responses use explicit serializers. Admin job and transaction APIs retain complete financial details. The model dashboard lists only each transaction date, TRX count, net rate and net earnings. Net rate is the saved net amount divided by its TRX count, rounded to two decimals; a period summary uses the weighted net average. Existing ledger records are retained. Regenerate any model-facing payslips before sharing them.

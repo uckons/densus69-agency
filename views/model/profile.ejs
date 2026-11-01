@@ -96,12 +96,7 @@
                         <%= typeof model !== 'undefined' && model.weight ? model.weight + ' kg' : 'N/A' %>
                     </span>
                 </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-600">Daily Rate:</span>
-                    <span class="font-medium text-gray-900">
-                        <%= typeof model !== 'undefined' && model.rate ? formatCurrency(model.rate) : 'Not set' %>
-                    </span>
-                </div>
+
             </div>
         </div>
     </div>

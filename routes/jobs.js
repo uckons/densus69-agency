@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jobController = require('../controllers/jobController');
-const { auth, isAdmin, isModel } = require('../middleware/auth');
+const { auth, optionalAuth, isAdmin, isModel } = require('../middleware/auth');
 
 // POST /api/jobs - Create new job (admin only)
 router.post('/', auth, isAdmin, jobController.createJob);
@@ -27,10 +27,10 @@ router.get('/:id/assigned-models', auth, isAdmin, jobController.getAssignedModel
 router.post('/:id/unassign-model', auth, isAdmin, jobController.unassignModelFromJob);
 
 // GET /api/jobs - Get all jobs (public and models)
-router.get('/', jobController.getJobs);
+router.get('/', optionalAuth, jobController.getJobs);
 
 // GET /api/jobs/:id - Get job by ID
-router.get('/:id', jobController.getJobDetail);
+router.get('/:id', optionalAuth, jobController.getJobDetail);
 
 // POST /api/jobs/:id/apply - Apply for job (model only)
 router.post('/:id/apply', auth, isModel, jobController.applyToJob);

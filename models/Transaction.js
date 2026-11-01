@@ -115,7 +115,7 @@ const Transaction = {
   // Find transactions by model
   findByModelId: async (modelId, startDate = null, endDate = null) => {
     let query = `
-      SELECT t.*, m.full_name as model_name
+      SELECT t.*, TO_CHAR(t.transaction_date, 'YYYY-MM-DD') AS transaction_day, m.full_name as model_name
       FROM transactions t
       LEFT JOIN models m ON t.model_id = m.id
       WHERE t.model_id = $1

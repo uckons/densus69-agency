@@ -1,3 +1,4 @@
+const Visibility = require('../utils/model-visibility');
 const { Model, Photo, Transaction } = require('../models');
 const { calculateNetPayout } = require('../utils/calculation');
 const path = require('path');
@@ -31,7 +32,7 @@ exports.getProfile = async (req, res) => {
     res.json({
       success: true,
       data: {
-        model,
+        model: Visibility.profile(model),
         photos
       }
     });
@@ -91,7 +92,7 @@ exports.updateProfile = async (req, res) => {
     res.json({
       success: true,
       message: 'Profile updated successfully',
-      data: updatedModel
+      data: Visibility.profile(updatedModel)
     });
   } catch (error) {
     console.error('Update profile error:', error);
@@ -148,16 +149,15 @@ exports.getDashboard = async (req, res) => {
     res.json({
       success: true,
       data: {
-        model,
+        model: Visibility.profile(model),
         statistics: {
           totalEarnings,
           totalTransactions,
-          currentRate: model.rate,
           photosCount: photos.length,
           status: model.status
         },
         monthlyEarnings,
-        recentTransactions: transactions.slice(0, 5)
+        recentTransactions: transactions.slice(0, 5).map(Visibility.transaction)
       }
     });
   } catch (error) {
@@ -290,7 +290,7 @@ exports.getPublicGallery = async (req, res) => {
 
     res.json({
       success: true,
-      data: activeModels
+      data: activeModels.map(Visibility.publicProfile)
     });
   } catch (error) {
     console.error('Get public gallery error:', error);
@@ -352,4 +352,13 @@ exports.getPublicModelProfile = async (req, res) => {
       error: error.message
     });
   }
+};
+
+exports.getEarnings = async (req, res) => {
+  try {
+    const model = await Model.findByUserId(req.user.userId);
+    if (!model) return res.status(404).json({success:false,message:'Model profile not found'});
+    const rows = await Transaction.findByModelId(model.id);
+    res.json({success:true,data:rows.map(Visibility.transaction)});
+  } catch (error) { res.status(500).json({success:false,message:'Pendapatan tidak dapat dimuat'}); }
 };

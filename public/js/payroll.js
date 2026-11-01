@@ -35,6 +35,7 @@
         const other = amount(tx.other_deduction);
         return { gross, safety, admin, other, total: amount(gross - safety - admin - other) };
     }
+    function netRate(tx) { return Number(tx.transaction_count) > 0 ? amount(Number(tx.net_amount || 0) / Number(tx.transaction_count)) : 0; }
     function balance(tx) {
         const total = invoice(tx).total;
         const paid = amount(tx.amount_paid);
@@ -56,5 +57,5 @@
         }
         return { rows, totals, count: rows.reduce((sum, tx) => sum + Number(tx.transaction_count || 0), 0) };
     }
-    return { calculate, breakdown, invoice, balance, period, formula: 'Gross - ((Safety + Admin Fee Client) x TRX) - Lain-lain - Denda - Cash Advance - Agent Fee' };
+    return { calculate, breakdown, invoice, balance, period, netRate, formula: 'Gross - ((Safety + Admin Fee Client) x TRX) - Lain-lain - Denda - Cash Advance - Agent Fee' };
 });

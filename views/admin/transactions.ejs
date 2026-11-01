@@ -858,25 +858,14 @@
         if (!lastTransactionDetail) return showToast('Detail transaksi belum dimuat', 'error');
         const { tx, model = {} } = lastTransactionDetail;
         const pdf = SkyPdf;
-        const rate = tx.model_rate ?? model.rate ?? tx.current_model_rate ?? 0;
         pdf.download({
-            prefix: 'SLIP', reference: `SLIP-${String(tx.id).padStart(6, '0')}`, title: 'Payroll Slip',
-            context: `Model: ${model.full_name || tx.model_name || '-'}  |  Grade: ${model.grade_name || tx.model_grade_name || '-'}\nClient: ${tx.client_name || '-'}  |  Date: ${pdf.date(tx.transaction_date)}`,
-            metrics: [['Net Model Payout', pdf.money(tx.net_amount)], ['Transactions', tx.transaction_count || 0]],
+            prefix: 'SLIP', reference: `SLIP-${String(tx.id).padStart(6, '0')}`, title: 'Slip Gaji Model',
+            context: `Model: ${model.full_name || tx.model_name || '-'}\nTanggal: ${pdf.date(tx.transaction_day || tx.transaction_date)}`,
             sections: [{
-                title: 'Payment Breakdown', columns: ['Description', 'Amount'], numeric: [1],
-                rows: [
-                    [`Gross (${tx.transaction_count || 0} TRX x ${pdf.money(rate)})`, pdf.money(tx.gross_amount)],
-                    ['Safety x ' + tx.transaction_count + ' TRX', '-' + pdf.money(Payroll.breakdown(tx).safety)],
-                    ['Admin Fee Client x ' + tx.transaction_count + ' TRX', '-' + pdf.money(Payroll.breakdown(tx).admin)],
-                    ['Lain-lain (sekali)', '-' + pdf.money(Payroll.breakdown(tx).other)],
-                    ['Denda', '-' + pdf.money(Payroll.breakdown(tx).fine)],
-                    ['Cash Advance', '-' + pdf.money(Payroll.breakdown(tx).cash)],
-                    ['Agent Fee', '-' + pdf.money(getAgentFeeAmount(tx))]
-                ],
-                totals: ['NET MODEL PAYOUT', pdf.money(tx.net_amount)]
+                title: 'Pendapatan Model', columns: ['Keterangan', 'Nominal'], numeric: [1],
+                rows: [['Jumlah TRX', tx.transaction_count || 0], ['Rate Bersih/TRX', pdf.money(Payroll.netRate(tx))]],
+                totals: ['PENDAPATAN BERSIH MODEL', pdf.money(tx.net_amount)]
             }],
-            note: tx.notes || '',
             signatures: ['Finance', 'Model']
         });
     }

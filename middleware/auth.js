@@ -40,4 +40,10 @@ const isAdminOrOwner = (req, res, next) => {
   }
 };
 
-module.exports = { auth, isAdmin, isModel, isAdminOrOwner };
+const optionalAuth = (req, res, next) => {
+  const token = req.cookies?.token || req.header('Authorization')?.replace('Bearer ', '');
+  try { req.user = token ? jwt.verify(token, process.env.JWT_SECRET) : undefined; }
+  catch (_) { req.user = undefined; }
+  next();
+};
+module.exports = { optionalAuth, auth, isAdmin, isModel, isAdminOrOwner };
