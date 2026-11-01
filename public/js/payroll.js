@@ -13,8 +13,9 @@
         const fine = amount(data.fine);
         const cash = amount(data.cash_advance);
         const refund = amount(data.refund);
+        const bonus = amount(data.model_bonus);
         const agent = amount(count * Number(data.agent_fee_per_trx || 0));
-        return { gross, safety, admin, other, fine, cash, refund, agent, net: amount((data.salary_rate != null ? amount(count * Number(data.salary_rate)) : gross - safety - admin - other) - fine - cash - agent + refund) };
+        return { gross, safety, admin, other, fine, cash, refund, bonus, agent, net: amount((data.salary_rate != null ? amount(count * Number(data.salary_rate)) : gross - safety - admin - other) - fine - cash - agent + refund + bonus) };
     }
     function breakdown(tx) {
         const fine = Number(tx.fine ?? tx.admin_fee ?? 0);
@@ -23,8 +24,8 @@
             gross: Number(tx.gross_amount || 0),
             safety: amount(count * Number(tx.safety_fee || 0)),
             admin: amount(count * Number(tx.client_admin_fee || 0)),
-            other: Number(tx.other_deduction || 0), fine, cash: Number(tx.cash_advance || 0), refund: amount(tx.refund),
-            agent: Number(tx.agent_fee_total ?? tx.agent_fee_amount ?? Math.max(Number(tx.gross_amount || 0) - Number(tx.admin_fee || 0) - Number(tx.net_amount || 0) + amount(tx.refund), 0)),
+            other: Number(tx.other_deduction || 0), fine, cash: Number(tx.cash_advance || 0), refund: amount(tx.refund), bonus: amount(tx.model_bonus),
+            agent: Number(tx.agent_fee_total ?? tx.agent_fee_amount ?? Math.max(Number(tx.gross_amount || 0) - Number(tx.admin_fee || 0) - Number(tx.net_amount || 0) + amount(tx.refund) + amount(tx.model_bonus), 0)),
             net: Number(tx.net_amount || 0)
         };
     }
@@ -37,15 +38,10 @@
         const refund = amount(tx.refund);
         return { gross, safety, admin, other, refund, total: amount(gross - safety - admin - other + refund) };
     }
-    function agentPay(tx) {
-        const base = breakdown(tx).agent;
-        const bonus = amount(tx.agent_bonus);
-        return {base, bonus, total: amount(base + bonus)};
-    }
     function modelPay(tx) {
         const values = breakdown(tx);
-        const gross = amount(tx.model_gross_amount ?? (tx.salary_rate != null ? Number(tx.salary_rate) * Number(tx.transaction_count) : values.net + values.agent + values.fine + values.cash - values.refund));
-        return { gross, rate: tx.salary_rate != null ? Number(tx.salary_rate) : (Number(tx.transaction_count) ? amount(gross / Number(tx.transaction_count)) : 0), agent: values.agent, fine: values.fine, cash: values.cash, refund: values.refund, net: values.net };
+        const gross = amount(tx.model_gross_amount ?? (tx.salary_rate != null ? Number(tx.salary_rate) * Number(tx.transaction_count) : values.net + values.agent + values.fine + values.cash - values.refund - values.bonus));
+        return { gross, rate: tx.salary_rate != null ? Number(tx.salary_rate) : (Number(tx.transaction_count) ? amount(gross / Number(tx.transaction_count)) : 0), agent: values.agent, fine: values.fine, cash: values.cash, refund: values.refund, bonus: values.bonus, net: values.net };
     }
     function netRate(tx) { return Number(tx.transaction_count) > 0 ? amount(Number(tx.net_amount || 0) / Number(tx.transaction_count)) : 0; }
     function balance(tx) {
@@ -62,12 +58,12 @@
             const day = tx.transaction_day || String(tx.transaction_date || '').slice(0, 10);
             return String(tx.model_id) === String(modelId) && day >= start && day <= end;
         }).sort((a, b) => String(a.transaction_day || a.transaction_date).localeCompare(String(b.transaction_day || b.transaction_date)) || Number(a.id) - Number(b.id));
-        const totals = { gross: 0, safety: 0, admin: 0, other: 0, fine: 0, cash: 0, refund: 0, agent: 0, net: 0 };
+        const totals = { gross: 0, safety: 0, admin: 0, other: 0, fine: 0, cash: 0, refund: 0, bonus: 0, agent: 0, net: 0 };
         for (const tx of rows) {
             const values = breakdown(tx);
             for (const key of Object.keys(totals)) totals[key] = amount(totals[key] + values[key]);
         }
         return { rows, totals, count: rows.reduce((sum, tx) => sum + Number(tx.transaction_count || 0), 0) };
     }
-    return { calculate, breakdown, invoice, balance, period, netRate, modelPay, agentPay, formula: 'Gross - ((Safety + Admin Fee Client) x TRX) - Lain-lain - Denda - Cash Advance - Agent Fee + Refund' };
+    return { calculate, breakdown, invoice, balance, period, netRate, modelPay, formula: 'Gross - ((Safety + Admin Fee Client) x TRX) - Lain-lain - Denda - Cash Advance - Agent Fee + Refund + Bonus Model' };
 });

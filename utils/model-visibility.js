@@ -6,7 +6,7 @@ const transaction = value => {
     const pay = Payroll.modelPay(value);
     return {id:value.id,transaction_date:value.transaction_day || value.transaction_date,
         transaction_count:Number(value.transaction_count || 0),salary_rate:pay.rate,model_gross_amount:pay.gross,
-        agent_fee:pay.agent,fine:pay.fine,cash_advance:pay.cash,refund:pay.refund,net_rate:Payroll.netRate(value),net_amount:pay.net};
+        agent_fee:pay.agent,fine:pay.fine,cash_advance:pay.cash,refund:pay.refund,model_bonus:pay.bonus,net_rate:Payroll.netRate(value),net_amount:pay.net};
 };
 const job = value => value && ({...pick(value, ['id','title','description','client_name','job_date','location','status','created_at','updated_at','assigned_model_count','unassigned_model_count','total_model_count']),
     ...(Array.isArray(value.assigned_models) ? {assigned_models:value.assigned_models.map(model => pick(model,['id','full_name']))} : {})});

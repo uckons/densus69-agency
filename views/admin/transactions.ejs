@@ -345,9 +345,9 @@
                 <input id="editRefund" type="number" min="0" max="9999999999.99" step="0.01" value="0" class="w-full border rounded-lg px-3 py-2">
             </div>
             <div>
-                <label for="editAgentBonus" class="block text-sm font-medium text-gray-700 mb-1">Bonus Agen (Rp)</label>
-                <input id="editAgentBonus" type="number" min="0" max="9999999999.99" step="0.01" value="0" class="w-full border rounded-lg px-3 py-2">
-                <p class="text-xs text-gray-500 mt-1">Tambahan sekali per transaksi, tidak mengurangi gaji model.</p>
+                <label for="editModelBonus" class="block text-sm font-medium text-gray-700 mb-1">Bonus Model (Rp)</label>
+                <input id="editModelBonus" type="number" min="0" max="9999999999.99" step="0.01" value="0" class="w-full border rounded-lg px-3 py-2">
+                <p class="text-xs text-gray-500 mt-1">Tambahan gaji model sekali per transaksi.</p>
             </div>
             <div>
                 <label for="editSalaryRate" class="block text-sm font-medium text-gray-700 mb-1">Rate Gaji Model/TRX (Rp)</label>
@@ -440,7 +440,7 @@
         return date && !Number.isNaN(date.getTime()) ? date : null;
     }
 
-    function getAgentFeeAmount(tx) { return Payroll.agentPay(tx).total; }
+    function getAgentFeeAmount(tx) { return Payroll.breakdown(tx).agent; }
     function getNonAgentDeductions(tx) {
         const values = Payroll.breakdown(tx);
         return values.safety + values.admin + values.other + values.fine + values.cash;
@@ -851,9 +851,9 @@
                             <div><span class="font-semibold">Lain-lain (sekali):</span> ${formatCurrencySafe(deductions.other)}</div>
                             <div><span class="font-semibold">Denda:</span> ${formatCurrencySafe(deductions.fine)}</div>
                             <div><span class="font-semibold">Cash Advance:</span> ${formatCurrencySafe(deductions.cash)}</div>
-                            <div><span class="font-semibold">Bonus Agen:</span> +${formatCurrencySafe(tx.agent_bonus)}</div>
+                            <div><span class="font-semibold">Bonus Model:</span> +${formatCurrencySafe(tx.model_bonus)}</div>
                             <div><span class="font-semibold">Refund:</span> +${formatCurrencySafe(deductions.refund)}</div>
-                            <div><span class="font-semibold">Total Fee Agen + Bonus:</span> Rp ${agentFee}</div>
+                            <div><span class="font-semibold">Agent Fee:</span> Rp ${agentFee}</div>
                             <div><span class="font-semibold">Net Model:</span> Rp ${net}</div>
                         </div>
                     </div>
@@ -882,7 +882,7 @@
                 title: 'Pendapatan Model', columns: ['Keterangan', 'Nominal'], numeric: [1],
                 rows: [['Jumlah TRX', tx.transaction_count || 0], ['Rate Gaji Model/TRX', pdf.money(pay.rate)],
                     ['Pendapatan Kotor Model', pdf.money(pay.gross)], ['Agent Fee', '-' + pdf.money(pay.agent)],
-                    ['Denda', '-' + pdf.money(pay.fine)], ['Cash Advance', '-' + pdf.money(pay.cash)], ['Refund', '+' + pdf.money(pay.refund)]],
+                    ['Denda', '-' + pdf.money(pay.fine)], ['Cash Advance', '-' + pdf.money(pay.cash)], ['Refund', '+' + pdf.money(pay.refund)], ['Bonus Model', '+' + pdf.money(pay.bonus)]],
                 totals: ['PENDAPATAN BERSIH MODEL', pdf.money(pay.net)]
             }],
             signatures: ['Finance', 'Model']
@@ -900,12 +900,12 @@
             client_admin_fee: changed ? client?.admin_fee || 0 : tx.client_admin_fee,
             other_deduction: changed ? client?.other_deduction || 0 : tx.other_deduction,
             transaction_count: document.getElementById('editTransactionCount').value,
-            fine: document.getElementById('editFine').value, cash_advance: document.getElementById('editCashAdvance').value, refund: document.getElementById('editRefund').value,
+            fine: document.getElementById('editFine').value, cash_advance: document.getElementById('editCashAdvance').value, refund: document.getElementById('editRefund').value, model_bonus: document.getElementById('editModelBonus').value,
             agent_fee_per_trx: tx.agent_fee_per_trx ?? (Payroll.breakdown(tx).agent / Number(tx.transaction_count))
         };
         const totals = Payroll.calculate(data);
         document.getElementById('editPayrollPreview').textContent = changed && !client ? 'Pilih client terdaftar.' :
-            `Gross: ${formatCurrencySafe(totals.gross)} | Tagihan Client: ${formatCurrencySafe(Payroll.invoice(data).total)} | Safety / TRX: ${formatCurrencySafe(data.safety_fee)} | Admin / TRX: ${formatCurrencySafe(data.client_admin_fee)} | Lain-lain: ${formatCurrencySafe(data.other_deduction)} | Fee Agen + Bonus: ${formatCurrencySafe(totals.agent + Number(document.getElementById('editAgentBonus').value || 0))} | Bersih: ${formatCurrencySafe(totals.net)}.`;
+            `Gross: ${formatCurrencySafe(totals.gross)} | Tagihan Client: ${formatCurrencySafe(Payroll.invoice(data).total)} | Safety / TRX: ${formatCurrencySafe(data.safety_fee)} | Admin / TRX: ${formatCurrencySafe(data.client_admin_fee)} | Lain-lain: ${formatCurrencySafe(data.other_deduction)} | Fee Agen: ${formatCurrencySafe(totals.agent)} | Bonus Model: ${formatCurrencySafe(totals.bonus)} | Bersih: ${formatCurrencySafe(totals.net)}.`;
     }
 
     async function openEditTransaction(id) {
@@ -929,7 +929,7 @@
             document.getElementById('editFine').value = Payroll.breakdown(tx).fine;
             document.getElementById('editCashAdvance').value = Number(tx.cash_advance || 0);
             document.getElementById('editRefund').value = Number(tx.refund || 0);
-            document.getElementById('editAgentBonus').value = Number(tx.agent_bonus || 0);
+            document.getElementById('editModelBonus').value = Number(tx.model_bonus || 0);
             editingTransaction = tx;
             try { const clientsResponse = await fetch('/api/admin/clients', {credentials:'include'}); const clientsData = await clientsResponse.json(); editClients = clientsData.success ? clientsData.data : []; } catch (_) { editClients = []; }
             const list = document.getElementById('editClientOptions'); list.replaceChildren();
@@ -953,7 +953,7 @@
             fine: Number(document.getElementById('editFine').value || 0),
             cash_advance: Number(document.getElementById('editCashAdvance').value || 0),
             refund: Number(document.getElementById('editRefund').value || 0),
-            agent_bonus: Number(document.getElementById('editAgentBonus').value || 0),
+            model_bonus: Number(document.getElementById('editModelBonus').value || 0),
             description: document.getElementById('editDescription').value.trim()
         };
 
@@ -965,8 +965,8 @@
             return;
         }
 
-        if (![payload.fine, payload.cash_advance, payload.refund, payload.agent_bonus].every(value => Number.isFinite(value) && value >= 0)) {
-            showToast('Denda, cash advance, refund, dan bonus agen harus berupa angka nol atau lebih', 'error');
+        if (![payload.fine, payload.cash_advance, payload.refund, payload.model_bonus].every(value => Number.isFinite(value) && value >= 0)) {
+            showToast('Denda, cash advance, refund, dan bonus model harus berupa angka nol atau lebih', 'error');
             return;
         }
         if (!Number.isFinite(payload.model_rate) || payload.model_rate <= 0 || payload.model_rate > 99999999.99) {

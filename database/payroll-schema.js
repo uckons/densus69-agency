@@ -42,7 +42,14 @@ module.exports = function ensurePayrollSchema() {
             await client.query('ALTER TABLE transactions ADD COLUMN IF NOT EXISTS salary_rate NUMERIC(10,2) CHECK (salary_rate > 0)');
             await client.query('ALTER TABLE transactions ADD COLUMN IF NOT EXISTS model_gross_amount NUMERIC(12,2)');
             await client.query('ALTER TABLE transactions ADD COLUMN IF NOT EXISTS refund NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (refund >= 0)');
-            await client.query('ALTER TABLE transactions ADD COLUMN IF NOT EXISTS agent_bonus NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (agent_bonus >= 0)');
+            await client.query('ALTER TABLE transactions ADD COLUMN IF NOT EXISTS model_bonus NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (model_bonus >= 0)');
+            // Carry over the briefly introduced agent bonus as model pay exactly once.
+            await client.query(`DO $$ BEGIN
+                IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='transactions' AND column_name='agent_bonus') THEN
+                    UPDATE transactions SET model_bonus=model_bonus+agent_bonus,
+                        net_amount=net_amount+agent_bonus, agent_bonus=0 WHERE agent_bonus<>0;
+                END IF;
+            END $$`);
             await client.query('COMMIT');
         } catch (error) {
             await client.query('ROLLBACK');

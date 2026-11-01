@@ -154,7 +154,7 @@ exports.showTransactions = async (req, res) => {
         m.full_name as model_name,
         g.grade_name as model_grade_name,
         a.full_name as agent_name,
-        COALESCE(t.agent_fee_amount, GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0) + COALESCE(t.refund, 0), 0)) as agent_fee_total
+        COALESCE(t.agent_fee_amount, GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0) + COALESCE(t.refund, 0) + COALESCE(t.model_bonus, 0), 0)) as agent_fee_total
       FROM transactions t
       LEFT JOIN models m ON t.model_id = m.id
       LEFT JOIN model_grades g ON m.grade_id = g.id
@@ -184,7 +184,7 @@ exports.showAnalytics = async (req, res) => {
         t.*,
         m.full_name AS model_name,
         g.grade_name AS model_grade_name,
-        COALESCE(t.agent_fee_amount, GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0) + COALESCE(t.refund, 0), 0)) AS agent_fee_total
+        COALESCE(t.agent_fee_amount, GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0) + COALESCE(t.refund, 0) + COALESCE(t.model_bonus, 0), 0)) AS agent_fee_total
       FROM transactions t
       LEFT JOIN models m ON t.model_id = m.id
       LEFT JOIN model_grades g ON m.grade_id = g.id
@@ -205,7 +205,7 @@ exports.showAnalytics = async (req, res) => {
     const totalRevenue = cashSummary.totalRevenue;
     const totalTransactions = transactions.length;
     const avgTransaction = cashSummary.receiptCount ? totalRevenue / cashSummary.receiptCount : 0;
-    const totalCommission = transactions.reduce((sum, tx) => sum + (Number(tx.agent_fee_total || 0) + Number(tx.agent_bonus || 0)), 0);
+    const totalCommission = transactions.reduce((sum, tx) => sum + Number(tx.agent_fee_total || 0), 0);
 
     const byModel = new Map();
     const byMonth = new Map();
@@ -225,7 +225,7 @@ exports.showAnalytics = async (req, res) => {
       };
       modelRow.jobsCompleted += Number(tx.transaction_count || 0);
       modelRow.totalEarnings += Number(tx.net_amount || 0);
-      modelRow.commission += (Number(tx.agent_fee_total || 0) + Number(tx.agent_bonus || 0));
+      modelRow.commission += Number(tx.agent_fee_total || 0);
       byModel.set(modelId, modelRow);
 
     });
