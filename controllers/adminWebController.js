@@ -205,7 +205,7 @@ exports.showAnalytics = async (req, res) => {
     const totalRevenue = cashSummary.totalRevenue;
     const totalTransactions = transactions.length;
     const avgTransaction = cashSummary.receiptCount ? totalRevenue / cashSummary.receiptCount : 0;
-    const totalCommission = transactions.reduce((sum, tx) => sum + Number(tx.agent_fee_total || 0), 0);
+    const totalCommission = transactions.reduce((sum, tx) => sum + (Number(tx.agent_fee_total || 0) + Number(tx.agent_bonus || 0)), 0);
 
     const byModel = new Map();
     const byMonth = new Map();
@@ -225,7 +225,7 @@ exports.showAnalytics = async (req, res) => {
       };
       modelRow.jobsCompleted += Number(tx.transaction_count || 0);
       modelRow.totalEarnings += Number(tx.net_amount || 0);
-      modelRow.commission += Number(tx.agent_fee_total || 0);
+      modelRow.commission += (Number(tx.agent_fee_total || 0) + Number(tx.agent_bonus || 0));
       byModel.set(modelId, modelRow);
 
     });

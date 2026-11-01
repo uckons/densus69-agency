@@ -2,7 +2,7 @@ const db = require('../config/database');
 const Payroll = require('../public/js/payroll');
 const ensure = require('../database/payroll-schema');
 const cents = value => Math.round(Number(value) * 100);
-const invoiceSql = (alias = 't') => `(${alias}.transaction_count * ${alias}.model_rate - ${alias}.transaction_count * (COALESCE(${alias}.safety_fee, 0) + COALESCE(${alias}.client_admin_fee, 0)) - COALESCE(${alias}.other_deduction, 0))`;
+const invoiceSql = (alias = 't') => `(${alias}.transaction_count * ${alias}.model_rate - ${alias}.transaction_count * (COALESCE(${alias}.safety_fee, 0) + COALESCE(${alias}.client_admin_fee, 0)) - COALESCE(${alias}.other_deduction, 0) + COALESCE(${alias}.refund, 0))`;
 
 async function attach(transactions) {
     await ensure();

@@ -34,7 +34,13 @@
         const safety = amount(count * Number(tx.safety_fee || 0));
         const admin = amount(count * Number(tx.client_admin_fee || 0));
         const other = amount(tx.other_deduction);
-        return { gross, safety, admin, other, total: amount(gross - safety - admin - other) };
+        const refund = amount(tx.refund);
+        return { gross, safety, admin, other, refund, total: amount(gross - safety - admin - other + refund) };
+    }
+    function agentPay(tx) {
+        const base = breakdown(tx).agent;
+        const bonus = amount(tx.agent_bonus);
+        return {base, bonus, total: amount(base + bonus)};
     }
     function modelPay(tx) {
         const values = breakdown(tx);
@@ -63,5 +69,5 @@
         }
         return { rows, totals, count: rows.reduce((sum, tx) => sum + Number(tx.transaction_count || 0), 0) };
     }
-    return { calculate, breakdown, invoice, balance, period, netRate, modelPay, formula: 'Gross - ((Safety + Admin Fee Client) x TRX) - Lain-lain - Denda - Cash Advance - Agent Fee + Refund' };
+    return { calculate, breakdown, invoice, balance, period, netRate, modelPay, agentPay, formula: 'Gross - ((Safety + Admin Fee Client) x TRX) - Lain-lain - Denda - Cash Advance - Agent Fee + Refund' };
 });

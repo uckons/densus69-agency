@@ -33,7 +33,7 @@ test('client invoice subtracts only client deductions and ignores model payroll 
     const tx = { transaction_count: 2, model_rate: 250000, safety_fee: 10000,
         client_admin_fee: 10000, other_deduction: 15000,
         fine: 30000, cash_advance: 50000, agent_fee_amount: 60000, net_amount: 305000 };
-    assert.deepEqual(Payroll.invoice(tx), {gross: 500000, safety: 20000, admin: 20000, other: 15000, total: 445000});
+    assert.deepEqual(Payroll.invoice(tx), {gross: 500000, safety: 20000, admin: 20000, other: 15000, refund: 0, total: 445000});
     assert.equal(Payroll.invoice({...tx, fine: 999999, cash_advance: 999999, agent_fee_amount: 999999}).total, 445000);
 });
 test('legacy admin fee is not treated as a client deduction on an invoice', () => {
@@ -85,12 +85,12 @@ test('historical model gross is reconstructed from stored net and own deductions
  assert.deepEqual(Payroll.modelPay({transaction_count:2,gross_amount:999999,admin_fee:0,fine:10000,cash_advance:20000,agent_fee_amount:60000,net_amount:270000}),{gross:360000,rate:180000,agent:60000,fine:10000,cash:20000,refund:0,net:270000});
 });
 
-test('refund increases model net once without changing client invoice or gross', () => {
+test('refund increases model net and client invoice once without changing gross', () => {
  const input={transaction_count:2,model_rate:250000,salary_rate:180000,safety_fee:10000,client_admin_fee:10000,agent_fee_per_trx:30000,fine:10000,cash_advance:20000,refund:15000.25};
  const totals=Payroll.calculate(input);
  assert.equal(totals.net,285000.25);
  assert.equal(totals.refund,15000.25);
- assert.equal(Payroll.invoice(input).total,460000);
+ assert.equal(Payroll.invoice(input).total,475000.25);
  const tx={...input,gross_amount:totals.gross,net_amount:totals.net,agent_fee_amount:totals.agent};
  assert.equal(Payroll.modelPay(tx).gross,360000);
  const {salary_rate,...legacy}=tx;
@@ -98,4 +98,15 @@ test('refund increases model net once without changing client invoice or gross',
  const period=Payroll.period([{...tx,model_id:1,transaction_day:'2026-11-01'}],1,'2026-11-01','2026-11-01');
  assert.equal(period.totals.refund,15000.25);
  assert.equal(period.totals.net,285000.25);
+});
+
+test('agent bonus adds once to agent pay without reducing model net or increasing client invoice', () => {
+ const tx={transaction_count:3,model_rate:250000,salary_rate:180000,agent_fee_per_trx:30000,agent_fee_amount:90000,agent_bonus:25000,refund:15000,amount_paid:750000};
+ assert.deepEqual(Payroll.agentPay(tx),{base:90000,bonus:25000,total:115000});
+ assert.equal(Payroll.calculate(tx).net,465000);
+ assert.equal(Payroll.invoice(tx).total,765000);
+ assert.equal(Payroll.balance(tx).outstanding,15000);
+ const pay=Payroll.modelPay({...tx,model_gross_amount:540000,net_amount:465000});
+ assert.equal(pay.agent,90000);assert.equal(pay.net,465000);
+ assert.equal(Payroll.agentPay({...tx,agent_bonus:0}).total,90000);
 });

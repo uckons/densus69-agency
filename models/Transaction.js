@@ -13,7 +13,7 @@ const Transaction = {
       notes: data.notes ?? null, created_by: data.created_by ?? null,
       safety_fee: data.safety_fee, client_admin_fee: data.client_admin_fee,
       other_deduction: data.other_deduction, fine: totals.fine,
-      cash_advance: totals.cash, refund: totals.refund, agent_fee_per_trx: data.agent_fee_per_trx,
+      cash_advance: totals.cash, refund: totals.refund, agent_bonus: data.agent_bonus ?? 0, agent_fee_per_trx: data.agent_fee_per_trx,
       agent_fee_amount: totals.agent, salary_rate: data.salary_rate ?? null, model_gross_amount: data.salary_rate != null ? Math.round(Number(data.salary_rate) * Number(data.transaction_count) * 100) / 100 : null, deduction_version: data.salary_rate != null ? 3 : 2
     };
     const columns = Object.keys(values);
@@ -165,7 +165,7 @@ const Transaction = {
     const paid = (await client.query('SELECT COALESCE(SUM(amount),0) AS total FROM client_payments WHERE transaction_id=$1 AND voided_at IS NULL', [id])).rows[0].total;
     if (data.client_name !== current.client_name && Number(paid) > 0) throw Object.assign(new Error('Client tidak dapat diganti setelah ada pembayaran aktif'), {status:409});
     if (data.preserveAmounts) {
-      const result = await client.query('UPDATE transactions SET client_name=$1, transaction_date=$2, notes=$3, refund=$5, net_amount=net_amount + $5 - COALESCE(refund,0) WHERE id=$4 RETURNING *', [data.client_name, data.transaction_date, data.notes, id, data.refund ?? current.refund ?? 0]);
+      const result = await client.query('UPDATE transactions SET client_name=$1, transaction_date=$2, notes=$3, agent_bonus=$6, refund=$5, net_amount=net_amount + $5 - COALESCE(refund,0) WHERE id=$4 RETURNING *', [data.client_name, data.transaction_date, data.notes, id, data.refund ?? current.refund ?? 0, data.agent_bonus ?? current.agent_bonus ?? 0]);
       await client.query('COMMIT');
     return result.rows[0];
     }
@@ -176,7 +176,7 @@ const Transaction = {
       admin_fee: totals.admin, gross_amount: totals.gross, net_amount: totals.net,
       notes: data.notes, safety_fee: data.safety_fee,
       client_admin_fee: data.client_admin_fee, other_deduction: data.other_deduction,
-      fine: totals.fine, cash_advance: totals.cash, refund: totals.refund,
+      fine: totals.fine, cash_advance: totals.cash, refund: totals.refund, agent_bonus: data.agent_bonus ?? 0,
       agent_fee_per_trx: data.agent_fee_per_trx, agent_fee_amount: totals.agent,
       salary_rate: data.salary_rate ?? null,
       model_gross_amount: data.salary_rate != null ? Math.round(Number(data.salary_rate) * Number(data.transaction_count) * 100) / 100 : null,

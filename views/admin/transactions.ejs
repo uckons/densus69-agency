@@ -345,6 +345,11 @@
                 <input id="editRefund" type="number" min="0" max="9999999999.99" step="0.01" value="0" class="w-full border rounded-lg px-3 py-2">
             </div>
             <div>
+                <label for="editAgentBonus" class="block text-sm font-medium text-gray-700 mb-1">Bonus Agen (Rp)</label>
+                <input id="editAgentBonus" type="number" min="0" max="9999999999.99" step="0.01" value="0" class="w-full border rounded-lg px-3 py-2">
+                <p class="text-xs text-gray-500 mt-1">Tambahan sekali per transaksi, tidak mengurangi gaji model.</p>
+            </div>
+            <div>
                 <label for="editSalaryRate" class="block text-sm font-medium text-gray-700 mb-1">Rate Gaji Model/TRX (Rp)</label>
                 <input id="editSalaryRate" type="number" min="0.01" max="99999999.99" step="0.01" required class="w-full border rounded-lg px-3 py-2">
             </div>
@@ -435,7 +440,7 @@
         return date && !Number.isNaN(date.getTime()) ? date : null;
     }
 
-    function getAgentFeeAmount(tx) { return Payroll.breakdown(tx).agent; }
+    function getAgentFeeAmount(tx) { return Payroll.agentPay(tx).total; }
     function getNonAgentDeductions(tx) {
         const values = Payroll.breakdown(tx);
         return values.safety + values.admin + values.other + values.fine + values.cash;
@@ -846,8 +851,9 @@
                             <div><span class="font-semibold">Lain-lain (sekali):</span> ${formatCurrencySafe(deductions.other)}</div>
                             <div><span class="font-semibold">Denda:</span> ${formatCurrencySafe(deductions.fine)}</div>
                             <div><span class="font-semibold">Cash Advance:</span> ${formatCurrencySafe(deductions.cash)}</div>
+                            <div><span class="font-semibold">Bonus Agen:</span> +${formatCurrencySafe(tx.agent_bonus)}</div>
                             <div><span class="font-semibold">Refund:</span> +${formatCurrencySafe(deductions.refund)}</div>
-                            <div><span class="font-semibold">Agent Fee:</span> Rp ${agentFee}</div>
+                            <div><span class="font-semibold">Total Fee Agen + Bonus:</span> Rp ${agentFee}</div>
                             <div><span class="font-semibold">Net Model:</span> Rp ${net}</div>
                         </div>
                     </div>
@@ -895,11 +901,11 @@
             other_deduction: changed ? client?.other_deduction || 0 : tx.other_deduction,
             transaction_count: document.getElementById('editTransactionCount').value,
             fine: document.getElementById('editFine').value, cash_advance: document.getElementById('editCashAdvance').value, refund: document.getElementById('editRefund').value,
-            agent_fee_per_trx: tx.agent_fee_per_trx ?? (getAgentFeeAmount(tx) / Number(tx.transaction_count))
+            agent_fee_per_trx: tx.agent_fee_per_trx ?? (Payroll.breakdown(tx).agent / Number(tx.transaction_count))
         };
         const totals = Payroll.calculate(data);
         document.getElementById('editPayrollPreview').textContent = changed && !client ? 'Pilih client terdaftar.' :
-            `Gross: ${formatCurrencySafe(totals.gross)} | Tagihan Client: ${formatCurrencySafe(Payroll.invoice(data).total)} | Safety / TRX: ${formatCurrencySafe(data.safety_fee)} | Admin / TRX: ${formatCurrencySafe(data.client_admin_fee)} | Lain-lain: ${formatCurrencySafe(data.other_deduction)} | Agent Fee: ${formatCurrencySafe(totals.agent)} | Bersih: ${formatCurrencySafe(totals.net)}.`;
+            `Gross: ${formatCurrencySafe(totals.gross)} | Tagihan Client: ${formatCurrencySafe(Payroll.invoice(data).total)} | Safety / TRX: ${formatCurrencySafe(data.safety_fee)} | Admin / TRX: ${formatCurrencySafe(data.client_admin_fee)} | Lain-lain: ${formatCurrencySafe(data.other_deduction)} | Fee Agen + Bonus: ${formatCurrencySafe(totals.agent + Number(document.getElementById('editAgentBonus').value || 0))} | Bersih: ${formatCurrencySafe(totals.net)}.`;
     }
 
     async function openEditTransaction(id) {
@@ -923,6 +929,7 @@
             document.getElementById('editFine').value = Payroll.breakdown(tx).fine;
             document.getElementById('editCashAdvance').value = Number(tx.cash_advance || 0);
             document.getElementById('editRefund').value = Number(tx.refund || 0);
+            document.getElementById('editAgentBonus').value = Number(tx.agent_bonus || 0);
             editingTransaction = tx;
             try { const clientsResponse = await fetch('/api/admin/clients', {credentials:'include'}); const clientsData = await clientsResponse.json(); editClients = clientsData.success ? clientsData.data : []; } catch (_) { editClients = []; }
             const list = document.getElementById('editClientOptions'); list.replaceChildren();
@@ -946,6 +953,7 @@
             fine: Number(document.getElementById('editFine').value || 0),
             cash_advance: Number(document.getElementById('editCashAdvance').value || 0),
             refund: Number(document.getElementById('editRefund').value || 0),
+            agent_bonus: Number(document.getElementById('editAgentBonus').value || 0),
             description: document.getElementById('editDescription').value.trim()
         };
 
@@ -957,8 +965,8 @@
             return;
         }
 
-        if (![payload.fine, payload.cash_advance, payload.refund].every(value => Number.isFinite(value) && value >= 0)) {
-            showToast('Denda, cash advance, dan refund harus berupa angka nol atau lebih', 'error');
+        if (![payload.fine, payload.cash_advance, payload.refund, payload.agent_bonus].every(value => Number.isFinite(value) && value >= 0)) {
+            showToast('Denda, cash advance, refund, dan bonus agen harus berupa angka nol atau lebih', 'error');
             return;
         }
         if (!Number.isFinite(payload.model_rate) || payload.model_rate <= 0 || payload.model_rate > 99999999.99) {
@@ -1029,12 +1037,12 @@
             prefix: 'INV', title: 'Client Invoice', confidential: false,
             sections: Array.from(clients).flatMap(([client, records]) => [{
                 title: 'Bill To: ' + client,
-                columns: ['Model / Detail', 'TRX', 'Gross', 'Potongan', 'Tagihan'], numeric: [1, 2, 3, 4],
+                columns: ['Model / Detail', 'TRX', 'Gross', 'Potongan', 'Refund', 'Tagihan'], numeric: [1, 2, 3, 4, 5],
                 rows: records.map((tx, index) => {
                     const bill = Payroll.invoice(tx);
-                    return [(tx.model_name || '-') + '\n' + (tx.model_grade_name || '-') + '\n' + pdf.date(tx.transaction_date) + '\nRate: ' + pdf.money(tx.model_rate), tx.transaction_count || 0, pdf.money(bill.gross), 'Safety + Admin\n' + pdf.money(bill.safety + bill.admin) + '\nLain-lain\n' + pdf.money(bill.other), pdf.money(bill.total)];
+                    return [(tx.model_name || '-') + '\n' + (tx.model_grade_name || '-') + '\n' + pdf.date(tx.transaction_date) + '\nRate: ' + pdf.money(tx.model_rate), tx.transaction_count || 0, pdf.money(bill.gross), 'Safety + Admin\n' + pdf.money(bill.safety + bill.admin) + '\nLain-lain\n' + pdf.money(bill.other), pdf.money(bill.refund), pdf.money(bill.total)];
                 }),
-                totals: ['CLIENT TOTAL', pdf.sum(records, 'transaction_count'), pdf.money(invoiceSum(records, 'gross')), pdf.money(invoiceSum(records, 'safety') + invoiceSum(records, 'admin') + invoiceSum(records, 'other')), pdf.money(invoiceSum(records, 'total'))]
+                totals: ['CLIENT TOTAL', pdf.sum(records, 'transaction_count'), pdf.money(invoiceSum(records, 'gross')), pdf.money(invoiceSum(records, 'safety') + invoiceSum(records, 'admin') + invoiceSum(records, 'other')), pdf.money(invoiceSum(records, 'refund')), pdf.money(invoiceSum(records, 'total'))]
             }, ...(records.some(tx => overpaidFor(tx) > 0) ? [{
                 title: 'Saldo Client: ' + client, columns: ['Keterangan', 'Nominal'], numeric: [1],
                 rows: [['Pembayaran Diterima', pdf.money(records.reduce((sum, tx) => sum + Number(tx.amount_paid || 0), 0))],

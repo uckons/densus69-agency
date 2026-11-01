@@ -291,7 +291,7 @@ Model Net = Model Gross − Agent Fee − Denda − Cash Advance + Refund
 Agent Fee = TRX × recorded agent flat rate
 ```
 
-Client invoice total = (TRX × recorded client rate) − ((Safety + Client Admin Fee) × TRX) − Other Deductions. Client deductions do not reduce the separately configured model salary. All PDF reports use A4 portrait without explanatory formula footnotes.
+Client invoice total = (TRX × recorded client rate) − ((Safety + Client Admin Fee) × TRX) − Other Deductions + Refund. Client deductions do not reduce the separately configured model salary. All PDF reports use A4 portrait without explanatory formula footnotes.
 
 Master rate changes affect future transactions only. Existing payroll, invoices and receipts remain unchanged. A transaction's edit form separately supports **Rate Tagihan Client/TRX** and **Rate Gaji Model/TRX**: the former changes its invoice, while the latter changes its payroll. For historical transactions without a salary snapshot, the original calculation remains until a salary rate is explicitly changed. Reducing an invoice below active client payments retains the receipts and displays **Kelebihan Bayar**. Changing the client uses that client's current deduction rates. Negative model balances remain visible.
 
@@ -438,4 +438,6 @@ For issues and questions, please open an issue on GitHub.
 
 Model accounts receive only their own salary rate, model gross, Agent Fee, Denda, Cash Advance, Refund and net earnings. They cannot change their salary rate through profile updates. Public profiles exclude all financial fields. Client rates, client gross, payments and client deductions remain private through explicit serializers; admin APIs retain full financial details. Existing ledger records are retained. Regenerate model-facing payslips before sharing them.
 
-Refund is a one-time addition to model salary per transaction, editable in Add/Edit Transaction and shown on model earnings and payslips. It does not change client invoices or cash receipts. Existing transactions default to zero refund without recalculating historical salaries.
+Refund is a one-time addition to model salary per transaction, editable in Add/Edit Transaction and shown on model earnings and payslips. Refund also increases the client invoice once; cash receipts only increase when a payment is recorded. Existing transactions default to zero refund without recalculating historical salaries.
+
+Bonus Agen is an additional one-time agent payment per transaction (Add/Edit Transaction). Agent earnings and commission summaries include base fee plus bonus. It does not reduce model pay or increase client invoices. Existing transactions default to zero bonus. Changing refund can reopen an outstanding balance on a previously paid invoice; existing receipt amounts and dates remain unchanged.

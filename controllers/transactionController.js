@@ -124,6 +124,7 @@ exports.createTransaction = async (req, res) => {
       fine: money(req.body.fine ?? admin_fee, 'Denda'),
       cash_advance: money(req.body.cash_advance, 'Cash Advance'),
       refund: money(req.body.refund, 'Refund'),
+      agent_bonus: money(req.body.agent_bonus, 'Bonus Agen'),
       agent_fee_per_trx: Math.min(Number(model.agent_fee_flat || 0), Number(model.rate)),
       notes: description || null, created_by: req.user?.userId || req.user?.id || null
     });
@@ -313,6 +314,7 @@ exports.updateTransaction = async (req, res) => {
       fine: newFine,
       cash_advance: newCash,
       refund: money(req.body.refund ?? transaction.refund, 'Refund'),
+      agent_bonus: money(req.body.agent_bonus ?? transaction.agent_bonus, 'Bonus Agen'),
       agent_fee_per_trx: Number(transaction.agent_fee_per_trx ?? (Number(transaction.agent_fee_total || 0) / Number(transaction.transaction_count))),
       notes: notes ?? description ?? transaction.notes
     });
