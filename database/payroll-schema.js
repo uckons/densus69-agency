@@ -50,6 +50,11 @@ module.exports = function ensurePayrollSchema() {
                         net_amount=net_amount+agent_bonus, agent_bonus=0 WHERE agent_bonus<>0;
                 END IF;
             END $$`);
+            await client.query(`DO $$ BEGIN
+                IF EXISTS (SELECT 1 FROM pg_type WHERE typname='user_role' AND typtype='e') THEN
+                    ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'operator';
+                END IF;
+            END $$`);
             await client.query('COMMIT');
         } catch (error) {
             await client.query('ROLLBACK');

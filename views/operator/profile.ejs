@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Operator - Sky Agency</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config={theme:{extend:{colors:{admin:{300:'#c4b5fd',400:'#a78bfa',600:'#7c3aed',700:'#6d28d9',800:'#5b21b6',900:'#4c1d95'}}}}};</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/admin-navigation.css">
+    <script src="/js/admin-navigation.js" defer></script>
+</head>
+<body class="bg-gray-50">
+<div class="flex h-screen bg-gray-100">
+    <%- include('../partials/admin-sidebar', {activePage:'profile'}) %>
+    <div class="flex-1 min-w-0 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm h-16 shrink-0 flex items-center gap-4 px-6">
+            <button id="open-sidebar" type="button" class="md:hidden text-gray-600" aria-label="Buka menu" aria-controls="sidebar" aria-expanded="false"><i class="fas fa-bars text-2xl" aria-hidden="true"></i></button>
+            <h1 class="text-xl font-semibold text-gray-800">Profil Saya</h1>
+        </header>
+        <main class="flex-1 overflow-y-auto p-6">
+            <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-6 space-y-6">
+                <h2 class="text-2xl font-bold text-gray-800">Akun Staf Operasional</h2>
+                <dl class="space-y-4">
+                    <div><dt class="text-sm text-gray-500">Email</dt><dd class="font-semibold break-all"><%= user.email %></dd></div>
+                    <div><dt class="text-sm text-gray-500">Role</dt><dd class="font-semibold"><%= user.role === 'operator' ? 'Staf Operasional' : 'Administrator' %></dd></div>
+                    <div><dt class="text-sm text-gray-500">Akun dibuat</dt><dd><%= new Date(user.created_at).toLocaleDateString('id-ID', {timeZone:'Asia/Jakarta'}) %></dd></div>
+                </dl>
+                <p class="text-gray-600">Kelola transaksi, catat pembayaran klien, serta unduh invoice dan slip gaji. Hubungi admin untuk perubahan akun atau password.</p>
+                <a href="/admin/transactions" class="inline-block px-5 py-3 bg-admin-700 text-white rounded-lg">Buka Transaksi</a>
+            </div>
+        </main>
+    </div>
+</div>
+<%- include('../partials/footer') %>

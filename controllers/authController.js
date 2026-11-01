@@ -139,6 +139,7 @@ exports.login = async (req, res) => {
     res.json({
       success: true,
       message: 'Login successful',
+      redirect: user.role === 'admin' ? '/admin/dashboard' : user.role === 'operator' ? '/operator/dashboard' : user.role === 'model' ? '/model/dashboard' : '/',
       data: {
         user: {
           user_id: user.id,

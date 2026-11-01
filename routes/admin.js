@@ -2,10 +2,13 @@ const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
 const clientController = require('../controllers/clientController');
-const { auth, isAdmin } = require('../middleware/auth');
+const { auth, isAdmin, isTransactionStaff } = require('../middleware/auth');
 
 // All routes require authentication and admin role
-router.use(auth, isAdmin);
+router.use(auth);
+// Transaction forms need client names and saved deduction rates, not master writes.
+router.get('/clients', isTransactionStaff, clientController.getClients);
+router.use(isAdmin);
 
 // GET /api/admin/dashboard
 router.get('/dashboard', adminController.getDashboard);
@@ -13,8 +16,6 @@ router.get('/dashboard', adminController.getDashboard);
 // GET /api/admin/model-grades
 router.get('/model-grades', adminController.getModelGrades);
 
-// GET /api/admin/clients
-router.get('/clients', clientController.getClients);
 
 // POST /api/admin/clients
 router.post('/clients', clientController.createClient);

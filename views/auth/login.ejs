@@ -159,6 +159,8 @@
                 setTimeout(() => {
                     if (data.role === 'admin') {
                         window.location.href = '/admin/dashboard';
+                    } else if (data.role === 'operator') {
+                        window.location.href = '/operator/dashboard';
                     } else if (data.role === 'model') {
                         window.location.href = '/model/dashboard';
                     } else {

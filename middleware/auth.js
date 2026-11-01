@@ -24,6 +24,11 @@ const isAdmin = (req, res, next) => {
   }
 };
 
+const isTransactionStaff = (req, res, next) => {
+  if (req.user && ['admin', 'operator'].includes(req.user.role)) return next();
+  return res.status(403).json({message:'Access denied. Transaction staff only.'});
+};
+
 const isModel = (req, res, next) => {
   if (req.user && req.user.role === 'model') {
     next();
@@ -46,4 +51,4 @@ const optionalAuth = (req, res, next) => {
   catch (_) { req.user = undefined; }
   next();
 };
-module.exports = { optionalAuth, auth, isAdmin, isModel, isAdminOrOwner };
+module.exports = { optionalAuth, auth, isAdmin, isTransactionStaff, isModel, isAdminOrOwner };

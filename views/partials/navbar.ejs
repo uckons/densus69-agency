@@ -30,6 +30,9 @@
                                 <a href="/admin/dashboard" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                                     <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
                                 </a>
+                            <% } else if (user.role === 'operator') { %>
+                                <a href="/operator/dashboard" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Transaksi</a>
+                                <a href="/operator/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Profil Saya</a>
                             <% } else if (user.role === 'model') { %>
                                 <a href="/model/dashboard" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                                     <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
@@ -73,7 +76,10 @@
                     <a href="/admin/dashboard" class="block text-gray-700 hover:text-pink-500 py-2">
                         <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
                     </a>
-                <% } else if (user.role === 'model') { %>
+                <% } else if (user.role === 'operator') { %>
+                                <a href="/operator/dashboard" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Transaksi</a>
+                                <a href="/operator/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Profil Saya</a>
+                            <% } else if (user.role === 'model') { %>
                     <a href="/model/dashboard" class="block text-gray-700 hover:text-pink-500 py-2">
                         <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
                     </a>

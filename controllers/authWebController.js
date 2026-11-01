@@ -194,6 +194,8 @@ exports.login = async (req, res) => {
 
     if (user.role === 'admin') {
       return res.redirect('/admin/dashboard');
+    } else if (user.role === 'operator') {
+      return res.redirect('/operator/dashboard');
     } else if (user.role === 'model') {
       return res.redirect('/model/dashboard');
     } else {

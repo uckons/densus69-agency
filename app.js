@@ -54,7 +54,7 @@ app.use('/api/complaints', complaintRoutes);
 app.use('/auth', authWebRoutes);
 
 // View routes for rendering pages
-const { auth, isAdmin, isModel } = require('./middleware/auth');
+const { auth, isAdmin, isTransactionStaff, isModel } = require('./middleware/auth');
 
 // Root route
 app.get('/', (req, res) => {
@@ -117,9 +117,9 @@ app.get('/admin/clients', auth, isAdmin, (req, res) => {
   res.render('admin/clients', { user: req.user });
 });
 
-app.get('/admin/transactions', auth, isAdmin, adminWebController.showTransactions);
+app.get('/admin/transactions', auth, isTransactionStaff, adminWebController.showTransactions);
 
-app.get('/admin/transactions/new', auth, isAdmin, (req, res) => {
+app.get('/admin/transactions/new', auth, isTransactionStaff, (req, res) => {
   res.render('admin/transaction-form', { user: req.user });
 });
 
@@ -137,6 +137,10 @@ app.get('/admin/agents', auth, isAdmin, (req, res) => {
   res.render('admin/agents', { user: req.user });
 });
 
+
+// Operator landing and own-account profile. Master administration stays admin-only.
+app.get('/operator/dashboard', auth, isTransactionStaff, (req, res) => res.redirect('/admin/transactions'));
+app.get('/operator/profile', auth, isTransactionStaff, require('./controllers/operatorController').showProfile);
 
 // Model routes
 app.get('/model/dashboard', auth, isModel, modelWebController.showDashboard);
