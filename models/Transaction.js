@@ -163,7 +163,6 @@ const Transaction = {
     const current = (await client.query('SELECT * FROM transactions WHERE id=$1 FOR UPDATE', [id])).rows[0];
     if (!current) throw Object.assign(new Error('Transaksi tidak ditemukan'), {status:404});
     const paid = (await client.query('SELECT COALESCE(SUM(amount),0) AS total FROM client_payments WHERE transaction_id=$1 AND voided_at IS NULL', [id])).rows[0].total;
-    if (!data.preserveAmounts && Math.round(Payroll.invoice(data).total * 100) < Math.round(Number(paid) * 100)) throw Object.assign(new Error('Tagihan baru lebih kecil dari pembayaran yang sudah diterima. Perubahan belum disimpan; selisih pembayaran perlu diselesaikan terlebih dahulu.'), {status:409});
     if (data.client_name !== current.client_name && Number(paid) > 0) throw Object.assign(new Error('Client tidak dapat diganti setelah ada pembayaran aktif'), {status:409});
     if (data.preserveAmounts) {
       const result = await client.query('UPDATE transactions SET client_name=$1, transaction_date=$2, notes=$3 WHERE id=$4 RETURNING *', [data.client_name, data.transaction_date, data.notes, id]);

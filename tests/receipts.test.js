@@ -15,3 +15,10 @@ test('partial receipts and exact decimal totals keep outstanding separate',()=>{
  [{receipt_date:'2026-10-27',amount:50.10},{receipt_date:'2026-10-27',amount:50.10}]);
  assert.equal(result.totalRevenue,100.20);assert.equal(result.outstanding,0.10);
 });
+test('outstanding invoices and overpayments are separate and never offset across clients',()=>{
+ const result=summarize([{transaction_day:'2026-10-24',invoice_amount:420000,outstanding:0,overpaid:40000},
+  {transaction_day:'2026-10-24',invoice_amount:100000,outstanding:100000,overpaid:0}],
+ [{receipt_date:'2026-10-27',amount:460000}]);
+ assert.equal(result.totalRevenue,460000);assert.equal(result.totalInvoiced,520000);
+ assert.equal(result.outstanding,100000);assert.equal(result.overpaid,40000);
+});

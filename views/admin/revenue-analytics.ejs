@@ -156,6 +156,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="bg-white rounded-xl shadow-md p-5"><p class="text-gray-500 text-sm">Tagihan Client (periode transaksi)</p><p class="text-2xl font-bold"><%= formatCurrency(typeof analytics !== 'undefined' ? analytics.totalInvoiced || 0 : 0) %></p></div>
         <div class="bg-white rounded-xl shadow-md p-5"><p class="text-gray-500 text-sm">Sisa Tagihan (transaksi periode ini)</p><p class="text-2xl font-bold text-orange-700"><%= formatCurrency(typeof analytics !== 'undefined' ? analytics.outstanding || 0 : 0) %></p></div>
+        <div class="bg-white rounded-xl shadow-md p-5"><p class="text-gray-500 text-sm">Kelebihan Bayar (transaksi periode ini)</p><p class="text-2xl font-bold text-blue-700"><%= formatCurrency(typeof analytics !== 'undefined' ? analytics.overpaid || 0 : 0) %></p></div>
     </div>
     <p class="text-xs text-gray-500">Uang masuk memakai tanggal pembayaran; tagihan dan pendapatan model memakai tanggal transaksi.</p>
     <!-- Charts -->
@@ -378,7 +379,7 @@
         pdf.download({
             prefix: 'ANL', title: 'Revenue Analytics Report', charts,
             context: `Period: ${from ? pdf.date(from) : 'All dates'} - ${to ? pdf.date(to) : 'All dates'}`,
-            metrics: [['Uang Masuk', pdf.money(analyticsSummary.totalRevenue)], ['Rata-rata Bayar', pdf.money(analyticsSummary.avgTransaction)], ['Fee Agen', pdf.money(analyticsSummary.totalCommission)], ['Top Model', analyticsSummary.topModelName || 'N/A'], ['Tagihan Client', pdf.money(analyticsSummary.totalInvoiced)], ['Sisa Tagihan', pdf.money(analyticsSummary.outstanding)]],
+            metrics: [['Uang Masuk', pdf.money(analyticsSummary.totalRevenue)], ['Rata-rata Bayar', pdf.money(analyticsSummary.avgTransaction)], ['Fee Agen', pdf.money(analyticsSummary.totalCommission)], ['Top Model', analyticsSummary.topModelName || 'N/A'], ['Tagihan Client', pdf.money(analyticsSummary.totalInvoiced)], ['Sisa Tagihan', pdf.money(analyticsSummary.outstanding)], ['Kelebihan Bayar', pdf.money(analyticsSummary.overpaid)]],
             sections: [{
                 title: 'Model Performance',
                 columns: ['#', 'Model', 'Jobs', 'Total Earnings', 'Avg / Job', 'Commission'], numeric: [2, 3, 4, 5],

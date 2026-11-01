@@ -17,7 +17,7 @@ async function attach(transactions) {
         const payments = byTransaction.get(tx.id) || [];
         const invoice = Payroll.invoice(tx).total;
         const paid = payments.reduce((total, payment) => total + cents(payment.amount), 0) / 100;
-        return { ...tx, payments, invoice_amount: invoice, amount_paid: paid, outstanding: Math.max(cents(invoice) - cents(paid), 0) / 100 };
+        return { ...tx, payments, invoice_amount: invoice, amount_paid: paid, outstanding: Payroll.balance({...tx, amount_paid:paid}).outstanding, overpaid: Payroll.balance({...tx, amount_paid:paid}).overpaid };
     });
 }
 
@@ -44,6 +44,7 @@ function summarize(transactions, payments, start = '', end = '') {
         totalRevenue: receipts.reduce((sum, p) => sum + cents(p.amount), 0) / 100,
         totalInvoiced: selected.reduce((sum, tx) => sum + cents(tx.invoice_amount), 0) / 100,
         outstanding: selected.reduce((sum, tx) => sum + cents(tx.outstanding), 0) / 100,
+        overpaid: selected.reduce((sum, tx) => sum + cents(tx.overpaid || 0), 0) / 100,
         receiptCount: receipts.length, receipts, selected
     };
 }

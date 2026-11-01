@@ -18,6 +18,7 @@
         document.getElementById('paymentInvoice').textContent=money(data.invoice);
         document.getElementById('paymentReceived').textContent=money(data.paid);
         document.getElementById('paymentOutstanding').textContent=money(data.outstanding);
+        document.getElementById('paymentOverpaid').textContent=money(data.overpaid);
         const form=document.getElementById('clientPaymentForm');form.reset();
         document.getElementById('paymentDate').value=today();
         document.getElementById('paymentDate').max=today();
@@ -47,7 +48,7 @@
             history.append(row);
         });
         const tx=allTransactions.find(tx=>Number(tx.id)===Number(id));
-        if(tx){Object.assign(tx,{invoice_amount:data.invoice,amount_paid:data.paid,outstanding:data.outstanding,payments:data.payments.filter(payment=>!payment.voided_at).map(payment=>({...payment,payment_date:payment.receipt_date}))});applyFilters();}
+        if(tx){Object.assign(tx,{invoice_amount:data.invoice,amount_paid:data.paid,outstanding:data.outstanding,overpaid:data.overpaid,payments:data.payments.filter(payment=>!payment.voided_at).map(payment=>({...payment,payment_date:payment.receipt_date}))});applyFilters();}
     }
     window.openClientPayments=async id=>{
         transactionId=id;

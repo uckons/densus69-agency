@@ -109,7 +109,7 @@
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-500"
                         onchange="filterTransactions()">
                     <option value="">All Status</option>
-                    <option value="unpaid">Belum Dibayar</option><option value="partial">Sebagian</option><option value="paid">Lunas</option>
+                    <option value="unpaid">Belum Dibayar</option><option value="partial">Sebagian</option><option value="paid">Lunas</option><option value="overpaid">Kelebihan Bayar</option>
                 </select>
             </div>
 
@@ -184,6 +184,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="bg-white rounded-xl shadow-md p-5"><p class="text-sm text-gray-500">Tagihan Client (transaksi terpilih)</p><p id="summary-invoiced" class="text-2xl font-bold"></p></div>
         <div class="bg-white rounded-xl shadow-md p-5"><p class="text-sm text-gray-500">Sisa Tagihan (transaksi terpilih)</p><p id="summary-outstanding" class="text-2xl font-bold text-orange-700"></p></div>
+        <div class="bg-white rounded-xl shadow-md p-5"><p class="text-sm text-gray-500">Kelebihan Bayar (transaksi terpilih)</p><p id="summary-overpaid" class="text-2xl font-bold text-blue-700"></p></div>
     </div>
     <p class="text-xs text-gray-500">Uang masuk memakai tanggal pembayaran. Daftar transaksi dan tagihan memakai tanggal transaksi. Pembayaran lama perlu dicatat agar masuk laporan.</p>
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -401,8 +402,8 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Trx x ${Number(transaction.transaction_count || 0)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${transaction.client_name || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">Gross: ${formatCurrencySafe(transaction.gross_amount)}<div class="text-xs text-emerald-700 mt-1">Bersih: ${formatCurrencySafe(transaction.net_amount)}</div><div class="text-xs text-gray-500 mt-1">Tagihan: ${formatCurrencySafe(Payroll.invoice(transaction).total)}<br>Diterima: ${formatCurrencySafe(transaction.amount_paid)} · Sisa: ${formatCurrencySafe(outstandingFor(transaction))}</div></td>
-                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">${({unpaid:'Belum Dibayar',partial:'Sebagian',paid:'Lunas'})[paymentStatus(transaction)]}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">Gross: ${formatCurrencySafe(transaction.gross_amount)}<div class="text-xs text-emerald-700 mt-1">Bersih: ${formatCurrencySafe(transaction.net_amount)}</div><div class="text-xs text-gray-500 mt-1">Tagihan: ${formatCurrencySafe(Payroll.invoice(transaction).total)}<br>Diterima: ${formatCurrencySafe(transaction.amount_paid)} · Sisa: ${formatCurrencySafe(outstandingFor(transaction))}${overpaidFor(transaction) > 0 ? '<br>Kelebihan Bayar: ' + formatCurrencySafe(overpaidFor(transaction)) : ''}</div></td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">${({unpaid:'Belum Dibayar',partial:'Sebagian',paid:'Lunas',overpaid:'Kelebihan Bayar'})[paymentStatus(transaction)]}</span></td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button onclick="openClientPayments('${transaction.id}')" class="text-green-700 mr-3" title="Catat pembayaran">Bayar</button>
                         <button onclick="viewTransaction('${transaction.id}')" class="text-admin-600 hover:text-admin-900 mr-3" title="View"><i class="fas fa-eye"></i></button>
@@ -605,8 +606,9 @@
         });
     }
 
-    function outstandingFor(tx) { return Math.max(Math.round(Payroll.invoice(tx).total * 100) - Math.round(Number(tx.amount_paid || 0) * 100), 0) / 100; }
-    function paymentStatus(tx) { return outstandingFor(tx) <= 0 ? 'paid' : Number(tx.amount_paid || 0) > 0 ? 'partial' : 'unpaid'; }
+    function outstandingFor(tx) { return Payroll.balance(tx).outstanding; }
+    function overpaidFor(tx) { return Payroll.balance(tx).overpaid; }
+    function paymentStatus(tx) { if (overpaidFor(tx) > 0) return 'overpaid'; return outstandingFor(tx) <= 0 ? 'paid' : Number(tx.amount_paid || 0) > 0 ? 'partial' : 'unpaid'; }
     function selectedReceipts() {
         const model = document.getElementById('modelFilter').value.toLowerCase();
         const status = document.getElementById('statusFilter').value;
@@ -621,6 +623,7 @@
         const totalGross = receipts.reduce((sum, payment) => sum + Number(payment.amount), 0);
         document.getElementById('summary-invoiced').textContent = formatCurrencySafe(filteredTransactions.reduce((sum, tx) => sum + Payroll.invoice(tx).total, 0));
         document.getElementById('summary-outstanding').textContent = formatCurrencySafe(filteredTransactions.reduce((sum, tx) => sum + outstandingFor(tx), 0));
+        document.getElementById('summary-overpaid').textContent = formatCurrencySafe(filteredTransactions.reduce((sum, tx) => sum + overpaidFor(tx), 0));
         const totalAgentFee = filteredTransactions.reduce((sum, tx) => sum + getAgentFeeAmount(tx), 0);
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -1015,7 +1018,7 @@
         });
         pdf.download({
             prefix: 'INV', title: 'Client Invoice', confidential: false,
-            sections: Array.from(clients, ([client, records]) => ({
+            sections: Array.from(clients).flatMap(([client, records]) => [{
                 title: 'Bill To: ' + client,
                 columns: ['Model / Detail', 'TRX', 'Gross', 'Potongan', 'Tagihan'], numeric: [1, 2, 3, 4],
                 rows: records.map((tx, index) => {
@@ -1023,7 +1026,12 @@
                     return [(tx.model_name || '-') + '\n' + (tx.model_grade_name || '-') + '\n' + pdf.date(tx.transaction_date) + '\nRate: ' + pdf.money(tx.model_rate), tx.transaction_count || 0, pdf.money(bill.gross), 'Safety + Admin\n' + pdf.money(bill.safety + bill.admin) + '\nLain-lain\n' + pdf.money(bill.other), pdf.money(bill.total)];
                 }),
                 totals: ['CLIENT TOTAL', pdf.sum(records, 'transaction_count'), pdf.money(invoiceSum(records, 'gross')), pdf.money(invoiceSum(records, 'safety') + invoiceSum(records, 'admin') + invoiceSum(records, 'other')), pdf.money(invoiceSum(records, 'total'))]
-            })).concat(clients.size > 1 ? [{
+            }, ...(records.some(tx => overpaidFor(tx) > 0) ? [{
+                title: 'Saldo Client: ' + client, columns: ['Keterangan', 'Nominal'], numeric: [1],
+                rows: [['Pembayaran Diterima', pdf.money(records.reduce((sum, tx) => sum + Number(tx.amount_paid || 0), 0))],
+                    ['Sisa Tagihan', pdf.money(records.reduce((sum, tx) => sum + outstandingFor(tx), 0))],
+                    ['Kelebihan Bayar', pdf.money(records.reduce((sum, tx) => sum + overpaidFor(tx), 0))]]
+            }] : [])]).concat(clients.size > 1 ? [{
                 title: 'Total Invoice', columns: ['Keterangan', 'Jumlah'], numeric: [1],
                 rows: [['Total Tagihan', pdf.money(invoiceSum(rows, 'total'))]]
             }] : []),

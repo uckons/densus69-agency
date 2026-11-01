@@ -105,7 +105,7 @@ exports.getDashboard = async (req, res) => {
           activeModels: activeModels.length,
           pendingModels: pendingModels.length,
           totalTransactions: transactions.length,
-          totalRevenue, totalInvoiced: cash.totalInvoiced, outstanding: cash.outstanding,
+          totalRevenue, totalInvoiced: cash.totalInvoiced, outstanding: cash.outstanding, overpaid: cash.overpaid,
           adminFees,
           netPayouts
         },
@@ -675,7 +675,7 @@ exports.getRevenueAnalytics = async (req, res) => {
         period,
         analytics,
         summary: {
-          totalRevenue, totalInvoiced: balances.totalInvoiced, outstanding: balances.outstanding, receiptCount: payments.length,
+          totalRevenue, totalInvoiced: balances.totalInvoiced, outstanding: balances.outstanding, overpaid: balances.overpaid, receiptCount: payments.length,
           totalAdminFees,
           totalNetPayouts,
           totalTransactions: transactions.length

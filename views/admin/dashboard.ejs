@@ -196,6 +196,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div class="bg-white rounded-xl shadow-md p-5"><p class="text-gray-500 text-sm">Total Tagihan Client</p><p class="text-2xl font-bold"><%= formatCurrency(typeof stats !== 'undefined' ? stats.totalInvoiced || 0 : 0) %></p></div>
                 <div class="bg-white rounded-xl shadow-md p-5"><p class="text-gray-500 text-sm">Sisa Tagihan Belum Dibayar</p><p class="text-2xl font-bold text-orange-700"><%= formatCurrency(typeof stats !== 'undefined' ? stats.outstanding || 0 : 0) %></p></div>
+        <div class="bg-white rounded-xl shadow-md p-5"><p class="text-gray-500 text-sm">Kelebihan Bayar Client</p><p class="text-2xl font-bold text-blue-700"><%= formatCurrency(typeof stats !== 'undefined' ? stats.overpaid || 0 : 0) %></p></div>
             </div>
             <p class="text-xs text-gray-500 mb-4">Uang masuk berdasarkan pembayaran tercatat, bukan nilai gross transaksi. Catat pembayaran melalui menu Transactions → Bayar.</p>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">

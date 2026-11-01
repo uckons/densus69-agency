@@ -92,7 +92,7 @@ exports.showDashboard = async (req, res) => {
         totalJobs,
         totalTransactions,
         totalRevenue,
-        totalInvoiced: cashSummary.totalInvoiced, outstanding: cashSummary.outstanding,
+        totalInvoiced: cashSummary.totalInvoiced, outstanding: cashSummary.outstanding, overpaid: cashSummary.overpaid,
         monthlyRevenue,
         pendingBookings,
         activeJobs
@@ -254,7 +254,7 @@ exports.showAnalytics = async (req, res) => {
     const topModels = modelStats.slice(0, 10);
 
     const analytics = {
-      totalRevenue, totalInvoiced: cashSummary.totalInvoiced, outstanding: cashSummary.outstanding, receiptCount: cashSummary.receiptCount,
+      totalRevenue, totalInvoiced: cashSummary.totalInvoiced, outstanding: cashSummary.outstanding, overpaid: cashSummary.overpaid, receiptCount: cashSummary.receiptCount,
       revenueGrowth: 0,
       avgTransaction,
       totalTransactions,

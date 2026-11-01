@@ -294,7 +294,7 @@ Example: rate Rp 500,000, 3 TRX, safety Rp 10,000/TRX, admin Rp 5,000/TRX, other
 
 Client invoice total = (TRX × recorded model rate) − ((Safety + Client Admin Fee) × TRX) − Other Deductions. Denda, Cash Advance, and Agent Fee affect model payroll only. Invoice PDFs show line deductions, client subtotals, and the grand total using saved transaction rates. All PDF reports use A4 portrait, with compact columns and no explanatory formula footnotes.
 
-Transaction rates are recorded at creation. Client/model rate changes affect future transactions; they do not rewrite existing payroll. Editing a transaction retains its saved rates unless **Rate/TRX** is explicitly changed in its edit form. This recalculates that transaction's gross, client invoice and model net pay; the model/grade/job master rate and recorded receipts remain unchanged. A change that would reduce the invoice below active client payments is rejected. Changing the client uses that client's current deduction rates. An amount below zero remains a negative balance, following the formula.
+Transaction rates are recorded at creation. Client/model rate changes affect future transactions; they do not rewrite existing payroll. Editing a transaction retains its saved rates unless **Rate/TRX** is explicitly changed in its edit form. This recalculates that transaction's gross, client invoice and model net pay; the model/grade/job master rate and recorded receipts remain unchanged. A change that reduces the invoice below active client payments is allowed: the original receipts stay intact and the difference appears as **Kelebihan Bayar**. Changing the client uses that client's current deduction rates. An amount below zero remains a negative balance, following the formula.
 
 The server applies the additive migration in `database/payroll-schema.js` before listening. Existing gross/net amounts remain unchanged; an existing transaction's former admin fee is displayed as its historical denda. No manual schema reset is required.
 
@@ -302,7 +302,7 @@ A combined model payslip is available from **Transactions → Slip Gaji Model**:
 
 Client payments are recorded from **Transactions → Bayar**. Enter the actual amount, receipt date, method and optional reference. Partial payments are supported. Dashboard, Transactions and Analytics revenue use active payment receipts by **payment date**, independently of the invoice transaction date. Invoice totals and unpaid balances are displayed separately. Historical transactions begin unpaid until their actual payments are entered; no receipts are inferred from recorded payroll.
 
-Incorrect receipts can be voided with a reason; the audit history remains. Duplicate request keys are idempotent and payments cannot exceed the remaining invoice balance. Paid invoices cannot be reduced below active receipts or moved to another client. Transactions with any payment history cannot be deleted.
+Incorrect receipts can be voided with a reason; the audit history remains. Duplicate request keys are idempotent and payments cannot exceed the remaining invoice balance. Overpayments and outstanding amounts are shown separately, with no automatic offset, allocation or refund. Invoices with active payments cannot be moved to another client. Transactions with any payment history cannot be deleted.
 
 The additive startup migration also creates `client_payments` and its indexes. Existing payroll and invoice amounts remain unchanged.
 

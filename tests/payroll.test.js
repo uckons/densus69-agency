@@ -66,3 +66,12 @@ test('an explicit rate correction recalculates invoice/payroll using saved clien
     assert.equal(Payroll.invoice(corrected).total,420000);
     assert.equal(stored.model_rate,250000);
 });
+test('rate correction can expose overpayment without changing the amount received', () => {
+    const tx={transaction_count:2,model_rate:230000,safety_fee:10000,client_admin_fee:10000,amount_paid:460000};
+    assert.deepEqual(Payroll.balance(tx),{invoice:420000,paid:460000,outstanding:0,overpaid:40000});
+    assert.equal(tx.amount_paid,460000);
+    assert.deepEqual(Payroll.balance({...tx,amount_paid:200000}),{invoice:420000,paid:200000,outstanding:220000,overpaid:0});
+});
+test('negative invoice with no actual receipt does not fabricate an overpayment', () => {
+    assert.equal(Payroll.balance({transaction_count:1,model_rate:10000,other_deduction:20000,amount_paid:0}).overpaid,0);
+});

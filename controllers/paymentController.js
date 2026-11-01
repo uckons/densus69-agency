@@ -16,7 +16,7 @@ exports.list = async (req, res) => {
             FROM client_payments p WHERE transaction_id=$1 ORDER BY created_at DESC, id DESC`, [tx.id]);
         const invoice = Payroll.invoice(tx).total;
         const paid = result.rows.filter(p => !p.voided_at).reduce((sum, p) => sum + cents(p.amount), 0) / 100;
-        res.json({ success: true, data: { transaction: tx, invoice, paid, outstanding: Math.max(cents(invoice) - cents(paid), 0) / 100, payments: result.rows } });
+        res.json({ success: true, data: { transaction: tx, invoice, paid, outstanding: Payroll.balance({...tx,amount_paid:paid}).outstanding, overpaid: Payroll.balance({...tx,amount_paid:paid}).overpaid, payments: result.rows } });
     } catch (error) { respondError(res, error); }
 };
 

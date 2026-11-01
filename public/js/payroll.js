@@ -35,6 +35,11 @@
         const other = amount(tx.other_deduction);
         return { gross, safety, admin, other, total: amount(gross - safety - admin - other) };
     }
+    function balance(tx) {
+        const total = invoice(tx).total;
+        const paid = amount(tx.amount_paid);
+        return { invoice: total, paid, outstanding: amount(Math.max(total - paid, 0)), overpaid: amount(Math.max(paid - Math.max(total, 0), 0)) };
+    }
     function period(transactions, modelId, start, end) {
         const validDate = day => /^\d{4}-\d{2}-\d{2}$/.test(day || '') && !Number.isNaN(new Date(day).getTime()) && new Date(day).toISOString().slice(0, 10) === day;
         if (!modelId) throw new Error('Pilih model untuk slip gaji.');
@@ -51,5 +56,5 @@
         }
         return { rows, totals, count: rows.reduce((sum, tx) => sum + Number(tx.transaction_count || 0), 0) };
     }
-    return { calculate, breakdown, invoice, period, formula: 'Gross - ((Safety + Admin Fee Client) x TRX) - Lain-lain - Denda - Cash Advance - Agent Fee' };
+    return { calculate, breakdown, invoice, balance, period, formula: 'Gross - ((Safety + Admin Fee Client) x TRX) - Lain-lain - Denda - Cash Advance - Agent Fee' };
 });
