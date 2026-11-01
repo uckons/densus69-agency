@@ -9,44 +9,9 @@
         </div>
     </div>
     
+    <%- include('dialogs') %>
     <!-- Global JavaScript -->
     <script>
-        // Toast notification function
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            
-            const bgColor = {
-                success: 'bg-green-500',
-                error: 'bg-red-500',
-                warning: 'bg-yellow-500',
-                info: 'bg-blue-500'
-            }[type] || 'bg-blue-500';
-            
-            const icon = {
-                success: 'fa-check-circle',
-                error: 'fa-times-circle',
-                warning: 'fa-exclamation-triangle',
-                info: 'fa-info-circle'
-            }[type] || 'fa-info-circle';
-            
-            toast.className = `toast ${bgColor} text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 min-w-[300px]`;
-            toast.innerHTML = `
-                <i class="fas ${icon}"></i>
-                <span class="flex-1">${message}</span>
-                <button onclick="this.parentElement.remove()" class="text-white hover:text-gray-200">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.classList.add('fade-out');
-                setTimeout(() => toast.remove(), 300);
-            }, 5000);
-        }
-        
         // Loading overlay functions
         function showLoading() {
             document.getElementById('loading-overlay').classList.remove('hidden');
@@ -103,11 +68,6 @@
                 month: 'long',
                 day: 'numeric'
             });
-        }
-        
-        // Confirm dialog
-        function confirmAction(message) {
-            return confirm(message);
         }
         
         // Image preview

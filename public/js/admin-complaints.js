@@ -191,7 +191,7 @@ function showComplaintModal(complaint) {
 
 // Resolve complaint
 async function resolveComplaint(id) {
-    const response = prompt('Enter admin response (optional):');
+    const response = await promptAction('Enter admin response (optional):');
     if (response === null) return;
 
     try {
@@ -217,7 +217,7 @@ async function resolveComplaint(id) {
 
 // Delete complaint
 async function deleteComplaint(id) {
-    if (!confirm('Are you sure you want to delete this complaint?')) return;
+    if (!await confirmAction('Are you sure you want to delete this complaint?')) return;
 
     try {
         const response = await fetch(`/api/complaints/${id}`, {
@@ -330,11 +330,11 @@ function showLoading(show) {
 }
 
 function showSuccess(message) {
-    alert(message); // Replace with toast notification
+    showNotice(message, 'success');
 }
 
 function showError(message) {
-    alert('Error: ' + message); // Replace with toast notification
+    showNotice(message, 'error');
 }
 
 // Close modal

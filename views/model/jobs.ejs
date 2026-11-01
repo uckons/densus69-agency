@@ -155,7 +155,7 @@
     }
     
     async function applyJob(jobId) {
-        if (!confirm('Are you sure you want to apply for this job?')) return;
+        if (!await confirmAction('Are you sure you want to apply for this job?')) return;
         
         try {
             showLoading();

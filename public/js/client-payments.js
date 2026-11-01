@@ -37,7 +37,7 @@
             else {
                 const button=node('button','Batalkan pembayaran','text-sm text-red-600');button.type='button';
                 button.onclick=async()=>{
-                    const reason=prompt('Alasan pembatalan pembayaran (riwayat tetap disimpan):');
+                    const reason=await promptAction('Alasan pembatalan pembayaran (riwayat tetap disimpan):', {required:true,maxLength:500});
                     if(!reason?.trim())return;
                     button.disabled=true;
                     try{await request(`/api/transactions/${id}/payments/${payment.id}/void`,'POST',{reason});await load();showToast('Pembayaran dibatalkan.','success');}

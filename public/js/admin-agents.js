@@ -17,7 +17,7 @@ async function loadAgents() {
         const data = await res.json();
         renderAgentsTable(data.agents || []);
     } catch {
-        alert('Error loading agents');
+        showNotice('Error loading agents', 'error');
     }
 }
 
@@ -83,13 +83,13 @@ function renderAgentsTable(agents) {
                 });
                 const data = await res.json();
                 if (!res.ok || !data.success) throw new Error(data.message || 'Failed');
-                alert(`Agent: ${data.agent.full_name}
+                showNotice(`Agent: ${data.agent.full_name}
 Models: ${data.summary.totalModels}
 Revenue: ${formatCurrency(data.summary.totalRevenue)}
 Fee Agent: ${formatCurrency(data.summary.totalAgentFee)}
 Fee Model: ${formatCurrency(data.summary.totalModelFee)}`);
             } catch (error) {
-                alert('Failed to load agent performance: ' + error.message);
+                showNotice('Failed to load agent performance: ' + error.message, 'error');
             }
         });
     });
@@ -143,11 +143,11 @@ async function addAgent() {
     
     // Validation
     if (!full_name || !email || !password) {
-        return alert('Name, Email, and Password are required');
+        return showNotice('Name, Email, and Password are required', 'error');
     }
     
     if (password.length < 6) {
-        return alert('Password must be at least 6 characters');
+        return showNotice('Password must be at least 6 characters', 'error');
     }
     
     try {
@@ -168,11 +168,11 @@ async function addAgent() {
         
         closeAgentModal();
         loadAgents();
-        alert('Agent added successfully');
+        showNotice('Agent added successfully', 'success');
         // Replace history state to prevent form resubmission on page refresh
         window.history.replaceState({}, document.title, window.location.pathname);
     } catch (error) {
-        alert('Failed to add agent: ' + error.message);
+        showNotice('Failed to add agent: ' + error.message, 'error');
     }
 }
 
@@ -184,7 +184,7 @@ async function updateAgent() {
     const password = document.getElementById('agentPassword').value;  // Don't trim passwords
     
     if (!id || !full_name || !email) {
-        return alert('Name and Email are required');
+        return showNotice('Name and Email are required', 'error');
     }
     
     const payload = { full_name, email, phone };
@@ -192,7 +192,7 @@ async function updateAgent() {
     // Only include password if provided
     if (password) {
         if (password.length < 6) {
-            return alert('Password must be at least 6 characters');
+            return showNotice('Password must be at least 6 characters', 'error');
         }
         payload.password = password;
     }
@@ -215,17 +215,17 @@ async function updateAgent() {
         
         closeAgentModal();
         loadAgents();
-        alert('Agent updated successfully');
+        showNotice('Agent updated successfully', 'success');
         // Replace history state to prevent form resubmission on page refresh
         window.history.replaceState({}, document.title, window.location.pathname);
     } catch (error) {
-        alert('Failed to update agent: ' + error.message);
+        showNotice('Failed to update agent: ' + error.message, 'error');
     }
 }
 
 // Delete agent function
 async function deleteAgent(id) {
-    if (!confirm('Delete this agent?')) return;
+    if (!await confirmAction('Delete this agent?')) return;
     try {
         const res = await fetch(`/api/admin/agents/${id}`, {
             method: 'DELETE',
@@ -233,9 +233,9 @@ async function deleteAgent(id) {
         });
         if (!res.ok) throw new Error('Failed');
         loadAgents();
-        alert('Agent deleted');
+        showNotice('Agent deleted', 'success');
     } catch {
-        alert('Failed to delete agent');
+        showNotice('Failed to delete agent', 'error');
     }
 }
 

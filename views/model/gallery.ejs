@@ -139,7 +139,7 @@
     }
     
     async function deletePhoto(photoId) {
-        if (!confirm('Are you sure you want to delete this photo?')) return;
+        if (!await confirmAction('Are you sure you want to delete this photo?')) return;
         
         try {
             showLoading();

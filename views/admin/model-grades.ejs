@@ -177,7 +177,7 @@ async function submitGrade() {
 }
 
 async function deleteGrade(id) {
-    if (!confirm('Hapus grade ini?')) return;
+    if (!await confirmAction('Hapus grade ini?')) return;
     const res = await fetch(`/api/admin/model-grades/${id}`, { method: 'DELETE', credentials: 'include' });
     const data = await res.json();
     if (!res.ok || !data.success) {

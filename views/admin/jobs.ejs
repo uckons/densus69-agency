@@ -441,7 +441,7 @@
         }
 
         async function unassignModel(jobId, modelId) {
-            if (!confirm('Unassign model ini dari job?')) return;
+            if (!await confirmAction('Unassign model ini dari job?')) return;
 
             try {
                 const response = await fetch(`/api/jobs/${jobId}/unassign-model`, {

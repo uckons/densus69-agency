@@ -997,7 +997,7 @@
     }
 
     async function deleteTransaction(id) {
-        if (!confirm('Are you sure you want to delete this transaction?')) return;
+        if (!await confirmAction('Are you sure you want to delete this transaction?')) return;
 
         try {
             showLoading();

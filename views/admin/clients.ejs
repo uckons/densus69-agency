@@ -138,7 +138,7 @@ async function submitClient(){
   closeClientModal();showToast('Berhasil simpan client','success');loadClients();
 }
 async function deleteClient(id){
-  if(!confirm('Hapus client ini?')) return;
+  if(!await confirmAction('Hapus client ini?')) return;
   const res=await fetch(`/api/admin/clients/${id}`,{method:'DELETE',credentials:'include'});
   const data=await res.json();
   if(!res.ok||!data.success){showToast(data.message||'Gagal hapus client','error');return;}

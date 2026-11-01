@@ -189,7 +189,7 @@
     }
     
     async function acceptBooking(bookingId) {
-        if (!confirm('Accept this booking?')) return;
+        if (!await confirmAction('Accept this booking?')) return;
         
         try {
             showLoading();
@@ -213,7 +213,7 @@
     }
     
     async function declineBooking(bookingId) {
-        if (!confirm('Decline this booking?')) return;
+        if (!await confirmAction('Decline this booking?')) return;
         
         try {
             showLoading();

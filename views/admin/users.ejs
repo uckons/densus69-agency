@@ -104,7 +104,7 @@
 
 <!-- Modal User -->
 <div id="userModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 space-y-6">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 space-y-6" style="max-height:calc(100dvh - 2rem);overflow-y:auto">
         <h2 id="modalTitle" class="text-2xl font-bold mb-2">Add/Edit User</h2>
         
         <!-- WRAP WITH FORM -->
@@ -124,8 +124,13 @@
                     </select>
                 </div>
                 <div id="userPasswordRow">
-                    <label class="block text-sm font-medium text-gray-700">Password</label>
-                    <input id="userPassword" type="password" class="mt-1 w-full px-3 py-2 border rounded focus:ring-blue-600" autocomplete="new-password">
+                    <label for="userPassword" id="userPasswordLabel" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input id="userPassword" type="password" minlength="6" class="mt-1 w-full px-3 py-2 border rounded focus:ring-blue-600" autocomplete="new-password">
+                    <p id="userPasswordHint" class="mt-1 text-xs text-gray-500">Minimal 6 karakter, maksimal 72 byte.</p>
+                </div>
+                <div>
+                    <label for="userPasswordConfirm" class="block text-sm font-medium text-gray-700">Konfirmasi Password Baru</label>
+                    <input id="userPasswordConfirm" type="password" class="mt-1 w-full px-3 py-2 border rounded focus:ring-blue-600" autocomplete="new-password">
                 </div>
             </div>
         </form>

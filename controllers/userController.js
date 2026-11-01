@@ -48,6 +48,10 @@ exports.createUser = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email, password, and role are required' });
     }
     
+    if (typeof password !== 'string' || !password.trim() || password.length < 6 || Buffer.byteLength(password, 'utf8') > 72) {
+      return res.status(400).json({success:false,message:'Password minimal 6 karakter dan maksimal 72 byte'});
+    }
+
     // Check if email already exists
     const existing = await db.query('SELECT id FROM users WHERE email = $1', [email]);
     if (existing.rows.length > 0) {
@@ -76,6 +80,10 @@ exports.updateUser = async (req, res) => {
     const { id } = req.params;
     const { email, password, role } = req.body;
     
+    if (password !== undefined && password !== '' && (typeof password !== 'string' || !password.trim() || password.length < 6 || Buffer.byteLength(password, 'utf8') > 72)) {
+      return res.status(400).json({success:false,message:'Password minimal 6 karakter dan maksimal 72 byte'});
+    }
+
     // Check if user exists
     const existing = await db.query('SELECT id FROM users WHERE id = $1', [id]);
     if (existing.rows.length === 0) {

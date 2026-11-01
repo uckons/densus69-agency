@@ -120,7 +120,7 @@ async function loadUsers() {
         selectedUserIds.clear();
         applyFiltersAndRender();
     } catch (err) {
-        alert(err.message || 'Error loading users');
+        showNotice(err.message || 'Error loading users', 'error');
     }
 }
 
@@ -249,14 +249,30 @@ function setUserModal({ id, email, role, password, type }) {
     document.getElementById('userPassword').value = password;
     document.getElementById('modalTitle').textContent = type === 'add' ? 'Add User' : 'Edit User';
     document.getElementById('userModalAction').onclick = type === 'add' ? addUser : updateUser;
-    document.getElementById('userPasswordRow').style.display = type === 'edit' ? 'none' : '';
+    document.getElementById('userPasswordRow').style.display = '';
+    document.getElementById('userPasswordConfirm').value = '';
+    document.getElementById('userPasswordLabel').textContent = type === 'edit' ? 'Password Baru (Opsional)' : 'Password';
+    document.getElementById('userPasswordHint').textContent = type === 'edit'
+        ? 'Kosongkan untuk mempertahankan password. Isi untuk mengganti password; minimal 6 karakter, maksimal 72 byte.'
+        : 'Minimal 6 karakter, maksimal 72 byte.';
+}
+
+function validUserPassword(password) {
+    if (!password.trim() || password.length < 6 || new TextEncoder().encode(password).length > 72) {
+        showNotice('Password minimal 6 karakter dan maksimal 72 byte.', 'error');return false;
+    }
+    if (password !== document.getElementById('userPasswordConfirm').value) {
+        showNotice('Konfirmasi password tidak sama.', 'error');return false;
+    }
+    return true;
 }
 
 async function addUser() {
     const email = document.getElementById('userEmail').value;
     const role = document.getElementById('userRole').value;
     const password = document.getElementById('userPassword').value;
-    if (!email || !role || !password) return alert('Email, Role, and Password required');
+    if (!email || !role || !password) return showNotice('Email, Role, and Password required', 'error');
+    if (!validUserPassword(password)) return;
 
     try {
         const res = await fetch('/api/admin/users', {
@@ -270,9 +286,9 @@ async function addUser() {
         if (!res.ok || result.success === false) throw new Error(result.message || 'Failed');
         closeUserModal();
         loadUsers();
-        alert(result.message || 'User added');
-    } catch {
-        alert('Failed to add user');
+        showNotice(result.message || 'User added', 'success');
+    } catch (error) {
+        showNotice(error.message || 'Failed to add user', 'error');
     }
 }
 
@@ -280,29 +296,31 @@ async function updateUser() {
     const id = document.getElementById('userId').value;
     const email = document.getElementById('userEmail').value;
     const role = document.getElementById('userRole').value;
-    if (!id || !email || !role) return alert('Email and Role required');
+    if (!id || !email || !role) return showNotice('Email and Role required', 'error');
+    const password = document.getElementById('userPassword').value;
+    if ((password || document.getElementById('userPasswordConfirm').value) && !validUserPassword(password)) return;
 
     try {
         const res = await fetch(`/api/admin/users/${id}`, {
             method: 'PUT',
             credentials: 'include',
             headers: buildAuthHeaders({ 'Content-Type': 'application/json' }),
-            body: JSON.stringify({ email, role })
+            body: JSON.stringify({ email, role, ...(password ? {password} : {}) })
         });
 
         const result = await parseJsonSafe(res);
         if (!res.ok || result.success === false) throw new Error(result.message || 'Failed');
         closeUserModal();
         loadUsers();
-        alert(result.message || 'User updated');
-    } catch {
-        alert('Failed to update user');
+        showNotice(result.message || 'User updated', 'success');
+    } catch (error) {
+        showNotice(error.message || 'Failed to update user', 'error');
     }
 }
 
 async function bulkDeleteUsers() {
     if (selectedUserIds.size === 0) return;
-    if (!confirm(`Delete ${selectedUserIds.size} selected users?`)) return;
+    if (!await confirmAction(`Delete ${selectedUserIds.size} selected users?`)) return;
 
     try {
         const res = await fetch('/api/admin/users/bulk-delete', {
@@ -316,14 +334,14 @@ async function bulkDeleteUsers() {
         if (!res.ok || result.success === false) throw new Error(result.message || 'Failed');
 
         await loadUsers();
-        alert(result.message || 'Selected users deleted');
+        showNotice(result.message || 'Selected users deleted', 'success');
     } catch (error) {
-        alert(error.message || 'Failed to delete selected users');
+        showNotice(error.message || 'Failed to delete selected users', 'error');
     }
 }
 
 window.deleteUser = async function (id) {
-    if (!confirm('Delete this user?')) return;
+    if (!await confirmAction('Delete this user?')) return;
 
     try {
         const res = await fetch(`/api/admin/users/${id}`, {
@@ -335,8 +353,8 @@ window.deleteUser = async function (id) {
         const result = await parseJsonSafe(res);
         if (!res.ok || result.success === false) throw new Error(result.message || 'Failed');
         loadUsers();
-        alert('User deleted');
+        showNotice('User deleted', 'success');
     } catch {
-        alert('Failed to delete user');
+        showNotice('Failed to delete user', 'error');
     }
 };
