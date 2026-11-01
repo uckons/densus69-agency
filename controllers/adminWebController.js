@@ -150,7 +150,7 @@ exports.showTransactions = async (req, res) => {
 
     const transactionsResult = await db.query(`
       SELECT
-        t.*,
+        t.*, TO_CHAR(t.transaction_date, 'YYYY-MM-DD') AS transaction_day,
         m.full_name as model_name,
         g.grade_name as model_grade_name,
         a.full_name as agent_name,

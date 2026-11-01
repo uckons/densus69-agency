@@ -1,0 +1,15 @@
+<div id="payrollPeriodModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90dvh] overflow-y-auto p-6">
+        <div class="flex justify-between gap-4 mb-4"><h3 class="text-xl font-bold">Slip Gaji Model</h3><button type="button" onclick="closePayrollPeriod()" aria-label="Tutup slip gaji">✕</button></div>
+        <p class="text-sm text-gray-500 mb-4">Gabungkan transaksi model dari seluruh client dalam satu slip gaji. Tanggal awal dan akhir ikut dihitung.</p>
+        <form id="payrollPeriodForm" class="space-y-4">
+            <label class="block text-sm">Model<select id="payrollPeriodModel" required class="w-full border rounded-lg p-2"></select></label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label class="text-sm">Dari tanggal<input id="payrollPeriodFrom" type="date" required class="w-full border rounded-lg p-2"></label>
+                <label class="text-sm">Sampai tanggal<input id="payrollPeriodTo" type="date" required class="w-full border rounded-lg p-2"></label>
+            </div>
+            <p id="payrollPeriodPreview" class="text-sm text-gray-600" aria-live="polite"></p>
+            <button id="exportPeriodPayroll" type="submit" class="w-full rounded-lg px-4 py-2 bg-blue-600 text-white disabled:opacity-50">Unduh Slip Gaji PDF</button>
+        </form>
+    </div>
+</div>

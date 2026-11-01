@@ -298,6 +298,8 @@ Transaction rates are recorded at creation. Client/model rate changes affect fut
 
 The server applies the additive migration in `database/payroll-schema.js` before listening. Existing gross/net amounts remain unchanged; an existing transaction's former admin fee is displayed as its historical denda. No manual schema reset is required.
 
+A combined model payslip is available from **Transactions → Slip Gaji Model**: choose the model and an inclusive start/end date range. The portrait PDF includes a deduction summary and every matching transaction across clients and table pages, using saved transaction amounts regardless of client payment status.
+
 Client payments are recorded from **Transactions → Bayar**. Enter the actual amount, receipt date, method and optional reference. Partial payments are supported. Dashboard, Transactions and Analytics revenue use active payment receipts by **payment date**, independently of the invoice transaction date. Invoice totals and unpaid balances are displayed separately. Historical transactions begin unpaid until their actual payments are entered; no receipts are inferred from recorded payroll.
 
 Incorrect receipts can be voided with a reason; the audit history remains. Duplicate request keys are idempotent and payments cannot exceed the remaining invoice balance. Paid invoices cannot be reduced below active receipts or moved to another client. Transactions with any payment history cannot be deleted.

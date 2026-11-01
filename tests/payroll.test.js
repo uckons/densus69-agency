@@ -39,3 +39,22 @@ test('client invoice subtracts only client deductions and ignores model payroll 
 test('legacy admin fee is not treated as a client deduction on an invoice', () => {
     assert.equal(Payroll.invoice({transaction_count: 2, model_rate: 250000, admin_fee: 50000}).total, 500000);
 });
+
+test('period payroll includes both dates, combines clients, and selects model ID rather than duplicate names', () => {
+    const rows = [
+        {id:1,model_id:11,model_name:'Same Name',client_name:'A',transaction_day:'2026-10-01',transaction_date:'2026-09-30T17:00:00Z',transaction_count:2,gross_amount:500000,safety_fee:10000,client_admin_fee:10000,agent_fee_amount:60000,fine:0,net_amount:400000},
+        {id:2,model_id:11,model_name:'Same Name',client_name:'B',transaction_day:'2026-10-31',transaction_count:1,gross_amount:300000,safety_fee:5000,client_admin_fee:5000,other_deduction:10000,fine:20000,cash_advance:30000,agent_fee_amount:20000,net_amount:210000},
+        {id:3,model_id:12,model_name:'Same Name',transaction_day:'2026-10-15',transaction_count:1,gross_amount:900000,net_amount:900000},
+        {id:4,model_id:11,transaction_day:'2026-11-01',transaction_count:1,gross_amount:900000,net_amount:900000}
+    ];
+    const result=Payroll.period(rows,'11','2026-10-01','2026-10-31');
+    assert.deepEqual(result.rows.map(row=>row.id),[1,2]);
+    assert.equal(result.count,3);
+    assert.deepEqual(result.totals,{gross:800000,safety:25000,admin:25000,other:10000,fine:20000,cash:30000,agent:80000,net:610000});
+});
+test('period payroll rejects reversed or invalid dates and missing model, and returns no rows for empty periods', () => {
+    assert.throws(()=>Payroll.period([],11,'2026-10-31','2026-10-01'),/Tanggal akhir/);
+    assert.throws(()=>Payroll.period([],11,'2026-02-31','2026-03-01'),/valid/);
+    assert.throws(()=>Payroll.period([],'','2026-10-01','2026-10-31'),/Pilih model/);
+    assert.equal(Payroll.period([],11,'2026-10-01','2026-10-31').rows.length,0);
+});

@@ -38,6 +38,7 @@
     <script src="/js/pdf-reports.js" defer></script>
     <script src="/js/payroll.js"></script>
     <script src="/js/client-payments.js" defer></script>
+    <script src="/js/payroll-period.js" defer></script>
 </head>
 <body class="bg-gray-50">
 
@@ -73,7 +74,7 @@
             <p class="text-gray-600 text-sm mt-1">View and manage all transactions</p>
         </div>
 
-        <div class="flex space-x-3">
+        <div class="flex flex-wrap gap-3">
             <a href="/admin/transactions/new"
                class="bg-admin-600 text-white px-4 py-2 rounded-lg hover:bg-admin-700 transition">
                 <i class="fas fa-plus mr-2"></i>Add Transaction
@@ -86,6 +87,7 @@
                     class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
                 <i class="fas fa-file-pdf mr-2"></i>Export PDF
             </button>
+            <button type="button" onclick="openPayrollPeriod()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Slip Gaji Model</button>
         </div>
     </div>
 
@@ -286,6 +288,7 @@
 </div>
 
 <%- include('../partials/client-payments') %>
+<%- include('../partials/payroll-period') %>
 
 <!-- Transaction Detail Modal -->
 <div id="transactionDetailModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
