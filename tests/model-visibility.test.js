@@ -8,7 +8,7 @@ test('profile and public serializers never include financial fields, including f
  }
 });
 test('model earnings expose model salary and own deductions without client financials',()=>{
- assert.deepEqual(Visibility.transaction({...confidential,id:4,transaction_day:'2026-10-27',transaction_count:2,salary_rate:180000,model_gross_amount:360000,agent_fee_amount:60000,fine:10000,cash_advance:20000,net_amount:270000}),{id:4,transaction_date:'2026-10-27',transaction_count:2,salary_rate:180000,model_gross_amount:360000,agent_fee:60000,fine:10000,cash_advance:20000,net_rate:135000,net_amount:270000});
+ assert.deepEqual(Visibility.transaction({...confidential,id:4,transaction_day:'2026-10-27',transaction_count:2,salary_rate:180000,model_gross_amount:360000,agent_fee_amount:60000,fine:10000,cash_advance:20000,net_amount:270000}),{id:4,transaction_date:'2026-10-27',transaction_count:2,salary_rate:180000,model_gross_amount:360000,agent_fee:60000,fine:10000,cash_advance:20000,refund:0,net_rate:135000,net_amount:270000});
 });
 test('nested booking jobs cannot expose client offers',()=>{
  const result=Visibility.booking({id:1,payment_amount:123456,job:{...confidential,id:5,title:'Job'}});

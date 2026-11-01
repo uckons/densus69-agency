@@ -13,7 +13,7 @@ const Transaction = {
       notes: data.notes ?? null, created_by: data.created_by ?? null,
       safety_fee: data.safety_fee, client_admin_fee: data.client_admin_fee,
       other_deduction: data.other_deduction, fine: totals.fine,
-      cash_advance: totals.cash, agent_fee_per_trx: data.agent_fee_per_trx,
+      cash_advance: totals.cash, refund: totals.refund, agent_fee_per_trx: data.agent_fee_per_trx,
       agent_fee_amount: totals.agent, salary_rate: data.salary_rate ?? null, model_gross_amount: data.salary_rate != null ? Math.round(Number(data.salary_rate) * Number(data.transaction_count) * 100) / 100 : null, deduction_version: data.salary_rate != null ? 3 : 2
     };
     const columns = Object.keys(values);
@@ -31,7 +31,7 @@ const Transaction = {
         COALESCE(m.agent_fee_flat, 0) as current_agent_fee_flat,
         g.grade_name as model_grade_name,
         g.rate_per_trx as model_grade_rate,
-        COALESCE(t.agent_fee_amount, GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0), 0)) as agent_fee_total,
+        COALESCE(t.agent_fee_amount, GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0) + COALESCE(t.refund, 0), 0)) as agent_fee_total,
         u.email as created_by_email
       FROM transactions t
       LEFT JOIN models m ON t.model_id = m.id
@@ -50,7 +50,7 @@ const Transaction = {
         t.*,
         m.full_name as model_name,
         g.grade_name as model_grade_name,
-        COALESCE(t.agent_fee_amount, GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0), 0)) as agent_fee_total
+        COALESCE(t.agent_fee_amount, GREATEST(COALESCE(t.gross_amount, 0) - COALESCE(t.admin_fee, 0) - COALESCE(t.net_amount, 0) + COALESCE(t.refund, 0), 0)) as agent_fee_total
       FROM transactions t
       LEFT JOIN models m ON t.model_id = m.id
       LEFT JOIN model_grades g ON m.grade_id = g.id
@@ -165,7 +165,7 @@ const Transaction = {
     const paid = (await client.query('SELECT COALESCE(SUM(amount),0) AS total FROM client_payments WHERE transaction_id=$1 AND voided_at IS NULL', [id])).rows[0].total;
     if (data.client_name !== current.client_name && Number(paid) > 0) throw Object.assign(new Error('Client tidak dapat diganti setelah ada pembayaran aktif'), {status:409});
     if (data.preserveAmounts) {
-      const result = await client.query('UPDATE transactions SET client_name=$1, transaction_date=$2, notes=$3 WHERE id=$4 RETURNING *', [data.client_name, data.transaction_date, data.notes, id]);
+      const result = await client.query('UPDATE transactions SET client_name=$1, transaction_date=$2, notes=$3, refund=$5, net_amount=net_amount + $5 - COALESCE(refund,0) WHERE id=$4 RETURNING *', [data.client_name, data.transaction_date, data.notes, id, data.refund ?? current.refund ?? 0]);
       await client.query('COMMIT');
     return result.rows[0];
     }
@@ -176,7 +176,7 @@ const Transaction = {
       admin_fee: totals.admin, gross_amount: totals.gross, net_amount: totals.net,
       notes: data.notes, safety_fee: data.safety_fee,
       client_admin_fee: data.client_admin_fee, other_deduction: data.other_deduction,
-      fine: totals.fine, cash_advance: totals.cash,
+      fine: totals.fine, cash_advance: totals.cash, refund: totals.refund,
       agent_fee_per_trx: data.agent_fee_per_trx, agent_fee_amount: totals.agent,
       salary_rate: data.salary_rate ?? null,
       model_gross_amount: data.salary_rate != null ? Math.round(Number(data.salary_rate) * Number(data.transaction_count) * 100) / 100 : null,

@@ -287,7 +287,7 @@ Set **Models → Edit → Rate Gaji Model/TRX** to the salary rate agreed with e
 
 ```text
 Model Gross = TRX × recorded model salary rate
-Model Net = Model Gross − Agent Fee − Denda − Cash Advance
+Model Net = Model Gross − Agent Fee − Denda − Cash Advance + Refund
 Agent Fee = TRX × recorded agent flat rate
 ```
 
@@ -297,7 +297,7 @@ Master rate changes affect future transactions only. Existing payroll, invoices 
 
 The server applies the additive migration in `database/payroll-schema.js` before listening. No manual schema reset is required. Existing salary rates are unset; enter them in Models before creating new transactions. Existing gross/net amounts remain unchanged, and former transaction admin fees remain historical denda.
 
-A combined model payslip is available from **Transactions → Slip Gaji Model** with an inclusive date range. Single and period payslips show dates, TRX counts, model salary rates, model gross, Agent Fee, Denda, Cash Advance and net earnings. Historical model gross is reconstructed from saved net plus these model deductions. Client rates, client gross and client deductions stay private. Payslips use stored earnings independently of client payment status.
+A combined model payslip is available from **Transactions → Slip Gaji Model** with an inclusive date range. Single and period payslips show dates, TRX counts, model salary rates, model gross, Agent Fee, Denda, Cash Advance, Refund and net earnings. Historical model gross is reconstructed from saved net plus these model deductions. Client rates, client gross and client deductions stay private. Payslips use stored earnings independently of client payment status.
 
 Client payments are recorded from **Transactions → Bayar**. Enter the actual amount, receipt date, method and optional reference. Partial payments are supported. Dashboard, Transactions and Analytics revenue use active payment receipts by **payment date**, independently of the invoice transaction date. Invoice totals and unpaid balances are displayed separately. Historical transactions begin unpaid until their actual payments are entered; no receipts are inferred from recorded payroll.
 
@@ -436,4 +436,6 @@ For issues and questions, please open an issue on GitHub.
 **Built with ❤️ for the modeling industry**
 ## Model financial visibility
 
-Model accounts receive only their own salary rate, model gross, Agent Fee, Denda, Cash Advance and net earnings. They cannot change their salary rate through profile updates. Public profiles exclude all financial fields. Client rates, client gross, payments and client deductions remain private through explicit serializers; admin APIs retain full financial details. Existing ledger records are retained. Regenerate model-facing payslips before sharing them.
+Model accounts receive only their own salary rate, model gross, Agent Fee, Denda, Cash Advance, Refund and net earnings. They cannot change their salary rate through profile updates. Public profiles exclude all financial fields. Client rates, client gross, payments and client deductions remain private through explicit serializers; admin APIs retain full financial details. Existing ledger records are retained. Regenerate model-facing payslips before sharing them.
+
+Refund is a one-time addition to model salary per transaction, editable in Add/Edit Transaction and shown on model earnings and payslips. It does not change client invoices or cash receipts. Existing transactions default to zero refund without recalculating historical salaries.

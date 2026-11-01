@@ -41,6 +41,7 @@ module.exports = function ensurePayrollSchema() {
             await client.query('ALTER TABLE models ADD COLUMN IF NOT EXISTS salary_rate NUMERIC(10,2) CHECK (salary_rate > 0)');
             await client.query('ALTER TABLE transactions ADD COLUMN IF NOT EXISTS salary_rate NUMERIC(10,2) CHECK (salary_rate > 0)');
             await client.query('ALTER TABLE transactions ADD COLUMN IF NOT EXISTS model_gross_amount NUMERIC(12,2)');
+            await client.query('ALTER TABLE transactions ADD COLUMN IF NOT EXISTS refund NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (refund >= 0)');
             await client.query('COMMIT');
         } catch (error) {
             await client.query('ROLLBACK');

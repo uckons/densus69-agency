@@ -33,7 +33,7 @@ exports.getAllAgents = async (req, res) => {
         a.*, u.email,
         COUNT(DISTINCT m.id) AS managed_models,
         COALESCE(SUM((SELECT COALESCE(SUM(cp.amount),0) FROM client_payments cp WHERE cp.transaction_id=t.id AND cp.voided_at IS NULL)), 0) AS total_revenue,
-        COALESCE(SUM(COALESCE(t.agent_fee_amount, GREATEST(t.gross_amount - t.admin_fee - t.net_amount, 0))), 0) AS total_agent_fee,
+        COALESCE(SUM(COALESCE(t.agent_fee_amount, GREATEST(t.gross_amount - t.admin_fee - t.net_amount + COALESCE(t.refund, 0), 0))), 0) AS total_agent_fee,
         COALESCE(SUM(t.net_amount), 0) AS total_model_fee
       FROM agents a
       JOIN users u ON a.user_id = u.id
@@ -243,7 +243,7 @@ exports.getAgentPerformance = async (req, res) => {
       `SELECT m.id, m.full_name, m.rate, COALESCE(m.agent_fee_flat, 0) AS agent_fee_flat,
               COUNT(t.id) AS transaction_count,
               COALESCE(SUM((SELECT COALESCE(SUM(cp.amount),0) FROM client_payments cp WHERE cp.transaction_id=t.id AND cp.voided_at IS NULL)), 0) AS revenue,
-              COALESCE(SUM(COALESCE(t.agent_fee_amount, GREATEST(t.gross_amount - t.admin_fee - t.net_amount, 0))), 0) AS agent_fee,
+              COALESCE(SUM(COALESCE(t.agent_fee_amount, GREATEST(t.gross_amount - t.admin_fee - t.net_amount + COALESCE(t.refund, 0), 0))), 0) AS agent_fee,
               COALESCE(SUM(t.net_amount), 0) AS model_fee
        FROM models m
        LEFT JOIN transactions t ON t.model_id = m.id

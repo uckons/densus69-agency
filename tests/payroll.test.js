@@ -6,7 +6,7 @@ test('client safety/admin multiply by TRX; other, fine and advance apply once', 
     assert.deepEqual(Payroll.calculate({ transaction_count: 3, model_rate: 500000,
         safety_fee: 10000, client_admin_fee: 5000, other_deduction: 25000,
         fine: 20000, cash_advance: 50000, agent_fee_per_trx: 20000 }),
-    { gross: 1500000, safety: 30000, admin: 15000, other: 25000, fine: 20000, cash: 50000, agent: 60000, net: 1300000 });
+    { gross: 1500000, safety: 30000, admin: 15000, other: 25000, fine: 20000, cash: 50000, agent: 60000, refund:0,net: 1300000 });
 });
 test('zero agent fee is not confused with client deductions', () => {
     const tx = { transaction_count: 2, gross_amount: 200000, net_amount: 100000,
@@ -18,7 +18,7 @@ test('zero agent fee is not confused with client deductions', () => {
 test('legacy rows retain recorded fine, commission and net', () => {
     assert.deepEqual(Payroll.breakdown({transaction_count: 2, gross_amount: 400000,
         admin_fee: 50000, net_amount: 310000}),
-    {gross: 400000, safety: 0, admin: 0, other: 0, fine: 50000, cash: 0, agent: 40000, net: 310000});
+    {gross: 400000, safety: 0, admin: 0, other: 0, fine: 50000, cash: 0, agent: 40000, refund:0,net: 310000});
 });
 test('exact formula retains a negative balance instead of hiding an advance shortfall', () => {
     assert.equal(Payroll.calculate({transaction_count: 1, model_rate: 100000, cash_advance: 150000}).net, -50000);
@@ -50,7 +50,7 @@ test('period payroll includes both dates, combines clients, and selects model ID
     const result=Payroll.period(rows,'11','2026-10-01','2026-10-31');
     assert.deepEqual(result.rows.map(row=>row.id),[1,2]);
     assert.equal(result.count,3);
-    assert.deepEqual(result.totals,{gross:800000,safety:25000,admin:25000,other:10000,fine:20000,cash:30000,agent:80000,net:610000});
+    assert.deepEqual(result.totals,{gross:800000,safety:25000,admin:25000,other:10000,fine:20000,cash:30000,agent:80000,refund:0,net:610000});
 });
 test('period payroll rejects reversed or invalid dates and missing model, and returns no rows for empty periods', () => {
     assert.throws(()=>Payroll.period([],11,'2026-10-31','2026-10-01'),/Tanggal akhir/);
@@ -79,8 +79,23 @@ test('custom model salary is independent of client rates and client deductions',
  const data={transaction_count:2,model_rate:250000,salary_rate:180000,safety_fee:10000,client_admin_fee:10000,other_deduction:5000,fine:10000,cash_advance:20000,agent_fee_per_trx:30000};
  assert.equal(Payroll.calculate(data).net,270000);
  assert.equal(Payroll.calculate({...data,model_rate:230000,safety_fee:70000,client_admin_fee:60000,other_deduction:100000}).net,270000);
- assert.deepEqual(Payroll.modelPay({...data,gross_amount:500000,model_gross_amount:360000,agent_fee_amount:60000,net_amount:270000}),{gross:360000,rate:180000,agent:60000,fine:10000,cash:20000,net:270000});
+ assert.deepEqual(Payroll.modelPay({...data,gross_amount:500000,model_gross_amount:360000,agent_fee_amount:60000,net_amount:270000}),{gross:360000,rate:180000,agent:60000,fine:10000,cash:20000,refund:0,net:270000});
 });
 test('historical model gross is reconstructed from stored net and own deductions, not current master rate',()=>{
- assert.deepEqual(Payroll.modelPay({transaction_count:2,gross_amount:999999,admin_fee:0,fine:10000,cash_advance:20000,agent_fee_amount:60000,net_amount:270000}),{gross:360000,rate:180000,agent:60000,fine:10000,cash:20000,net:270000});
+ assert.deepEqual(Payroll.modelPay({transaction_count:2,gross_amount:999999,admin_fee:0,fine:10000,cash_advance:20000,agent_fee_amount:60000,net_amount:270000}),{gross:360000,rate:180000,agent:60000,fine:10000,cash:20000,refund:0,net:270000});
+});
+
+test('refund increases model net once without changing client invoice or gross', () => {
+ const input={transaction_count:2,model_rate:250000,salary_rate:180000,safety_fee:10000,client_admin_fee:10000,agent_fee_per_trx:30000,fine:10000,cash_advance:20000,refund:15000.25};
+ const totals=Payroll.calculate(input);
+ assert.equal(totals.net,285000.25);
+ assert.equal(totals.refund,15000.25);
+ assert.equal(Payroll.invoice(input).total,460000);
+ const tx={...input,gross_amount:totals.gross,net_amount:totals.net,agent_fee_amount:totals.agent};
+ assert.equal(Payroll.modelPay(tx).gross,360000);
+ const {salary_rate,...legacy}=tx;
+ assert.equal(Payroll.modelPay(legacy).gross,360000);
+ const period=Payroll.period([{...tx,model_id:1,transaction_day:'2026-11-01'}],1,'2026-11-01','2026-11-01');
+ assert.equal(period.totals.refund,15000.25);
+ assert.equal(period.totals.net,285000.25);
 });

@@ -341,6 +341,10 @@
                 <input id="editCashAdvance" type="number" min="0" step="0.01" value="0" class="w-full border rounded-lg px-3 py-2">
             </div>
             <div>
+                <label for="editRefund" class="block text-sm font-medium text-gray-700 mb-1">Refund (Penambah Gaji Model)</label>
+                <input id="editRefund" type="number" min="0" max="9999999999.99" step="0.01" value="0" class="w-full border rounded-lg px-3 py-2">
+            </div>
+            <div>
                 <label for="editSalaryRate" class="block text-sm font-medium text-gray-700 mb-1">Rate Gaji Model/TRX (Rp)</label>
                 <input id="editSalaryRate" type="number" min="0.01" max="99999999.99" step="0.01" required class="w-full border rounded-lg px-3 py-2">
             </div>
@@ -842,6 +846,7 @@
                             <div><span class="font-semibold">Lain-lain (sekali):</span> ${formatCurrencySafe(deductions.other)}</div>
                             <div><span class="font-semibold">Denda:</span> ${formatCurrencySafe(deductions.fine)}</div>
                             <div><span class="font-semibold">Cash Advance:</span> ${formatCurrencySafe(deductions.cash)}</div>
+                            <div><span class="font-semibold">Refund:</span> +${formatCurrencySafe(deductions.refund)}</div>
                             <div><span class="font-semibold">Agent Fee:</span> Rp ${agentFee}</div>
                             <div><span class="font-semibold">Net Model:</span> Rp ${net}</div>
                         </div>
@@ -871,7 +876,7 @@
                 title: 'Pendapatan Model', columns: ['Keterangan', 'Nominal'], numeric: [1],
                 rows: [['Jumlah TRX', tx.transaction_count || 0], ['Rate Gaji Model/TRX', pdf.money(pay.rate)],
                     ['Pendapatan Kotor Model', pdf.money(pay.gross)], ['Agent Fee', '-' + pdf.money(pay.agent)],
-                    ['Denda', '-' + pdf.money(pay.fine)], ['Cash Advance', '-' + pdf.money(pay.cash)]],
+                    ['Denda', '-' + pdf.money(pay.fine)], ['Cash Advance', '-' + pdf.money(pay.cash)], ['Refund', '+' + pdf.money(pay.refund)]],
                 totals: ['PENDAPATAN BERSIH MODEL', pdf.money(pay.net)]
             }],
             signatures: ['Finance', 'Model']
@@ -889,7 +894,7 @@
             client_admin_fee: changed ? client?.admin_fee || 0 : tx.client_admin_fee,
             other_deduction: changed ? client?.other_deduction || 0 : tx.other_deduction,
             transaction_count: document.getElementById('editTransactionCount').value,
-            fine: document.getElementById('editFine').value, cash_advance: document.getElementById('editCashAdvance').value,
+            fine: document.getElementById('editFine').value, cash_advance: document.getElementById('editCashAdvance').value, refund: document.getElementById('editRefund').value,
             agent_fee_per_trx: tx.agent_fee_per_trx ?? (getAgentFeeAmount(tx) / Number(tx.transaction_count))
         };
         const totals = Payroll.calculate(data);
@@ -917,6 +922,7 @@
             document.getElementById('editTransactionCount').value = tx.transaction_count || 1;
             document.getElementById('editFine').value = Payroll.breakdown(tx).fine;
             document.getElementById('editCashAdvance').value = Number(tx.cash_advance || 0);
+            document.getElementById('editRefund').value = Number(tx.refund || 0);
             editingTransaction = tx;
             try { const clientsResponse = await fetch('/api/admin/clients', {credentials:'include'}); const clientsData = await clientsResponse.json(); editClients = clientsData.success ? clientsData.data : []; } catch (_) { editClients = []; }
             const list = document.getElementById('editClientOptions'); list.replaceChildren();
@@ -939,6 +945,7 @@
             model_rate: Number(document.getElementById('editModelRate').value),
             fine: Number(document.getElementById('editFine').value || 0),
             cash_advance: Number(document.getElementById('editCashAdvance').value || 0),
+            refund: Number(document.getElementById('editRefund').value || 0),
             description: document.getElementById('editDescription').value.trim()
         };
 
@@ -950,8 +957,8 @@
             return;
         }
 
-        if (![payload.fine, payload.cash_advance].every(value => Number.isFinite(value) && value >= 0)) {
-            showToast('Denda dan cash advance harus berupa angka nol atau lebih', 'error');
+        if (![payload.fine, payload.cash_advance, payload.refund].every(value => Number.isFinite(value) && value >= 0)) {
+            showToast('Denda, cash advance, dan refund harus berupa angka nol atau lebih', 'error');
             return;
         }
         if (!Number.isFinite(payload.model_rate) || payload.model_rate <= 0 || payload.model_rate > 99999999.99) {
