@@ -1,0 +1,23 @@
+<%- include('../partials/operator-page-start', {pageTitle:'Pendapatan Saya',pageKey:'earnings'}) %>
+<div class="max-w-5xl mx-auto space-y-6">
+    <h2 class="text-2xl font-bold text-gray-800">Pendapatan Saya</h2>
+    <% if (!agent) { %><p class="bg-white p-6 rounded-xl shadow">Akun ini belum terhubung ke data agen. Hubungi admin untuk menghubungkan akun dengan agen dan model binaan Anda.</p><% } else { %>
+    <p class="text-gray-600">Fee agen tercatat untuk <strong><%= agent.full_name %></strong>, berdasarkan tanggal transaksi. Angka ini belum menunjukkan pembayaran gaji yang sudah diterima.</p>
+    <form method="get" class="bg-white rounded-xl shadow p-5 flex flex-wrap gap-4 items-end">
+        <div><label for="from" class="block text-sm mb-1">Dari Tanggal</label><input id="from" name="from" type="date" value="<%= from %>" class="border rounded px-3 py-2"></div>
+        <div><label for="to" class="block text-sm mb-1">Sampai Tanggal</label><input id="to" name="to" type="date" value="<%= to %>" class="border rounded px-3 py-2"></div>
+        <button class="bg-admin-700 text-white px-4 py-2 rounded" type="submit">Tampilkan</button><a href="/operator/earnings" class="px-4 py-2 border rounded">Semua Tanggal</a>
+    </form>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-6 rounded-xl shadow"><p class="text-gray-500">Total Fee Agen</p><p id="own-income" class="text-2xl font-bold"><%= formatCurrency(summary.total_fee) %></p></div>
+        <div class="bg-white p-6 rounded-xl shadow"><p class="text-gray-500">Jumlah TRX</p><p class="text-2xl font-bold"><%= summary.total_trx %></p></div>
+        <div class="bg-white p-6 rounded-xl shadow"><p class="text-gray-500">Pencatatan Transaksi</p><p class="text-2xl font-bold"><%= summary.records %></p></div>
+    </div>
+    <div class="bg-white rounded-xl shadow overflow-x-auto"><table class="min-w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-4 text-left">Tanggal</th><th class="p-4 text-left">Model Binaan</th><th class="p-4 text-right">TRX</th><th class="p-4 text-right">Fee Agen</th></tr></thead><tbody>
+        <% rows.forEach(row => { %><tr class="border-t"><td class="p-4"><%= row.day %></td><td class="p-4"><%= row.model_name %></td><td class="p-4 text-right"><%= row.transaction_count %></td><td class="p-4 text-right font-semibold"><%= formatCurrency(row.fee) %></td></tr><% }); %>
+        <% if (!rows.length) { %><tr><td colspan="4" class="p-6 text-center text-gray-500">Belum ada pendapatan pada periode ini.</td></tr><% } %>
+    </tbody></table></div>
+    <% if (Number(summary.records)>200) { %><p class="text-sm text-gray-500">Menampilkan 200 pencatatan terbaru. Total mencakup seluruh periode terpilih; persempit tanggal untuk melihat rincian lainnya.</p><% } %>
+    <% } %>
+</div>
+<%- include('../partials/operator-page-end') %>

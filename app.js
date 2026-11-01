@@ -141,6 +141,9 @@ app.get('/admin/agents', auth, isAdmin, (req, res) => {
 // Operator landing and own-account profile. Master administration stays admin-only.
 app.get('/operator/dashboard', auth, isTransactionStaff, (req, res) => res.redirect('/admin/transactions'));
 app.get('/operator/profile', auth, isTransactionStaff, require('./controllers/operatorController').showProfile);
+app.get('/operator/earnings', auth, isTransactionStaff, require('./controllers/operatorController').showEarnings);
+app.get('/operator/models', auth, isTransactionStaff, require('./controllers/operatorController').showModels);
+app.get('/operator/models/:id', auth, isTransactionStaff, require('./controllers/operatorController').showModel);
 
 // Model routes
 app.get('/model/dashboard', auth, isModel, modelWebController.showDashboard);

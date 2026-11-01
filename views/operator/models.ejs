@@ -1,0 +1,11 @@
+<%- include('../partials/operator-page-start', {pageTitle:'Model Binaan',pageKey:'managed-models'}) %>
+<div class="max-w-5xl mx-auto space-y-6">
+    <h2 class="text-2xl font-bold text-gray-800">Model Binaan</h2>
+    <% if (!agent) { %><p class="bg-white p-6 rounded-xl shadow">Akun ini belum terhubung ke data agen. Hubungi admin untuk menghubungkan akun dengan agen dan model binaan Anda.</p><% } else { %>
+    <p class="text-gray-600"><%= models.length %> model binaan <strong><%= agent.full_name %></strong>.</p>
+    <div class="bg-white rounded-xl shadow overflow-x-auto"><table class="min-w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-4 text-left">Nama</th><th class="p-4 text-left">Grade</th><th class="p-4 text-left">Status</th><th class="p-4 text-left">Telepon</th><th class="p-4 text-left">Profil</th></tr></thead><tbody>
+        <% models.forEach(model => { %><tr class="border-t"><td class="p-4 font-semibold"><%= model.full_name %></td><td class="p-4"><%= model.grade_name || '-' %></td><td class="p-4"><%= model.status %></td><td class="p-4"><%= model.phone || '-' %></td><td class="p-4"><a class="text-admin-700 font-semibold" href="/operator/models/<%= model.id %>">Lihat Profil</a></td></tr><% }); %>
+        <% if (!models.length) { %><tr><td colspan="5" class="p-6 text-center text-gray-500">Belum ada model binaan. Penugasan agen diatur oleh admin melalui menu Models.</td></tr><% } %>
+    </tbody></table></div><% } %>
+</div>
+<%- include('../partials/operator-page-end') %>
