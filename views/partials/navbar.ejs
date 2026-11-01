@@ -1,10 +1,10 @@
-<nav class="bg-white shadow-md sticky top-0 z-40">
+<nav aria-label="Navigasi situs" class="bg-white shadow-md sticky top-0 z-40">
     <div class="container mx-auto px-4">
         <div class="flex justify-between items-center h-16">
             <!-- Logo -->
             <a href="/" class="flex items-center space-x-2">
                 <i class="fas fa-star text-pink-500 text-2xl"></i>
-                <span class="text-2xl font-bold text-gray-800">Sky Agency</span>
+                <span class="text-xl md:text-2xl font-bold text-gray-800">Sky Agency</span>
             </a>
             
             <!-- Desktop Navigation -->
@@ -42,13 +42,13 @@
                                 </a>
                             <% } %>
                             <hr class="my-2">
-                            <a href="/logout" class="block px-4 py-2 text-red-600 hover:bg-gray-100">
+                            <a href="/auth/logout" class="block px-4 py-2 text-red-600 hover:bg-gray-100">
                                 <i class="fas fa-sign-out-alt mr-2"></i> Logout
                             </a>
                         </div>
                     </div>
                 <% } else { %>
-                    <a href="/auth/login" class="text-gray-700 hover:text-pink-500 transition">Login</a>
+                    <a href="/auth/login" class="bg-pink-500 text-white px-6 py-2 rounded-full hover:bg-pink-600 transition font-semibold">Login</a>
                     <a href="/auth/register" class="bg-pink-500 text-white px-6 py-2 rounded-full hover:bg-pink-600 transition">
                         Join as Model
                     </a>
@@ -56,9 +56,12 @@
             </div>
             
             <!-- Mobile Menu Button -->
-            <button id="mobile-menu-btn" class="md:hidden text-gray-700 hover:text-pink-500">
-                <i class="fas fa-bars text-2xl"></i>
-            </button>
+            <div class="md:hidden flex items-center space-x-3">
+                <a href="/auth/login" class="bg-pink-500 text-white px-4 py-2 rounded-full font-semibold hover:bg-pink-600">Login</a>
+                <button id="mobile-menu-btn" type="button" style="min-width:40px;min-height:40px" class="text-gray-700 hover:text-pink-500" aria-label="Buka menu" aria-controls="mobile-menu" aria-expanded="false">
+                    <i class="fas fa-bars text-2xl" aria-hidden="true"></i>
+                </button>
+            </div>
         </div>
     </div>
     
@@ -87,7 +90,7 @@
                         <i class="fas fa-user mr-2"></i> Profile
                     </a>
                 <% } %>
-                <a href="/logout" class="block text-red-600 hover:text-red-700 py-2">
+                <a href="/auth/logout" class="block text-red-600 hover:text-red-700 py-2">
                     <i class="fas fa-sign-out-alt mr-2"></i> Logout
                 </a>
             <% } else { %>
@@ -104,5 +107,6 @@
     document.getElementById('mobile-menu-btn')?.addEventListener('click', function() {
         const menu = document.getElementById('mobile-menu');
         menu.classList.toggle('hidden');
+        this.setAttribute('aria-expanded', String(!menu.classList.contains('hidden')));
     });
 </script>
