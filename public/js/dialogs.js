@@ -1,5 +1,8 @@
 (() => {
-    const defaults = {confirmButtonColor:'#6d28d9',cancelButtonColor:'#64748b'};
+    const defaults = {
+        showConfirmButton:true, showCloseButton:true, buttonsStyling:false,
+        customClass:{popup:'sky-dialog',confirmButton:'sky-dialog-confirm',cancelButton:'sky-dialog-cancel',closeButton:'sky-dialog-close'}
+    };
     window.showNotice = (message, type='info') => Swal.fire({
         ...defaults, icon:type, title:({success:'Berhasil',error:'Gagal',warning:'Perhatian',info:'Informasi'})[type] || 'Informasi',
         text:String(message), confirmButtonText:'OK'

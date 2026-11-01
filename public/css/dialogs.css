@@ -1,0 +1,41 @@
+/* Explicit dialog styles stay visible alongside Tailwind's runtime preflight. */
+.swal2-container { z-index: 10000; }
+.swal2-popup.sky-dialog {
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+}
+.sky-dialog .swal2-html-container { white-space: pre-line; }
+.sky-dialog:not(.swal2-toast) .swal2-actions {
+    display: flex !important;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .75rem;
+    margin: 1.25rem auto 0;
+    padding: 0 1rem 1rem;
+}
+.sky-dialog .sky-dialog-confirm,
+.sky-dialog .sky-dialog-cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 5rem;
+    min-height: 2.75rem;
+    padding: .65rem 1.25rem;
+    border: 0;
+    border-radius: .5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: #fff !important;
+    cursor: pointer;
+    opacity: 1;
+    visibility: visible;
+}
+.sky-dialog .sky-dialog-confirm { background: #6d28d9 !important; }
+.sky-dialog .sky-dialog-cancel { background: #475569 !important; }
+.sky-dialog .sky-dialog-confirm:hover { background: #5b21b6 !important; }
+.sky-dialog .sky-dialog-cancel:hover { background: #334155 !important; }
+.sky-dialog button:focus-visible { outline: 3px solid #a78bfa; outline-offset: 3px; }
+.sky-dialog .sky-dialog-close { color: #475569; }
+/* Toasts intentionally have no confirmation action. */
+.swal2-toast.sky-dialog .swal2-actions { display: none !important; }
