@@ -44,7 +44,7 @@
             const modelGross = rows.reduce((sum, tx) => sum + Payroll.modelPay(tx).gross, 0);
             const pdf = SkyPdf;
             const name = rows[0].model_name || modelSelect.selectedOptions[0].textContent;
-            pdf.download({
+            pdf.preview({
                 prefix: 'GAJI', title: 'Slip Gaji Model',
                 context: `Model: ${name}\nPeriode: ${pdf.date(from.value)} - ${pdf.date(to.value)}\n${rows.length} pencatatan / ${count} TRX`,
                 sections: [{

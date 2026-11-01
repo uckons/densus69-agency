@@ -79,6 +79,7 @@
                class="bg-admin-600 text-white px-4 py-2 rounded-lg hover:bg-admin-700 transition">
                 <i class="fas fa-plus mr-2"></i>Add Transaction
             </a>
+            <button type="button" onclick="exportClientInvoice('preview')" class="bg-purple-600 text-white px-4 py-2 rounded-lg">View Invoice</button>
             <button onclick="exportClientInvoice()"
                     class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
                 <i class="fas fa-file-invoice mr-2"></i>Invoice Client
@@ -860,6 +861,7 @@
                     <div><span class="font-semibold">Created By:</span> ${tx.created_by_email || '-'}</div>
                     <div><span class="font-semibold">Description:</span> ${tx.notes || '-'}</div>
                     <div class="flex justify-end">
+                        <button type="button" onclick="exportTransactionPdf('preview')" class="px-4 py-2 bg-blue-600 text-white rounded-lg">View Slip</button>
                         <button type="button" onclick="exportTransactionPdf()" class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"><i class="fas fa-file-pdf mr-2"></i>Export PDF Slip</button>
                     </div>
                 </div>
@@ -870,12 +872,12 @@
     }
 
 
-    function exportTransactionPdf() {
+    function exportTransactionPdf(mode = 'download') {
         if (!lastTransactionDetail) return showToast('Detail transaksi belum dimuat', 'error');
         const { tx, model = {} } = lastTransactionDetail;
         const pdf = SkyPdf;
         const pay = Payroll.modelPay(tx);
-        pdf.download({
+        pdf[mode]({
             prefix: 'SLIP', reference: `SLIP-${String(tx.id).padStart(6, '0')}`, title: 'Slip Gaji Model',
             context: `Model: ${model.full_name || tx.model_name || '-'}\nTanggal: ${pdf.date(tx.transaction_day || tx.transaction_date)}`,
             sections: [{
@@ -1022,7 +1024,7 @@
     }
 
 
-    function exportClientInvoice() {
+    function exportClientInvoice(mode = 'download') {
         const rows = filteredTransactions;
         if (!rows.length) return showToast('Tidak ada transaksi untuk dibuat invoice', 'error');
         const pdf = SkyPdf;
@@ -1033,7 +1035,7 @@
             if (!clients.has(name)) clients.set(name, []);
             clients.get(name).push(tx);
         });
-        pdf.download({
+        pdf[mode]({
             prefix: 'INV', title: 'Client Invoice', confidential: false,
             sections: Array.from(clients).flatMap(([client, records]) => [{
                 title: 'Bill To: ' + client,

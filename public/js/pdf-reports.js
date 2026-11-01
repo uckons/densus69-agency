@@ -194,5 +194,42 @@
             if (typeof showToast === 'function') showToast(error.message || 'PDF gagal dibuat. Silakan coba lagi.', 'error');
         }
     }
-    window.SkyPdf = { download, chartImages, money, date, sum };
+    function preview(options) {
+        let url;
+        try {
+            const report = createReport(options);
+            url = URL.createObjectURL(report.doc.output('blob'));
+            const previousFocus = document.activeElement;
+            const dialog = document.createElement('dialog');
+            dialog.setAttribute('aria-label', 'Pratinjau dokumen PDF');
+            dialog.style.cssText = 'width:96vw;max-width:1200px;height:92vh;padding:16px;border:0;border-radius:12px;';
+            const toolbar = document.createElement('div');
+            toolbar.style.cssText = 'display:flex;gap:16px;align-items:center;margin-bottom:12px;';
+            const title = document.createElement('strong');
+            title.textContent = options.title || 'Pratinjau PDF';
+            title.style.marginRight = 'auto';
+            const save = document.createElement('button');
+            save.type = 'button'; save.textContent = 'Unduh PDF';
+            save.addEventListener('click', () => report.doc.save(report.filename));
+            const close = document.createElement('button');
+            close.type = 'button'; close.textContent = 'Tutup';
+            close.addEventListener('click', () => dialog.close());
+            toolbar.append(title, save, close);
+            const frame = document.createElement('iframe');
+            frame.title = 'Pratinjau PDF'; frame.src = url;
+            frame.style.cssText = 'width:100%;height:calc(100% - 48px);border:0;';
+            dialog.append(toolbar, frame);
+            dialog.addEventListener('close', () => {
+                URL.revokeObjectURL(url); dialog.remove(); previousFocus?.focus();
+            }, { once: true });
+            document.body.append(dialog);
+            dialog.showModal();
+            close.focus();
+        } catch (error) {
+            if (url) URL.revokeObjectURL(url);
+            console.error('PDF preview failed:', error);
+            if (typeof showToast === 'function') showToast(error.message || 'Pratinjau PDF gagal dibuat.', 'error');
+        }
+    }
+    window.SkyPdf = { download, preview, chartImages, money, date, sum };
 })();
