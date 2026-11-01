@@ -58,3 +58,11 @@ test('period payroll rejects reversed or invalid dates and missing model, and re
     assert.throws(()=>Payroll.period([],'','2026-10-01','2026-10-31'),/Pilih model/);
     assert.equal(Payroll.period([],11,'2026-10-01','2026-10-31').rows.length,0);
 });
+test('an explicit rate correction recalculates invoice/payroll using saved client and agent rates', () => {
+    const stored = {transaction_count:2,model_rate:250000,safety_fee:10000,client_admin_fee:10000,other_deduction:0,fine:0,cash_advance:0,agent_fee_per_trx:30000};
+    const corrected = {...stored,model_rate:230000};
+    assert.equal(Payroll.calculate(corrected).gross,460000);
+    assert.equal(Payroll.calculate(corrected).net,360000);
+    assert.equal(Payroll.invoice(corrected).total,420000);
+    assert.equal(stored.model_rate,250000);
+});

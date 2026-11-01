@@ -298,12 +298,14 @@ exports.updateTransaction = async (req, res) => {
     const newFine = money(req.body.fine ?? admin_fee ?? transaction.fine ?? transaction.admin_fee, 'Denda');
     const newCash = money(req.body.cash_advance ?? transaction.cash_advance, 'Cash Advance');
     const newCount = count(transaction_count ?? transaction.transaction_count);
+    const newRate = money(req.body.model_rate ?? transaction.model_rate, 'Rate/TRX');
+    if (newRate <= 0 || newRate > 99999999.99) throw Object.assign(new Error('Rate/TRX harus lebih besar dari nol dan maksimal Rp99.999.999,99'), {status:400});
     await Transaction.update(id, {
       ...snapshot,
-      preserveAmounts: !changedClient && newFine === Number(transaction.fine ?? transaction.admin_fee) && newCash === Number(transaction.cash_advance || 0) && newCount === Number(transaction.transaction_count),
+      preserveAmounts: !changedClient && newRate === Number(transaction.model_rate) && newFine === Number(transaction.fine ?? transaction.admin_fee) && newCash === Number(transaction.cash_advance || 0) && newCount === Number(transaction.transaction_count),
       transaction_date: transaction_date || transaction.transaction_date,
       transaction_count: newCount,
-      model_rate: Number(transaction.model_rate),
+      model_rate: newRate,
       fine: newFine,
       cash_advance: newCash,
       agent_fee_per_trx: Number(transaction.agent_fee_per_trx ?? (Number(transaction.agent_fee_total || 0) / Number(transaction.transaction_count))),

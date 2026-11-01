@@ -294,7 +294,7 @@ Example: rate Rp 500,000, 3 TRX, safety Rp 10,000/TRX, admin Rp 5,000/TRX, other
 
 Client invoice total = (TRX × recorded model rate) − ((Safety + Client Admin Fee) × TRX) − Other Deductions. Denda, Cash Advance, and Agent Fee affect model payroll only. Invoice PDFs show line deductions, client subtotals, and the grand total using saved transaction rates. All PDF reports use A4 portrait, with compact columns and no explanatory formula footnotes.
 
-Transaction rates are recorded at creation. Client/model rate changes affect future transactions; they do not rewrite existing payroll. Editing a transaction retains its saved rates unless its client changes. Changing the client uses that client's current deduction rates. An amount below zero remains a negative balance, following the formula.
+Transaction rates are recorded at creation. Client/model rate changes affect future transactions; they do not rewrite existing payroll. Editing a transaction retains its saved rates unless **Rate/TRX** is explicitly changed in its edit form. This recalculates that transaction's gross, client invoice and model net pay; the model/grade/job master rate and recorded receipts remain unchanged. A change that would reduce the invoice below active client payments is rejected. Changing the client uses that client's current deduction rates. An amount below zero remains a negative balance, following the formula.
 
 The server applies the additive migration in `database/payroll-schema.js` before listening. Existing gross/net amounts remain unchanged; an existing transaction's former admin fee is displayed as its historical denda. No manual schema reset is required.
 
