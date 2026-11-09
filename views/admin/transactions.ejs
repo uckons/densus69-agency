@@ -882,10 +882,9 @@
             context: `Model: ${model.full_name || tx.model_name || '-'}\nTanggal: ${pdf.date(tx.transaction_day || tx.transaction_date)}`,
             sections: [{
                 title: 'Pendapatan Model', columns: ['Keterangan', 'Nominal'], numeric: [1],
-                rows: [['Jumlah TRX', tx.transaction_count || 0], ['Rate Gaji Model/TRX', pdf.money(pay.rate)],
-                    ['Pendapatan Kotor Model', pdf.money(pay.gross)], ['Agent Fee', '-' + pdf.money(pay.agent)],
-                    ['Denda', '-' + pdf.money(pay.fine)], ['Cash Advance', '-' + pdf.money(pay.cash)], ['Refund', '+' + pdf.money(pay.refund)], ['Bonus Model', '+' + pdf.money(pay.bonus)]],
-                totals: ['PENDAPATAN BERSIH MODEL', pdf.money(pay.net)]
+                rows: [['Jumlah TRX', tx.transaction_count || 0],
+                    ['Gaji Model per TRX', pdf.money(Payroll.netRate(tx))]],
+                totals: ['TOTAL GAJI MODEL', pdf.money(pay.net)]
             }],
             signatures: ['Finance', 'Model']
         });

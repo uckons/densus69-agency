@@ -41,7 +41,6 @@
         try {
             const { rows, totals, count } = selection();
             if (!rows.length) return showToast('Tidak ada transaksi model pada periode tersebut.', 'error');
-            const modelGross = rows.reduce((sum, tx) => sum + Payroll.modelPay(tx).gross, 0);
             const pdf = SkyPdf;
             const name = rows[0].model_name || modelSelect.selectedOptions[0].textContent;
             pdf.preview({
@@ -49,17 +48,13 @@
                 context: `Model: ${name}\nPeriode: ${pdf.date(from.value)} - ${pdf.date(to.value)}\n${rows.length} pencatatan / ${count} TRX`,
                 sections: [{
                     title: 'Ringkasan Pendapatan', columns: ['Keterangan', 'Nominal'], numeric: [1],
-                    rows: [['Jumlah TRX', count], ['Rata-rata Gaji Model/TRX', pdf.money(count ? Math.round(modelGross / count * 100)/100 : 0)], ['Pendapatan Kotor Model', pdf.money(modelGross)], ['Agent Fee', '-' + pdf.money(totals.agent)], ['Denda', '-' + pdf.money(totals.fine)], ['Cash Advance', '-' + pdf.money(totals.cash)], ['Refund', '+' + pdf.money(totals.refund)], ['Bonus Model', '+' + pdf.money(totals.bonus)]],
-                    totals: ['PENDAPATAN BERSIH MODEL', pdf.money(totals.net)]
+                    rows: [['Jumlah TRX', count], ['Rata-rata Gaji Model per TRX', pdf.money(count ? totals.net / count : 0)]],
+                    totals: ['TOTAL GAJI MODEL', pdf.money(totals.net)]
                 }, {
-                    title: 'Rincian Pendapatan', columns: ['Tanggal / TRX', 'Rate / Kotor Model', 'Agent Fee', 'Potongan / Tambahan', 'Bersih'], numeric: [1,2,3,4],
-                    rows: rows.map(tx => {
-                        const pay = Payroll.modelPay(tx);
-                        return [pdf.date(tx.transaction_day || tx.transaction_date) + '\n' + tx.transaction_count + ' TRX',
-                            pdf.money(pay.rate) + '\n' + pdf.money(pay.gross), pdf.money(pay.agent),
-                            'Denda: ' + pdf.money(pay.fine) + '\nCA: ' + pdf.money(pay.cash) + '\nRefund: +' + pdf.money(pay.refund) + '\nBonus: +' + pdf.money(pay.bonus), pdf.money(pay.net)];
-                    }),
-                    totals: ['TOTAL ' + count + ' TRX', pdf.money(modelGross), pdf.money(totals.agent), 'Denda/CA: ' + pdf.money(totals.fine + totals.cash) + '\nRefund: +' + pdf.money(totals.refund) + '\nBonus: +' + pdf.money(totals.bonus), pdf.money(totals.net)]
+                    title: 'Rincian Gaji Model', columns: ['Tanggal', 'Jumlah TRX', 'Gaji Model per TRX', 'Total Gaji Model'], numeric: [1,2,3],
+                    rows: rows.map(tx => [pdf.date(tx.transaction_day || tx.transaction_date),
+                        tx.transaction_count || 0, pdf.money(Payroll.netRate(tx)), pdf.money(tx.net_amount)]),
+                    totals: ['TOTAL', count, pdf.money(count ? totals.net / count : 0), pdf.money(totals.net)]
                 }],
                 signatures: ['Finance', 'Model']
             });
