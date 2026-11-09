@@ -876,14 +876,17 @@
         if (!lastTransactionDetail) return showToast('Detail transaksi belum dimuat', 'error');
         const { tx, model = {} } = lastTransactionDetail;
         const pdf = SkyPdf;
-        const pay = Payroll.modelPay(tx);
+        const pay = Payroll.payslipPay(tx);
         pdf[mode]({
             prefix: 'SLIP', reference: `SLIP-${String(tx.id).padStart(6, '0')}`, title: 'Slip Gaji Model',
             context: `Model: ${model.full_name || tx.model_name || '-'}\nTanggal: ${pdf.date(tx.transaction_day || tx.transaction_date)}`,
             sections: [{
                 title: 'Pendapatan Model', columns: ['Keterangan', 'Nominal'], numeric: [1],
                 rows: [['Jumlah TRX', tx.transaction_count || 0],
-                    ['Gaji Model per TRX', pdf.money(Payroll.netRate(tx))]],
+                    ['Gaji Model per TRX', pdf.money(pay.rate)],
+                    ['Jumlah Gaji Model', pdf.money(pay.base)],
+                    ['Denda', '-' + pdf.money(pay.fine)], ['Cash Advance', '-' + pdf.money(pay.cash)],
+                    ['Refund', '+' + pdf.money(pay.refund)], ['Bonus Model', '+' + pdf.money(pay.bonus)]],
                 totals: ['TOTAL GAJI MODEL', pdf.money(pay.net)]
             }],
             signatures: ['Finance', 'Model']

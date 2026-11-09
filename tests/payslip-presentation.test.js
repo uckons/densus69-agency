@@ -12,10 +12,10 @@ function pdf(capture) {
 }
 function privateSlip(report) {
     const text = JSON.stringify(report);
-    assert.doesNotMatch(text, /agent|fee|kotor|gross|potongan|denda|cash advance/i);
+    assert.doesNotMatch(text, /agent|fee|kotor|gross/i);
     assert.match(text, /Gaji Model per TRX/);
 }
-test('single payslip uses recorded net per TRX without exposing gross or fees in preview and download', () => {
+test('single payslip uses salary rate minus agent fee per TRX without exposing gross or fees in preview and download', () => {
     const template = fs.readFileSync('views/admin/transactions.ejs', 'utf8');
     const code = template.slice(template.indexOf('    function exportTransactionPdf('), template.indexOf('    function updateEditPayrollPreview('));
     for (const tx of fixtures) {
@@ -26,12 +26,20 @@ test('single payslip uses recorded net per TRX without exposing gross or fees in
         for (const mode of ['preview', 'download']) {
             context.exportTransactionPdf(mode);
             privateSlip(report);
-            assert.equal(report.sections[0].rows[1][1], Payroll.netRate(tx));
+            assert.equal(report.sections[0].rows[1][1], Payroll.payslipPay(tx).rate);
             assert.equal(report.sections[0].totals[1], tx.net_amount);
+            const rows = report.sections[0].rows;
+            assert.equal(rows[2][1], Payroll.payslipPay(tx).base);
+            assert.deepEqual(Array.from(rows.slice(3), row => row[0]), ['Denda', 'Cash Advance', 'Refund', 'Bonus Model']);
+            if (tx.id === 1) {
+                assert.equal(rows[1][1], 90000);
+                assert.equal(rows[2][1], 270000);
+                assert.deepEqual(Array.from(rows.slice(3), row => row[1]), ['-10000', '-20000', '+5000', '+5000']);
+            }
         }
     }
 });
-test('period payslip retains recorded totals, weighted net rate and negative earnings without exposing deductions', () => {
+test('period payslip retains recorded totals, weighted net rate and negative earnings with visible adjustments and no fee details', () => {
     const elements = new Map();
     const element = id => {
         if (!elements.has(id)) elements.set(id, { value: '', addEventListener(event, handler) { this[event] = handler; } });
@@ -45,9 +53,13 @@ test('period payslip retains recorded totals, weighted net rate and negative ear
     vm.runInNewContext(fs.readFileSync('public/js/payroll-period.js', 'utf8'), context);
     element('payrollPeriodForm').submit({ preventDefault() {} });
     privateSlip(report);
-    assert.equal(report.sections[0].rows[1][1], 245000 / 4);
+    assert.equal(report.sections[0].rows[1][1], 265000 / 4);
     assert.equal(report.sections[0].totals[1], 245000);
-    assert.equal(report.sections[1].rows[1][2], -5000);
-    assert.equal(report.sections[1].rows[1][3], -5000);
-    assert.equal(report.sections[1].totals[3], 245000);
+    assert.match(JSON.stringify(report), /Denda/);
+    assert.match(JSON.stringify(report), /Cash Advance/);
+    assert.match(JSON.stringify(report), /Refund/);
+    assert.match(JSON.stringify(report), /Bonus Model/);
+    assert.equal(report.sections[1].rows[1][1], -5000);
+    assert.equal(report.sections[1].rows[1][4], -5000);
+    assert.equal(report.sections[1].totals[4], 245000);
 });

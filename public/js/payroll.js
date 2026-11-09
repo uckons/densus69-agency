@@ -43,6 +43,13 @@
         const gross = amount(tx.model_gross_amount ?? (tx.salary_rate != null ? Number(tx.salary_rate) * Number(tx.transaction_count) : values.net + values.agent + values.fine + values.cash - values.refund - values.bonus));
         return { gross, rate: tx.salary_rate != null ? Number(tx.salary_rate) : (Number(tx.transaction_count) ? amount(gross / Number(tx.transaction_count)) : 0), agent: values.agent, fine: values.fine, cash: values.cash, refund: values.refund, bonus: values.bonus, net: values.net };
     }
+    function payslipPay(tx) {
+        const pay = modelPay(tx);
+        const base = amount(pay.gross - pay.agent);
+        const count = Number(tx.transaction_count || 0);
+        return { base, rate: count > 0 ? amount(base / count) : 0,
+            fine: pay.fine, cash: pay.cash, refund: pay.refund, bonus: pay.bonus, net: pay.net };
+    }
     function netRate(tx) { return Number(tx.transaction_count) > 0 ? amount(Number(tx.net_amount || 0) / Number(tx.transaction_count)) : 0; }
     function balance(tx) {
         const total = invoice(tx).total;
@@ -65,5 +72,5 @@
         }
         return { rows, totals, count: rows.reduce((sum, tx) => sum + Number(tx.transaction_count || 0), 0) };
     }
-    return { calculate, breakdown, invoice, balance, period, netRate, modelPay, formula: 'Gross - ((Safety + Admin Fee Client) x TRX) - Lain-lain - Denda - Cash Advance - Agent Fee + Refund + Bonus Model' };
+    return { calculate, breakdown, invoice, balance, period, netRate, modelPay, payslipPay, formula: 'Gross - ((Safety + Admin Fee Client) x TRX) - Lain-lain - Denda - Cash Advance - Agent Fee + Refund + Bonus Model' };
 });
