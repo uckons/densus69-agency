@@ -878,7 +878,7 @@
         const pdf = SkyPdf;
         const pay = Payroll.payslipPay(tx);
         pdf[mode]({
-            prefix: 'SLIP', reference: `SLIP-${String(tx.id).padStart(6, '0')}`, title: 'Slip Gaji Model',
+            prefix: 'SLIP', reference: `SLIP-${String(tx.id).padStart(6, '0')}`, title: 'Slip Gaji Model', compact: true,
             context: `Model: ${model.full_name || tx.model_name || '-'}\nTanggal: ${pdf.date(tx.transaction_day || tx.transaction_date)}`,
             sections: [{
                 title: 'Pendapatan Model', columns: ['Keterangan', 'Nominal'], numeric: [1],
@@ -1038,13 +1038,13 @@
             clients.get(name).push(tx);
         });
         pdf[mode]({
-            prefix: 'INV', title: 'Client Invoice', confidential: false,
+            prefix: 'INV', title: 'Client Invoice', compact: true, confidential: false,
             sections: Array.from(clients).flatMap(([client, records]) => [{
                 title: 'Bill To: ' + client,
                 columns: ['Model / Detail', 'TRX', 'Gross', 'Potongan', 'Refund', 'Tagihan'], numeric: [1, 2, 3, 4, 5],
                 rows: records.map((tx, index) => {
                     const bill = Payroll.invoice(tx);
-                    return [(tx.model_name || '-') + '\n' + (tx.model_grade_name || '-') + '\n' + pdf.date(tx.transaction_date) + '\nRate: ' + pdf.money(tx.model_rate), tx.transaction_count || 0, pdf.money(bill.gross), 'Safety + Admin\n' + pdf.money(bill.safety + bill.admin) + '\nLain-lain\n' + pdf.money(bill.other), pdf.money(bill.refund), pdf.money(bill.total)];
+                    return [(tx.model_name || '-') + '\n' + (tx.model_grade_name || '-') + ' / ' + pdf.date(tx.transaction_date) + '\nRate: ' + pdf.money(tx.model_rate), tx.transaction_count || 0, pdf.money(bill.gross), 'Safety + Admin: ' + pdf.money(bill.safety + bill.admin) + '\nLain-lain: ' + pdf.money(bill.other), pdf.money(bill.refund), pdf.money(bill.total)];
                 }),
                 totals: ['CLIENT TOTAL', pdf.sum(records, 'transaction_count'), pdf.money(invoiceSum(records, 'gross')), pdf.money(invoiceSum(records, 'safety') + invoiceSum(records, 'admin') + invoiceSum(records, 'other')), pdf.money(invoiceSum(records, 'refund')), pdf.money(invoiceSum(records, 'total'))]
             }, ...(records.some(tx => overpaidFor(tx) > 0) ? [{

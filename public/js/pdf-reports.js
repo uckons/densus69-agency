@@ -53,7 +53,11 @@
         if (typeof doc.autoTable !== 'function') throw new Error('Komponen tabel PDF belum termuat.');
         const width = doc.internal.pageSize.getWidth();
         const height = doc.internal.pageSize.getHeight();
-        const margin = 14;
+        const compact = options.compact === true;
+        const margin = compact ? 10 : 14;
+        const contentTop = compact ? 31 : 65;
+        const bottomMargin = compact ? 13 : 23;
+        const signatureLine = compact ? 13 : 21;
         const usable = width - margin * 2;
         const now = new Date();
         const stamp = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now).replace(/\D/g, '');
@@ -76,6 +80,17 @@
             label(visible, x, y, size, color, bold);
         }
         function header() {
+            if (compact) {
+                const right = { align: 'right' };
+                label('SKY AGENCY', margin, 10, 9, palette.ink, true);
+                label(options.title, margin, 18, 14, palette.ink, true);
+                label('agency.densus69.my.id  /  info@densus69.my.id', margin, 24, 7);
+                label(reference, width - margin, 10, 7, palette.ink, true, right);
+                label(generated, width - margin, 16, 7, palette.muted, false, right);
+                doc.setDrawColor(palette.line);
+                doc.line(margin, 27, width - margin, 27);
+                return;
+            }
             doc.setFillColor(palette.ink);
             doc.rect(0, 0, width, 54, 'F');
             doc.setFillColor(palette.gold);
@@ -89,7 +104,7 @@
             label(reference, width - margin, 15, 7, '#FFFFFF', true, { align: 'right' });
             label(generated, width - margin, 21, 7, '#C8D3E0', false, { align: 'right' });
         }
-        let y = 65;
+        let y = contentTop;
         const metrics = options.metrics || [];
         if (metrics.length) {
             const metricColumns = Math.min(3, metrics.length);
@@ -111,12 +126,12 @@
             doc.setFontSize(8);
             const lines = doc.splitTextToSize(text(options.context), usable);
             label(lines, margin, y, 8);
-            y += lines.length * 4 + 6;
+            y += lines.length * (compact ? 3.3 : 4) + (compact ? 3 : 6);
         }
         const charts = options.charts || [];
         for (const chart of charts) {
             const cardHeight = 100;
-            if (y + cardHeight > height - 23) { doc.addPage(); y = 65; }
+            if (y + cardHeight > height - bottomMargin) { doc.addPage(); y = contentTop; }
             doc.setDrawColor(palette.line);
             doc.roundedRect(margin, y, usable, cardHeight, 2, 2, 'S');
             label(chart.title, margin + 4, y + 7, 10, palette.ink, true);
@@ -124,16 +139,16 @@
             doc.addImage(chart.image, 'PNG', margin + (usable - imageWidth) / 2, y + 12, imageWidth, imageWidth / chart.aspect);
             y += cardHeight + 6;
         }
-        if (charts.length && options.sections?.length) { doc.addPage(); y = 65; }
+        if (charts.length && options.sections?.length) { doc.addPage(); y = contentTop; }
         for (const section of options.sections || []) {
-            if (y > height - 55) { doc.addPage(); y = 65; }
+            if (y > height - (compact ? bottomMargin + 18 : 55)) { doc.addPage(); y = contentTop; }
             const columns = section.columns;
             const rightColumns = section.numeric || [];
             doc.autoTable({
                 startY: y,
-                margin: { top: 65, left: margin, right: margin, bottom: 23 },
+                margin: { top: contentTop, left: margin, right: margin, bottom: bottomMargin },
                 head: [
-                    [{ content: section.title, colSpan: columns.length, styles: { fillColor: palette.ink, textColor: '#FFFFFF', fontSize: 10, cellPadding: 4 } }],
+                    [{ content: section.title, colSpan: columns.length, styles: { fillColor: palette.ink, textColor: '#FFFFFF', fontSize: compact ? 9 : 10, cellPadding: compact ? 1.5 : 4 } }],
                     columns
                 ],
                 body: section.rows.length ? section.rows.map(row => row.map(text)) : [[{ content: 'Tidak ada data pada periode ini.', colSpan: columns.length }]],
@@ -141,7 +156,7 @@
                 theme: 'plain',
                 showHead: 'everyPage',
                 rowPageBreak: 'avoid',
-                styles: { font: 'helvetica', fontSize: 8, cellPadding: 3, overflow: 'linebreak', textColor: palette.ink, lineColor: palette.line, lineWidth: { bottom: 0.15 }, valign: 'middle' },
+                styles: { font: 'helvetica', fontSize: 8, cellPadding: compact ? 1.25 : 3, overflow: 'linebreak', textColor: palette.ink, lineColor: palette.line, lineWidth: { bottom: 0.15 }, valign: 'middle' },
                 headStyles: { fillColor: palette.light, textColor: palette.muted, fontStyle: 'bold', fontSize: 7.5 },
                 alternateRowStyles: { fillColor: '#F8FAFC' },
                 footStyles: { fillColor: '#EAF0F7', fontStyle: 'bold', textColor: palette.ink },
@@ -150,27 +165,27 @@
                     if ((data.section !== 'head' || data.row.index === 1) && rightColumns.includes(data.column.index)) data.cell.styles.halign = 'right';
                 }
             });
-            y = doc.lastAutoTable.finalY + 9;
+            y = doc.lastAutoTable.finalY + (compact ? 4 : 9);
         }
         if (options.note) {
             doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
             const lines = doc.splitTextToSize(text(options.note), usable - 10);
             // Notes can span pages without overrunning the footer.
             for (const line of lines) {
-                if (y > height - 25) { doc.addPage(); y = 65; }
-                label(line, margin, y, 8); y += 4;
+                if (y > height - bottomMargin - 2) { doc.addPage(); y = contentTop; }
+                label(line, margin, y, 8); y += compact ? 3.3 : 4;
             }
-            y += 6;
+            y += compact ? 3 : 6;
         }
         if (options.signatures?.length) {
-            if (y + 32 > height - 23) { doc.addPage(); y = 65; }
+            if (y + signatureLine + (compact ? 6 : 11) > height - bottomMargin) { doc.addPage(); y = contentTop; }
             const signWidth = usable / options.signatures.length;
             options.signatures.forEach((name, i) => {
                 const x = margin + i * signWidth;
                 label('APPROVAL', x, y, 6.5, palette.muted, true);
                 doc.setDrawColor(palette.line);
-                doc.line(x, y + 21, x + signWidth - 12, y + 21);
-                label(name, x, y + 27, 8, palette.ink);
+                doc.line(x, y + signatureLine, x + signWidth - 12, y + signatureLine);
+                label(name, x, y + signatureLine + (compact ? 4 : 6), 8, palette.ink);
             });
         }
         const pages = doc.internal.getNumberOfPages();
@@ -178,9 +193,10 @@
             doc.setPage(page);
             header();
             doc.setDrawColor(palette.line);
-            doc.line(margin, height - 18, width - margin, height - 18);
-            label('SKY AGENCY  /  ' + (options.confidential === false ? 'BUSINESS DOCUMENT' : 'CONFIDENTIAL'), margin, height - 12, 6.5, palette.muted, true);
-            label(`Halaman ${page} / ${pages}`, width - margin, height - 12, 7, palette.muted, false, { align: 'right' });
+            const footerY = height - (compact ? 6 : 12);
+            doc.line(margin, footerY - (compact ? 4 : 6), width - margin, footerY - (compact ? 4 : 6));
+            label('SKY AGENCY  /  ' + (options.confidential === false ? 'BUSINESS DOCUMENT' : 'CONFIDENTIAL'), margin, footerY, 6.5, palette.muted, true);
+            label(`Halaman ${page} / ${pages}`, width - margin, footerY, 7, palette.muted, false, { align: 'right' });
         }
         return { doc, filename: `Sky-Agency-${reference}.pdf` };
     }

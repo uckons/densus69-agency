@@ -45,7 +45,7 @@
             const pdf = SkyPdf;
             const name = rows[0].model_name || modelSelect.selectedOptions[0].textContent;
             pdf.preview({
-                prefix: 'GAJI', title: 'Slip Gaji Model',
+                prefix: 'GAJI', title: 'Slip Gaji Model', compact: true,
                 context: `Model: ${name}\nPeriode: ${pdf.date(from.value)} - ${pdf.date(to.value)}\n${rows.length} pencatatan / ${count} TRX`,
                 sections: [{
                     title: 'Ringkasan Pendapatan', columns: ['Keterangan', 'Nominal'], numeric: [1],
